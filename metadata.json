@@ -1,0 +1,5 @@
+{
+  "name": "weight loss Intake Form- 10-2-25",
+  "description": "A dynamic and visually appealing intake form system that renders screens, fields, and navigation logic from a JSON configuration. It's designed to create user-friendly questionnaires, like the provided weight-loss program intake flow.",
+  "requestFramePermissions": []
+}
