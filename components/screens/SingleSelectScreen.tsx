@@ -3,6 +3,7 @@ import { ScreenProps } from './common';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
 import Select from '../ui/Select';
+import RegionDropdown from '../common/RegionDropdown';
 import { SingleSelectScreen as SingleSelectScreenType } from '../../types';
 
 const DROPDOWN_THRESHOLD = 8;
@@ -10,6 +11,31 @@ const DROPDOWN_THRESHOLD = 8;
 const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack }) => {
   const { id, title, help_text, options = [], required, auto_advance = true } = screen;
   const selectedValue = answers[id];
+
+  if (screen.id === 'demographics.state') {
+    const stateValue = selectedValue || '';
+    const handleStateChange = (code: string) => {
+      updateAnswer(id, code);
+    };
+
+    return (
+      <ScreenLayout title={title} helpText={help_text}>
+        <div className="space-y-4">
+          <RegionDropdown
+            value={stateValue}
+            onChange={handleStateChange}
+            placeholder="Select your state"
+          />
+        </div>
+        <NavigationButtons
+          showBack={showBack}
+          onBack={onBack}
+          onNext={onSubmit}
+          isNextDisabled={!stateValue}
+        />
+      </ScreenLayout>
+    );
+  }
 
   const handleButtonSelect = (value: string) => {
     updateAnswer(id, value);

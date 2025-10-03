@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { useFormLogic } from './hooks/useFormLogic';
 import formConfig from './data';
 import { Screen } from './types';
+import { apiClient } from './utils/api';
 
 import ProgressBar from './components/ui/ProgressBar';
 import SingleSelectScreen from './components/screens/SingleSelectScreen';
@@ -16,6 +17,8 @@ import DateScreen from './components/screens/DateScreen';
 import ConsentScreen from './components/screens/ConsentScreen';
 import TerminalScreen from './components/screens/TerminalScreen';
 import ReviewScreen from './components/screens/ReviewScreen';
+import MedicationSelectionScreen from './components/screens/MedicationSelectionScreen';
+import PlanSelectionScreen from './components/screens/PlanSelectionScreen';
 
 const App: React.FC = () => {
   const { 
@@ -30,12 +33,72 @@ const App: React.FC = () => {
     direction,
   } = useFormLogic(formConfig);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   useEffect(() => {
     document.documentElement.style.setProperty('--primary-color', formConfig.settings.theme.primary_hex);
     document.documentElement.style.setProperty('--accent-color', formConfig.settings.theme.accent_hex);
     document.documentElement.style.setProperty('--secondary-color', formConfig.settings.theme.secondary_hex);
     document.documentElement.style.setProperty('--background-color', formConfig.settings.theme.background_hex);
   }, []);
+
+  useEffect(() => {
+    if (currentScreen.id !== 'review.summary' && submitError) {
+      setSubmitError(null);
+      setIsSubmitting(false);
+    }
+  }, [currentScreen.id, submitError]);
+
+  const handleReviewSubmit = async () => {
+    if (isSubmitting) return;
+    try {
+      setSubmitError(null);
+      setIsSubmitting(true);
+
+      const responses = JSON.parse(JSON.stringify(answers));
+
+      const existingAddress = responses.address || {};
+      const street = responses.shipping_address || existingAddress.street || '';
+      const locality = responses.shipping_city || existingAddress.locality || existingAddress.city || '';
+      const region = responses.shipping_state || existingAddress.region || '';
+      const postalCode = responses.shipping_zip || existingAddress.postalCode || existingAddress.postal_code || '';
+      const country = existingAddress.country || 'US';
+      const isDefault = typeof existingAddress.default === 'boolean' ? existingAddress.default : false;
+
+      responses.address = {
+        street,
+        locality,
+        region,
+        postalCode,
+        country,
+        default: isDefault,
+      };
+
+      if (!responses.selected_plan && responses.selected_plan_id) {
+        responses.selected_plan = responses.selected_plan_id;
+      }
+
+      if (responses.notification_consent === undefined || responses.notification_consent === null || responses.notification_consent === '') {
+        responses.notification_consent = 'false';
+      }
+
+      const payload = {
+        condition: responses.condition || 'weight_loss',
+        responses,
+        intake_form: formConfig,
+        timestamp: new Date().toISOString(),
+      };
+
+      await apiClient.submitConsultation(payload);
+      goToNext();
+    } catch (error) {
+      console.error(error);
+      setSubmitError(error instanceof Error ? error.message : 'Failed to submit form');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const variants = {
     enter: (direction: number) => ({
@@ -63,6 +126,14 @@ const App: React.FC = () => {
       showBack: history.length > 0,
       onBack: goToPrev,
     };
+
+    if (screen.id === 'treatment.medication_selection') {
+      return <MedicationSelectionScreen {...commonProps} screen={screen} />;
+    }
+
+    if (screen.id === 'treatment.plan_selection') {
+      return <PlanSelectionScreen {...commonProps} screen={screen} />;
+    }
     
     switch (screen.type) {
       case 'single_select':
@@ -85,9 +156,12 @@ const App: React.FC = () => {
         return <ReviewScreen 
                   {...commonProps} 
                   screen={screen}
+                  onSubmit={handleReviewSubmit}
                   allScreens={formConfig.screens} 
                   providerFields={formConfig.provider_packet.include_fields} 
                   goToScreen={goToScreen} 
+                  isSubmitting={isSubmitting}
+                  submissionError={submitError}
                />;
       case 'terminal':
         return <TerminalScreen {...commonProps} screen={screen} />;

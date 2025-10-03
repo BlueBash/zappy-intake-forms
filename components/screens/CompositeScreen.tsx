@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ScreenProps } from './common';
 import { CompositeScreen as CompositeScreenType, Field, FieldOrFieldGroup, SelectField } from '../../types';
 import ScreenLayout from '../common/ScreenLayout';
@@ -6,6 +6,7 @@ import NavigationButtons from '../common/NavigationButtons';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import CheckboxGroup from '../common/CheckboxGroup';
+import RegionDropdown from '../common/RegionDropdown';
 
 const checkCondition = (condition: string, answers: Record<string, any>): boolean => {
   const match = condition.match(/(\w+)\s*(==|!=)\s*['"]?([\w\s/.-]+)['"]?/);
@@ -41,6 +42,13 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
 
   const allFields = flattenFields(fields);
   const visibleFields = allFields.filter(field => shouldShowField(field, answers));
+
+  useEffect(() => {
+    const initialDemographicState = answers['demographics.state'];
+    if (initialDemographicState && !answers['shipping_state']) {
+      updateAnswer('shipping_state', initialDemographicState);
+    }
+  }, [answers, updateAnswer]);
   
   const isComplete = visibleFields
     .filter(field => field.required)
@@ -100,6 +108,23 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         );
       case 'single_select': {
         const selectField = field as SelectField;
+        if (field.id === 'shipping_state') {
+          return (
+            <div className="text-left">
+              <label htmlFor={field.id} className="block text-sm font-medium text-stone-700 mb-2">
+                {field.label}
+              </label>
+              {field.help_text && (
+                <p className="text-sm text-stone-500 mb-2">{field.help_text}</p>
+              )}
+              <RegionDropdown
+                value={value || ''}
+                onChange={(stateCode) => updateAnswer(field.id, stateCode)}
+                placeholder={field.placeholder || 'Select state'}
+              />
+            </div>
+          );
+        }
         const options = selectField.conditional_options 
             ? (selectField.conditional_options.options_map[answers[selectField.conditional_options.based_on]] || [])
             : selectField.options;

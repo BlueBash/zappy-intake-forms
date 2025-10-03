@@ -8,6 +8,7 @@ interface NavigationButtonsProps {
   onNext: () => void;
   isNextDisabled?: boolean;
   nextButtonType?: 'button' | 'submit' | 'reset';
+  isNextLoading?: boolean;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -17,6 +18,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   onNext,
   isNextDisabled = false,
   nextButtonType = 'button',
+  isNextLoading = false,
 }) => {
   return (
     <div className="w-full flex flex-col-reverse sm:flex-row sm:justify-between items-center mt-12 gap-3 sm:gap-5">
@@ -38,11 +40,11 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       {/* Next/Submit Button */}
       <Button
         onClick={onNext}
-        disabled={isNextDisabled}
+        disabled={isNextDisabled || isNextLoading}
         type={nextButtonType}
         className="w-full sm:w-auto sm:max-w-[240px]"
       >
-        {nextLabel}
+        {isNextLoading ? 'Submitting…' : nextLabel}
       </Button>
     </div>
   );

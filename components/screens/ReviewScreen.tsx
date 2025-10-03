@@ -4,6 +4,14 @@ import ScreenLayout from '../common/ScreenLayout';
 import { Screen, Option, Field, ReviewScreen as ReviewScreenType } from '../../types';
 import NavigationButtons from '../common/NavigationButtons';
 
+const CUSTOM_LABELS: Record<string, string> = {
+  selected_medication: 'Preferred medication',
+  selected_plan_name: 'Selected plan',
+  selected_plan_price_display: 'Plan price',
+  discount_code: 'Discount code',
+  notification_consent: 'SMS/email consent',
+};
+
 interface ReviewScreenProps {
   // FIX: Use the specific ReviewScreenType for the screen prop.
   screen: ReviewScreenType;
@@ -14,6 +22,8 @@ interface ReviewScreenProps {
   goToScreen: (screenId: string) => void;
   showBack: boolean;
   onBack: () => void;
+  isSubmitting?: boolean;
+  submissionError?: string | null;
 }
 
 const getLabelForId = (id: string, allScreens: Screen[]): { screenId: string, label: string } | null => {
@@ -31,6 +41,9 @@ const getLabelForId = (id: string, allScreens: Screen[]): { screenId: string, la
                 }
             }
         }
+    }
+    if (CUSTOM_LABELS[id]) {
+        return { screenId: 'treatment.plan_selection', label: CUSTOM_LABELS[id] };
     }
     return null;
 }
@@ -84,11 +97,11 @@ const formatAnswer = (answer: any, id: string, allScreens: Screen[], answers: Re
 const groupOrder = ['Your Details', 'Measurements', 'Medical History', 'Goals & Motivation', 'Medication'];
 
 const getGroup = (id: string): string => {
-    if (id.startsWith('demographics.') || id.startsWith('contact.') || id === 'email' || id === 'password') return 'Your Details';
+    if (id.startsWith('demographics.') || id.startsWith('contact.') || id === 'email' || id === 'password' || id === 'notification_consent') return 'Your Details';
     if (id.startsWith('anthro.') || id === 'goal.range' || ['weight', 'height_ft', 'highest_weight'].includes(id) ) return 'Measurements';
     if (id.startsWith('safety.') || id.startsWith('medical.')) return 'Medical History';
     if (id.startsWith('goals.') || id.startsWith('motivation.')) return 'Goals & Motivation';
-    if (id.startsWith('meds.')) return 'Medication';
+    if (id.startsWith('meds.') || id.startsWith('selected_plan') || id === 'selected_medication' || id.startsWith('discount_')) return 'Medication';
     return 'Other';
 };
 
@@ -102,6 +115,8 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({
   goToScreen,
   showBack,
   onBack,
+  isSubmitting = false,
+  submissionError = null,
 }) => {
   const { title, help_text } = screen;
 
@@ -177,11 +192,15 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({
           );
         })}
       </div>
+      {submissionError && (
+        <div className="mt-6 text-red-600 text-sm text-center">{submissionError}</div>
+      )}
       <NavigationButtons
         showBack={showBack}
         onBack={onBack}
         onNext={onSubmit}
         nextLabel="Looks Good, Submit"
+        isNextLoading={isSubmitting}
       />
     </ScreenLayout>
   );

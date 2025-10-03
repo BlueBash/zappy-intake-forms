@@ -950,6 +950,13 @@ const formConfig: FormConfig = {
         { "value": "not_sure", "label": "I'm not sure, tell me more later" }
       ],
       "required": true,
+      "next": "treatment.medication_selection"
+    },
+    {
+      "id": "treatment.medication_selection",
+      "type": "content",
+      "headline": "Which medication sounds right for you?",
+      "body": "We'll show available medications based on your state so you can choose the best option.",
       "next": "contact.details"
     },
     {
@@ -1061,8 +1068,26 @@ const formConfig: FormConfig = {
             "pattern": "^\\d{5}(-\\d{4})?$",
             "error": "Please enter a valid ZIP code"
           }
+        },
+        {
+          "id": "notification_consent",
+          "type": "single_select",
+          "label": "May we send important updates by SMS and email?",
+          "help_text": "We’ll use this to share order updates, appointment reminders, and support messages.",
+          "required": true,
+          "options": [
+            { "value": "true", "label": "Yes, keep me updated by SMS and email" },
+            { "value": "false", "label": "No, email only please" }
+          ]
         }
       ],
+      "next": "treatment.plan_selection"
+    },
+    {
+      "id": "treatment.plan_selection",
+      "type": "content",
+      "headline": "Choose your treatment plan",
+      "body": "Select a plan and apply any discount code you may have.",
       "next": "consent.terms"
     },
     {
@@ -1207,7 +1232,11 @@ const formConfig: FormConfig = {
       "shipping_address",
       "shipping_city",
       "shipping_state",
-      "shipping_zip"
+      "shipping_zip",
+      "selected_medication",
+      "selected_plan_name",
+      "selected_plan_price_display",
+      "discount_code"
     ],
     "summary_template": "Patient: {email} | Phone: {phone} | State: {demographics.state} | Age: {calc.age} | Sex: {demographics.sex_birth} | BMI: {calc.bmi:.1f} | Goal: -{goal.range} lb to {goal_weight} lb | ED History: {safety.eating_disorder} | Mental Health: {medical.mental_health_diagnosis} | Suicide Risk: {medical.suicide_risk} | Diabetes: {medical.diabetes} | Current GLP-1: {meds.status} | Conditions: {medical.conditions} | Medications: {medical.medications} | Allergies: {medical.allergies} | Side Effect Management: {side_effects.management_interest}"
   }
