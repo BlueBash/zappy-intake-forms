@@ -6,7 +6,7 @@ import Select from '../ui/Select';
 import RegionDropdown from '../common/RegionDropdown';
 import { SingleSelectScreen as SingleSelectScreenType } from '../../types';
 
-const DROPDOWN_THRESHOLD = 8;
+const DROPDOWN_THRESHOLD = 15;
 
 const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack }) => {
   const { id, title, help_text, options = [], required, auto_advance = true, field_id } = screen;

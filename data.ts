@@ -1054,66 +1054,113 @@ const formConfig: FormConfig = {
     },
     {
       "id": "assess.supplements",
-      "type": "composite",
+      "type": "single_select",
       "phase": "assess_medical",
+      "field_id": "taking_supplements",
       "title": "Any vitamins or supplements?",
-      "fields": [
+      "auto_advance": true,
+      "required": true,
+      "options": [
+        { "value": "no", "label": "No" },
+        { "value": "yes", "label": "Yes" }
+      ],
+      "next_logic": [
         {
-          "id": "taking_supplements",
-          "type": "single_select",
-          "label": "",
-          "required": true,
-          "auto_advance": true,
-          "options": [
-            { "value": "no", "label": "No" },
-            { "value": "yes", "label": "Yes" }
-          ]
+          "if": "answer == 'yes'",
+          "go_to": "assess.supplements_detail"
         },
         {
-          "id": "supplements_detail",
-          "type": "text",
-          "label": "List them",
-          "placeholder": "Vitamin D 2000 IU daily, fish oil, multivitamin",
-          "multiline": true,
-          "rows": 4,
-          "required": true,
-          "conditional_display": {
-            "show_if": "taking_supplements == 'yes'"
-          }
+          "else": "assess.allergies"
         }
-      ],
+      ]
+    },
+    {
+      "id": "assess.supplements_detail",
+      "type": "text",
+      "phase": "assess_medical",
+      "title": "List your vitamins and supplements",
+      "placeholder": "Vitamin D 2000 IU daily, fish oil, multivitamin",
+      "multiline": true,
+      "rows": 4,
+      "required": true,
       "next": "assess.allergies"
     },
     {
       "id": "assess.allergies",
+      "type": "single_select",
+      "phase": "assess_medical",
+      "field_id": "has_allergies",
+      "title": "Any medication allergies?",
+      "auto_advance": true,
+      "required": true,
+      "options": [
+        { "value": "no", "label": "No" },
+        { "value": "yes", "label": "Yes" }
+      ],
+      "next_logic": [
+        {
+          "if": "answer == 'yes'",
+          "go_to": "assess.allergies_detail"
+        },
+        {
+          "else": "transition.treatment_intro"
+        }
+      ]
+    },
+    {
+      "id": "assess.allergies_detail",
+      "type": "text",
+      "phase": "assess_medical",
+      "title": "List them with reactions",
+      "placeholder": "Penicillin (rash), sulfa drugs (hives)",
+      "multiline": true,
+      "rows": 4,
+      "required": true,
+      "next": "assess.previous_attempts"
+    },
+    {
+      "id": "assess.previous_attempts",
       "type": "composite",
       "phase": "assess_medical",
-      "title": "Any medication allergies?",
+      "title": "Tell us a bit about your journey",
       "fields": [
         {
-          "id": "has_allergies",
+          "id": "activity_level",
           "type": "single_select",
-          "label": "",
+          "label": "How active are you right now?",
           "required": true,
-          "auto_advance": true,
           "options": [
-            { "value": "no", "label": "No" },
-            { "value": "yes", "label": "Yes" }
+            { "value": "sedentary", "label": "Mostly sedentary (desk work, little movement)" },
+            { "value": "light", "label": "Lightly active (some walking daily)" },
+            { "value": "moderate", "label": "Moderately active (regular walks or exercise)" },
+            { "value": "active", "label": "Active (consistent exercise routine)" },
+            { "value": "very_active", "label": "Very active (intensive daily training)" }
           ]
         },
         {
-          "id": "allergies_detail",
+          "id": "journey_notes",
           "type": "text",
-          "label": "List them with reactions",
-          "placeholder": "Penicillin (rash), sulfa drugs (hives)",
+          "label": "Anything else we should know? (optional)",
+          "help_text": "Share whatever feels important—we're listening and here to help.",
+          "placeholder": "Feel free to share what's on your mind...",
           "multiline": true,
-          "rows": 4,
-          "required": true,
-          "conditional_display": {
-            "show_if": "has_allergies == 'yes'"
-          }
+          "rows": 6,
+          "required": false
         }
       ],
+      "next": "treatment.side_effect_plan_interest"
+    },
+    {
+      "id": "treatment.side_effect_plan_interest",
+      "type": "single_select",
+      "phase": "assess_medical",
+      "title": "Would you be interested in a personalized plan that minimizes side effects?",
+      "auto_advance": true,
+      "options": [
+        { "value": "yes", "label": "Yes, definitely" },
+        { "value": "no", "label": "No, I'm not concerned" }
+      ],
+      "required": true,
       "next": "transition.treatment_intro"
     },
 
@@ -1133,26 +1180,20 @@ const formConfig: FormConfig = {
     },
     {
       "id": "treatment.glp1_experience",
-      "type": "composite",
+      "type": "single_select",
       "phase": "treatment",
+      "field_id": "glp1_status",
       "title": "First: have you tried GLP-1 medications before?",
       "help_text": "Things like Wegovy, Ozempic, Mounjaro, etc.",
-      "fields": [
-        {
-          "id": "glp1_status",
-          "type": "single_select",
-          "label": "",
-          "required": true,
-          "auto_advance": true,
-          "options": [
-            { "value": "never", "label": "No, never used" },
-            { "value": "yes", "label": "Yes, I've used them" }
-          ]
-        }
+      "auto_advance": true,
+      "required": true,
+      "options": [
+        { "value": "never", "label": "No, never used" },
+        { "value": "yes", "label": "Yes, I've used them" }
       ],
       "next_logic": [
         {
-          "if": "glp1_status == 'never'",
+          "if": "answer == 'never'",
           "go_to": "treatment.medication_preference"
         },
         {
@@ -1185,10 +1226,17 @@ const formConfig: FormConfig = {
         },
         {
           "id": "wegovy_dose",
-          "type": "text",
+          "type": "single_select",
           "label": "  ↳ What dose?",
-          "placeholder": "1 mg weekly, 2.4 mg weekly, etc.",
           "required": true,
+          "options": [
+            { "value": "0.25mg", "label": "0.25 mg weekly" },
+            { "value": "0.5mg", "label": "0.5 mg weekly" },
+            { "value": "1mg", "label": "1 mg weekly" },
+            { "value": "1.7mg", "label": "1.7 mg weekly" },
+            { "value": "2mg", "label": "2 mg weekly" },
+            { "value": "2.4mg", "label": "2.4 mg weekly" }
+          ],
           "conditional_display": {
             "show_if": "used_wegovy == true"
           }
@@ -1245,10 +1293,15 @@ const formConfig: FormConfig = {
         },
         {
           "id": "ozempic_dose",
-          "type": "text",
+          "type": "single_select",
           "label": "  ↳ What dose?",
-          "placeholder": "0.5 mg weekly, 1 mg weekly, etc.",
           "required": true,
+          "options": [
+            { "value": "0.25mg", "label": "0.25 mg weekly" },
+            { "value": "0.5mg", "label": "0.5 mg weekly" },
+            { "value": "1mg", "label": "1 mg weekly" },
+            { "value": "2mg", "label": "2 mg weekly" }
+          ],
           "conditional_display": {
             "show_if": "used_ozempic == true"
           }
@@ -1305,10 +1358,17 @@ const formConfig: FormConfig = {
         },
         {
           "id": "semaglutide_compound_dose",
-          "type": "text",
+          "type": "single_select",
           "label": "  ↳ What dose?",
-          "placeholder": "1 mg weekly, 2.5 mg weekly, etc.",
           "required": true,
+          "options": [
+            { "value": "0.25mg", "label": "0.25 mg weekly" },
+            { "value": "0.5mg", "label": "0.5 mg weekly" },
+            { "value": "1mg", "label": "1 mg weekly" },
+            { "value": "1.7mg", "label": "1.7 mg weekly" },
+            { "value": "2mg", "label": "2 mg weekly" },
+            { "value": "2.4mg", "label": "2.4 mg weekly" }
+          ],
           "conditional_display": {
             "show_if": "used_semaglutide_compound == true"
           }
@@ -1365,10 +1425,17 @@ const formConfig: FormConfig = {
         },
         {
           "id": "zepbound_dose",
-          "type": "text",
+          "type": "single_select",
           "label": "  ↳ What dose?",
-          "placeholder": "5 mg weekly, 10 mg weekly, etc.",
           "required": true,
+          "options": [
+            { "value": "2.5mg", "label": "2.5 mg weekly" },
+            { "value": "5mg", "label": "5 mg weekly" },
+            { "value": "7.5mg", "label": "7.5 mg weekly" },
+            { "value": "10mg", "label": "10 mg weekly" },
+            { "value": "12.5mg", "label": "12.5 mg weekly" },
+            { "value": "15mg", "label": "15 mg weekly" }
+          ],
           "conditional_display": {
             "show_if": "used_zepbound == true"
           }
@@ -1425,10 +1492,17 @@ const formConfig: FormConfig = {
         },
         {
           "id": "mounjaro_dose",
-          "type": "text",
+          "type": "single_select",
           "label": "  ↳ What dose?",
-          "placeholder": "5 mg weekly, 10 mg weekly, etc.",
           "required": true,
+          "options": [
+            { "value": "2.5mg", "label": "2.5 mg weekly" },
+            { "value": "5mg", "label": "5 mg weekly" },
+            { "value": "7.5mg", "label": "7.5 mg weekly" },
+            { "value": "10mg", "label": "10 mg weekly" },
+            { "value": "12.5mg", "label": "12.5 mg weekly" },
+            { "value": "15mg", "label": "15 mg weekly" }
+          ],
           "conditional_display": {
             "show_if": "used_mounjaro == true"
           }
@@ -1485,10 +1559,17 @@ const formConfig: FormConfig = {
         },
         {
           "id": "tirzepatide_compound_dose",
-          "type": "text",
+          "type": "single_select",
           "label": "  ↳ What dose?",
-          "placeholder": "5 mg weekly, 10 mg weekly, etc.",
           "required": true,
+          "options": [
+            { "value": "2.5mg", "label": "2.5 mg weekly" },
+            { "value": "5mg", "label": "5 mg weekly" },
+            { "value": "7.5mg", "label": "7.5 mg weekly" },
+            { "value": "10mg", "label": "10 mg weekly" },
+            { "value": "12.5mg", "label": "12.5 mg weekly" },
+            { "value": "15mg", "label": "15 mg weekly" }
+          ],
           "conditional_display": {
             "show_if": "used_tirzepatide_compound == true"
           }
@@ -1545,10 +1626,15 @@ const formConfig: FormConfig = {
         },
         {
           "id": "saxenda_dose",
-          "type": "text",
+          "type": "single_select",
           "label": "  ↳ What dose?",
-          "placeholder": "3 mg daily, etc.",
           "required": true,
+          "options": [
+            { "value": "0.6mg", "label": "0.6 mg daily" },
+            { "value": "1.2mg", "label": "1.2 mg daily" },
+            { "value": "1.8mg", "label": "1.8 mg daily" },
+            { "value": "3mg", "label": "3 mg daily" }
+          ],
           "conditional_display": {
             "show_if": "used_saxenda == true"
           }
@@ -1605,10 +1691,14 @@ const formConfig: FormConfig = {
         },
         {
           "id": "victoza_dose",
-          "type": "text",
+          "type": "single_select",
           "label": "  ↳ What dose?",
-          "placeholder": "1.2 mg daily, 1.8 mg daily, etc.",
           "required": true,
+          "options": [
+            { "value": "0.6mg", "label": "0.6 mg daily" },
+            { "value": "1.2mg", "label": "1.2 mg daily" },
+            { "value": "1.8mg", "label": "1.8 mg daily" }
+          ],
           "conditional_display": {
             "show_if": "used_victoza == true"
           }
@@ -1764,70 +1854,128 @@ const formConfig: FormConfig = {
         { "value": "not_sure", "label": "Not sure—want to discuss with provider" }
       ],
       "required": true,
-      "next": "treatment.side_effect_history"
-    },
-    {
-      "id": "treatment.side_effect_history",
-      "type": "multi_select",
-      "phase": "treatment",
-      "title": "Do you usually have side effects with medications?",
-      "help_text": "Select any that apply to your past experiences.",
-      "options": [
-        { "value": "nausea", "label": "Nausea or stomach upset" },
-        { "value": "constipation_diarrhea", "label": "Constipation or diarrhea" },
-        { "value": "fatigue", "label": "Fatigue or low energy" },
-        { "value": "headaches", "label": "Headaches" },
-        { "value": "insomnia", "label": "Difficulty sleeping" },
-        { "value": "none", "label": "None, I tolerate medications well" },
-        { "value": "other", "label": "Other" }
-      ],
-      "other_text_id": "side_effect_history_other",
-      "required": true,
-      "next": "treatment.side_effect_plan_interest"
-    },
-    {
-      "id": "treatment.side_effect_plan_interest",
-      "type": "single_select",
-      "phase": "treatment",
-      "title": "Would you be interested in a personalized plan that minimizes your side effects?",
-      "auto_advance": true,
-      "options": [
-        { "value": "yes", "label": "Yes, definitely" },
-        { "value": "maybe", "label": "Maybe, I'd like to learn more" },
-        { "value": "no", "label": "No, I'm not concerned" }
-      ],
-      "required": true,
-      "next": "assess.previous_attempts"
-    },
-    {
-      "id": "assess.previous_attempts",
-      "type": "composite",
-      "phase": "treatment",
-      "title": "Tell us a bit about your journey",
-      "fields": [
+      "next_logic": [
         {
-          "id": "activity_level",
-          "type": "single_select",
-          "label": "How active are you right now?",
-          "required": true,
-          "options": [
-            { "value": "sedentary", "label": "Mostly sedentary (desk work, little movement)" },
-            { "value": "light", "label": "Lightly active (some walking daily)" },
-            { "value": "moderate", "label": "Moderately active (regular walks or exercise)" },
-            { "value": "active", "label": "Active (consistent exercise routine)" },
-            { "value": "very_active", "label": "Very active (intensive daily training)" }
-          ]
+          "if": "answer contains 'semaglutide_brand'",
+          "go_to": "treatment.plan_selection.semaglutide_brand"
         },
         {
-          "id": "journey_notes",
-          "type": "text",
-          "label": "Anything else we should know? (optional)",
-          "help_text": "Share whatever feels important—we're listening and here to help.",
-          "placeholder": "Feel free to share what's on your mind...",
-          "multiline": true,
-          "rows": 6,
-          "required": false
+          "if": "answer contains 'semaglutide_compound'",
+          "go_to": "treatment.plan_selection.semaglutide_compound"
+        },
+        {
+          "if": "answer contains 'tirzepatide_brand'",
+          "go_to": "treatment.plan_selection.tirzepatide_brand"
+        },
+        {
+          "if": "answer contains 'tirzepatide_compound'",
+          "go_to": "treatment.plan_selection.tirzepatide_compound"
+        },
+        {
+          "else": "treatment.plan_selection.generic"
         }
+      ]
+    },
+    {
+      "id": "treatment.plan_selection.semaglutide_brand",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Choose Your Brand Semaglutide Plan",
+      "help_text": "Includes medication, provider consultations, and support.",
+      "auto_advance": true,
+      "options": [
+        { "value": "monthly", "label": "1 Month Plan - $999/mo" },
+        { "value": "3_month", "label": "3 Month Plan - $899/mo (Save 10%)" },
+        { "value": "6_month", "label": "6 Month Plan - $799/mo (Save 20%)" }
+      ],
+      "required": true,
+      "next": "logistics.discount_code"
+    },
+    {
+      "id": "treatment.plan_selection.semaglutide_compound",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Choose Your Compounded Semaglutide Plan",
+      "help_text": "Includes medication, provider consultations, and support.",
+      "auto_advance": true,
+      "options": [
+        { "value": "monthly", "label": "1 Month Plan - $299/mo" },
+        { "value": "3_month", "label": "3 Month Plan - $269/mo (Save 10%)" },
+        { "value": "6_month", "label": "6 Month Plan - $239/mo (Save 20%)" }
+      ],
+      "required": true,
+      "next": "logistics.discount_code"
+    },
+    {
+      "id": "treatment.plan_selection.tirzepatide_brand",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Choose Your Brand Tirzepatide Plan",
+      "help_text": "Includes medication, provider consultations, and support.",
+      "auto_advance": true,
+      "options": [
+        { "value": "monthly", "label": "1 Month Plan - $1299/mo" },
+        { "value": "3_month", "label": "3 Month Plan - $1169/mo (Save 10%)" },
+        { "value": "6_month", "label": "6 Month Plan - $1039/mo (Save 20%)" }
+      ],
+      "required": true,
+      "next": "logistics.discount_code"
+    },
+    {
+      "id": "treatment.plan_selection.tirzepatide_compound",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Choose Your Compounded Tirzepatide Plan",
+      "help_text": "Includes medication, provider consultations, and support.",
+      "auto_advance": true,
+      "options": [
+        { "value": "monthly", "label": "1 Month Plan - $499/mo" },
+        { "value": "3_month", "label": "3 Month Plan - $449/mo (Save 10%)" },
+        { "value": "6_month", "label": "6 Month Plan - $399/mo (Save 20%)" }
+      ],
+      "required": true,
+      "next": "logistics.discount_code"
+    },
+    {
+      "id": "treatment.plan_selection.generic",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Choose Your Plan",
+      "help_text": "Your provider will recommend the best medication for you. Prices shown are for compounded options.",
+      "auto_advance": true,
+      "options": [
+        { "value": "monthly", "label": "1 Month Plan - from $299/mo" },
+        { "value": "3_month", "label": "3 Month Plan - from $269/mo" },
+        { "value": "6_month", "label": "6 Month Plan - from $239/mo" }
+      ],
+      "required": true,
+      "next": "logistics.discount_code"
+    },
+    {
+      "id": "logistics.discount_code",
+      "type": "text",
+      "phase": "treatment",
+      "title": "Have a discount code?",
+      "help_text": "Enter it below to apply it to your plan (optional)",
+      "placeholder": "DISCOUNT20",
+      "required": false,
+      "next": "logistics.pharmacy_selection"
+    },
+    {
+      "id": "logistics.pharmacy_selection",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Choose your preferred pharmacy",
+      "help_text": "We'll send your prescription here",
+      "required": true,
+      "options": [
+        { "value": "mail_order", "label": "Mail order pharmacy (delivered to your door)" },
+        { "value": "cvs", "label": "CVS Pharmacy" },
+        { "value": "walgreens", "label": "Walgreens" },
+        { "value": "walmart", "label": "Walmart Pharmacy" },
+        { "value": "kroger", "label": "Kroger Pharmacy" },
+        { "value": "rite_aid", "label": "Rite Aid" },
+        { "value": "other", "label": "Other local pharmacy" }
       ],
       "next": "transition.final_section"
     },
