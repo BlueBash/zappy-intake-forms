@@ -31,6 +31,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <select
             id={id}
             ref={ref}
+            aria-required={props.required}
             aria-invalid={!!error}
             aria-describedby={error ? errorId : undefined}
             className={`

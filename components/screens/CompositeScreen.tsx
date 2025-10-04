@@ -1,22 +1,32 @@
-import React, { useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ScreenProps } from './common';
-import { CompositeScreen as CompositeScreenType, Field, FieldOrFieldGroup, SelectField } from '../../types';
+import { CompositeScreen as CompositeScreenType, Field, FieldOrFieldGroup, SelectField, TextField, ConsentItemField, Link, MedicationDetailsGroupField, CheckboxField } from '../../types';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
+import Checkbox from '../ui/Checkbox';
 import CheckboxGroup from '../common/CheckboxGroup';
-import RegionDropdown from '../common/RegionDropdown';
+import SingleSelectButtonGroup from '../common/SingleSelectButtonGroup';
+import { BMIGauge } from '../ui/Illustrations';
 
 const checkCondition = (condition: string, answers: Record<string, any>): boolean => {
-  const match = condition.match(/(\w+)\s*(==|!=)\s*['"]?([\w\s/.-]+)['"]?/);
+  const containsMatch = condition.match(/(\w+)\s+contains\s+['"]?([\w\s/.-]+)['"]?/);
+  if (containsMatch) {
+      const [, fieldId, value] = containsMatch;
+      const fieldValue = answers[fieldId];
+      return Array.isArray(fieldValue) && fieldValue.includes(value);
+  }
+
+  const match = condition.match(/([\w.]+)\s*(==|!=)\s*['"]?([\w\s/.-]+)['"]?/);
   if (!match) return true;
 
   const [, fieldId, operator, value] = match;
   const fieldValue = answers[fieldId];
 
-  if (operator === '==') return fieldValue === value;
-  if (operator === '!=') return fieldValue !== value;
+  if (operator === '==') return String(fieldValue) === value;
+  if (operator === '!=') return String(fieldValue) !== value;
   return true;
 };
 
@@ -33,32 +43,252 @@ const shouldShowField = (field: Field, answers: Record<string, any>): boolean =>
   return checkCondition(show_if, answers);
 };
 
-const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack }) => {
-  const { title, help_text, fields, footer_note } = screen;
+const applyPhoneMask = (value: string): string => {
+    if (!value) return '';
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+    const length = digitsOnly.length;
 
-  const flattenFields = (fields: FieldOrFieldGroup[]): Field[] => {
-    return fields.flat();
+    if (length === 0) return '';
+    if (length <= 3) return `(${digitsOnly}`;
+    if (length <= 6) return `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3)}`;
+    return `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6, 10)}`;
+};
+
+const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, headerSize, calculations = {} }) => {
+  const { title, help_text, fields, footer_note, validation, post_screen_note } = screen;
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+
+  const allFields = useMemo(() => {
+    const flattened: Field[] = [];
+    const recurse = (items: FieldOrFieldGroup[]) => {
+      for (const item of items) {
+        if (Array.isArray(item)) {
+          recurse(item);
+        } else {
+          flattened.push(item);
+          if (item.type === 'medication_details_group') {
+            recurse((item as MedicationDetailsGroupField).fields);
+          }
+        }
+      }
+    };
+    recurse(fields);
+    return flattened;
+  }, [fields]);
+  
+  const validateField = (field: Field, value: any, currentAnswers: Record<string, any>): string | undefined => {
+    if (!field) return undefined;
+
+    if (field.type === 'consent_item') {
+      if (field.required && value !== true) {
+        return 'This consent is required to continue.';
+      }
+      return undefined;
+    }
+
+    if (field.required && (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0))) {
+      return 'This field is required.';
+    }
+
+    if (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+      return undefined;
+    }
+
+    if (field.validation) {
+      if (field.validation.pattern && typeof value === 'string') {
+        const regex = new RegExp(field.validation.pattern);
+        if (!regex.test(value)) {
+          return field.validation.error;
+        }
+      }
+      if (field.validation.matches) {
+        if (value !== currentAnswers[field.validation.matches]) {
+          return field.validation.error;
+        }
+      }
+      if (field.type === 'number') {
+        const numValue = parseFloat(value);
+        if (isNaN(numValue)) { return 'Please enter a valid number.'; }
+
+        if (field.validation.min !== undefined && numValue < field.validation.min) {
+          return field.validation.error;
+        }
+        if (field.validation.max !== undefined && numValue > field.validation.max) {
+          return field.validation.error;
+        }
+      }
+
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        if (field.validation.greater_than_field) {
+          const otherFieldId = field.validation.greater_than_field.field;
+          const otherValueStr = currentAnswers[otherFieldId];
+          if (otherValueStr !== undefined && otherValueStr !== null && otherValueStr !== '') {
+            const otherValue = parseFloat(otherValueStr);
+            if (!isNaN(otherValue) && numValue <= otherValue) {
+              return field.validation.greater_than_field.error;
+            }
+          }
+        }
+        if (field.validation.less_than_field) {
+          const otherFieldId = field.validation.less_than_field.field;
+          const otherValueStr = currentAnswers[otherFieldId];
+          if (otherValueStr !== undefined && otherValueStr !== null && otherValueStr !== '') {
+            const otherValue = parseFloat(otherValueStr);
+            if (!isNaN(otherValue) && numValue >= otherValue) {
+              return field.validation.less_than_field.error;
+            }
+          }
+        }
+      }
+    }
+    
+    if (field.type === 'number' && (!field.validation || (field.validation.min === undefined && field.validation.max === undefined))) {
+      const numValue = parseFloat(value);
+      if (isNaN(numValue)) { return 'Please enter a valid number.'; }
+      
+      const min = 'min' in field ? field.min : undefined;
+      const max = 'max' in field ? field.max : undefined;
+
+      if (min !== undefined && numValue < min) {
+        return `Value must be at least ${min}.`;
+      }
+      if (max !== undefined && numValue > max) {
+        return `Value must be no more than ${max}.`;
+      }
+    }
+
+    return undefined;
   };
 
-  const allFields = flattenFields(fields);
-  const visibleFields = allFields.filter(field => shouldShowField(field, answers));
-
-  useEffect(() => {
-    const initialDemographicState = answers['demographics.state'];
-    if (initialDemographicState && !answers['shipping_state']) {
-      updateAnswer('shipping_state', initialDemographicState);
+  const handleBlur = (fieldId: string) => {
+    const field = allFields.find(f => f.id === fieldId);
+    if (field) {
+      const error = validateField(field, answers[fieldId], answers);
+      setErrors(prev => ({ ...prev, [fieldId]: error }));
     }
-  }, [answers, updateAnswer]);
+  };
+
+  const handleSubmit = () => {
+    const newErrors: Record<string, string | undefined> = {};
+    let allValid = true;
+
+    const validateVisibleFields = (fieldsToValidate: FieldOrFieldGroup[]) => {
+      for (const fieldOrGroup of fieldsToValidate) {
+        if (Array.isArray(fieldOrGroup)) {
+          validateVisibleFields(fieldOrGroup);
+        } else {
+          const field = fieldOrGroup;
+          if (shouldShowField(field, answers)) {
+            if (field.type === 'medication_details_group') {
+              validateVisibleFields((field as MedicationDetailsGroupField).fields);
+            } else {
+              const error = validateField(field, answers[field.id], answers);
+              if (error) {
+                allValid = false;
+                newErrors[field.id] = error;
+              }
+            }
+          }
+        }
+      }
+    };
+    validateVisibleFields(fields);
+
+    if (validation?.max_currently_taking) {
+      const rule = validation.max_currently_taking;
+      const currentlyTakingCount = rule.fields.filter(fieldId => answers[fieldId] === 'yes').length;
+      
+      if (currentlyTakingCount > rule.limit) {
+        allValid = false;
+        rule.fields.forEach(fieldId => {
+          if (answers[fieldId] === 'yes') {
+            newErrors[fieldId] = rule.error;
+          }
+        });
+      }
+    }
+
+    setErrors(newErrors);
+
+    if (allValid) {
+      onSubmit();
+    }
+  };
+
+  const isComplete = useMemo(() => {
+    let complete = true;
+    const checkCompletionRecursively = (fieldsToCheck: FieldOrFieldGroup[]) => {
+      for (const fieldOrGroup of fieldsToCheck) {
+        if (!complete) return;
+
+        if (Array.isArray(fieldOrGroup)) {
+          checkCompletionRecursively(fieldOrGroup);
+        } else {
+          const field = fieldOrGroup;
+          if (shouldShowField(field, answers)) {
+            if (field.type === 'medication_details_group') {
+              checkCompletionRecursively((field as MedicationDetailsGroupField).fields);
+            } else if (field.required) {
+              const value = answers[field.id];
+              if (field.type === 'consent_item') {
+                if (value !== true) complete = false;
+              } else if (Array.isArray(value)) {
+                if (value.length === 0) complete = false;
+              } else if (value === undefined || value === null || value === '') {
+                complete = false;
+              }
+            }
+          }
+        }
+      }
+    };
+    checkCompletionRecursively(fields);
+    return complete;
+  }, [fields, answers]);
   
-  const isComplete = visibleFields
-    .filter(field => field.required)
-    .every(field => {
-      const value = answers[field.id];
-      if (Array.isArray(value)) return value.length > 0;
-      return value !== undefined && value !== null && value !== '';
+  const renderConsentLabel = (item: { label?: string, links?: Link[] }) => {
+    if (!item.label) {
+      return null;
+    }
+    if (!item.links || item.links.length === 0) {
+      return item.label;
+    }
+  
+    let label: (string | React.ReactNode)[] = [item.label];
+    item.links.forEach((link, i) => {
+      const newLabel: (string | React.ReactNode)[] = [];
+      label.forEach(part => {
+        if (typeof part !== 'string') {
+          newLabel.push(part);
+          return;
+        }
+        const split = part.split(link.label);
+        split.forEach((text, j) => {
+          newLabel.push(text);
+          if (j < split.length - 1) {
+            newLabel.push(
+              <a 
+                key={`${link.url}-${i}-${j}`} 
+                href={link.url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-primary font-semibold hover:underline" 
+                onClick={e => e.stopPropagation()}
+              >
+                {link.label}
+              </a>
+            );
+          }
+        });
+      });
+      label = newLabel;
     });
   
-  const renderField = (field: Field) => {
+    return <span>{label}</span>;
+  };
+
+  const renderField = (field: Field): React.ReactNode => {
     if (!shouldShowField(field, answers)) {
       return null;
     }
@@ -67,16 +297,34 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
     switch (field.type) {
       case 'text':
       case 'email':
-      case 'password':
-        const isMultiline = 'multiline' in field && field.multiline;
-        return isMultiline ? (
-          <textarea
-            id={field.id}
-            value={value || ''}
-            onChange={(e) => updateAnswer(field.id, e.target.value)}
-            placeholder={field.placeholder}
-            className="block w-full rounded-lg transition-all duration-200 py-[18px] px-5 text-[1.0625rem] text-stone-900 border-2 border-stone-200 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none"
-          />
+      case 'password': {
+        const textField = field as TextField;
+        const isPhoneMask = textField.mask === '(###) ###-####';
+
+        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const val = e.target.value;
+            if (isPhoneMask) {
+                updateAnswer(field.id, applyPhoneMask(val));
+            } else {
+                updateAnswer(field.id, val);
+            }
+        };
+
+        return textField.multiline ? (
+          <div>
+            {field.label && <label htmlFor={field.id} className="block text-base font-bold mb-2 text-stone-800 tracking-tight">{field.label}</label>}
+            {field.help_text && <p className="text-sm -mt-2 mb-3 text-stone-600">{field.help_text}</p>}
+            <textarea
+              id={field.id}
+              value={value || ''}
+              onChange={(e) => updateAnswer(field.id, e.target.value)}
+              onBlur={() => handleBlur(field.id)}
+              placeholder={field.placeholder}
+              rows={textField.rows || 4}
+              className={`block w-full rounded-lg transition-all duration-200 py-[18px] px-5 text-[1.0625rem] text-stone-900 border-2 ${errors[field.id] ? 'border-red-500' : 'border-stone-200'} focus:border-primary focus:ring-4 focus:ring-primary-200/75 focus:outline-none`}
+            />
+            {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
+          </div>
         ) : (
           <Input
             id={field.id}
@@ -85,9 +333,13 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
             help_text={field.help_text}
             placeholder={field.placeholder}
             value={value || ''}
-            onChange={(e) => updateAnswer(field.id, e.target.value)}
+            onChange={handleChange}
+            onBlur={() => handleBlur(field.id)}
+            error={errors[field.id]}
+            maxLength={isPhoneMask ? 14 : undefined}
           />
         );
+      }
       case 'number':
         return (
           <Input
@@ -104,40 +356,53 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                     updateAnswer(field.id, e.target.value);
                 }
             }}
+            onBlur={() => handleBlur(field.id)}
+            error={errors[field.id]}
           />
         );
       case 'single_select': {
         const selectField = field as SelectField;
-        if (field.id === 'shipping_state') {
-          return (
-            <div className="text-left">
-              <label htmlFor={field.id} className="block text-sm font-medium text-stone-700 mb-2">
-                {field.label}
-              </label>
-              {field.help_text && (
-                <p className="text-sm text-stone-500 mb-2">{field.help_text}</p>
-              )}
-              <RegionDropdown
-                value={value || ''}
-                onChange={(stateCode) => updateAnswer(field.id, stateCode)}
-                placeholder={field.placeholder || 'Select state'}
-              />
-            </div>
-          );
-        }
         const options = selectField.conditional_options 
             ? (selectField.conditional_options.options_map[answers[selectField.conditional_options.based_on]] || [])
             : selectField.options;
+        
+        const renderAsDropdown = field.id === 'state';
+        
+        if (renderAsDropdown) {
+            return (
+                <Select
+                    id={field.id}
+                    label={field.label}
+                    help_text={field.help_text}
+                    options={options}
+                    value={value || ''}
+                    onChange={(e) => updateAnswer(field.id, e.target.value)}
+                    onBlur={() => handleBlur(field.id)}
+                    error={errors[field.id]}
+                />
+            );
+        }
+        
         return (
-          <Select
-            id={field.id}
-            label={field.label}
-            help_text={field.help_text}
-            options={options}
-            value={value || ''}
-            onChange={(e) => updateAnswer(field.id, e.target.value)}
-          />
-        );
+            <div>
+                {field.label && (
+                    <label className="block text-base font-bold mb-2 text-stone-800 tracking-tight">
+                        {field.label}
+                    </label>
+                )}
+                {field.help_text && (
+                    <p className="text-sm -mt-2 mb-3 text-stone-600">
+                        {field.help_text}
+                    </p>
+                )}
+                <SingleSelectButtonGroup
+                    options={options}
+                    selectedValue={value}
+                    onSelect={(val) => updateAnswer(field.id, val)}
+                />
+                {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
+            </div>
+        )
       }
       case 'multi_select': {
           const multiSelectField = field as SelectField;
@@ -152,13 +417,69 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
             />
           )
       }
+      case 'medication_details_group': {
+        const groupField = field as MedicationDetailsGroupField;
+        return (
+          <div className="p-6 border-2 border-stone-100 rounded-2xl space-y-6 bg-stone-50/75 my-4">
+            <h3 className="font-bold text-lg text-stone-800 tracking-tight">{groupField.label}</h3>
+            {groupField.fields.map((subFieldOrGroup, index) => {
+              if (Array.isArray(subFieldOrGroup)) {
+                return (
+                  <div key={`sub-group-${index}`} className="grid grid-cols-2 gap-4">
+                    {subFieldOrGroup.map(subField => (
+                      <div key={subField.id}>{renderField(subField)}</div>
+                    ))}
+                  </div>
+                );
+              }
+              return <div key={subFieldOrGroup.id}>{renderField(subFieldOrGroup)}</div>;
+            })}
+          </div>
+        );
+      }
+      case 'consent_item': {
+        const consentField = field as ConsentItemField;
+        return (
+          <div 
+            className="p-5 bg-white border-2 border-stone-200 rounded-2xl shadow-sm cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => updateAnswer(consentField.id, !value)}
+          >
+            <Checkbox
+              id={consentField.id}
+              label={renderConsentLabel(consentField)}
+              checked={!!value}
+              onChange={(e) => updateAnswer(consentField.id, e.target.checked)}
+            />
+            {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
+          </div>
+        );
+      }
+      case 'checkbox': {
+        const checkboxField = field as CheckboxField;
+        return (
+          <div 
+            className="p-5 bg-white border-2 border-stone-200 rounded-2xl shadow-sm cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => updateAnswer(checkboxField.id, !value)}
+          >
+            <Checkbox
+              id={checkboxField.id}
+              label={checkboxField.label || ''}
+              checked={!!value}
+              onChange={(e) => updateAnswer(checkboxField.id, e.target.checked)}
+            />
+            {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
+          </div>
+        );
+      }
       default:
         return <div>Unsupported field type: {(field as any).type}</div>;
     }
   };
 
+  const showBmiGauge = screen.id === 'assess.body_measurements' && calculations && 'bmi' in calculations && calculations.bmi && isComplete;
+
   return (
-    <ScreenLayout title={title} helpText={help_text}>
+    <ScreenLayout title={title} helpText={help_text} headerSize={headerSize}>
       <div className="space-y-6 text-left">
         {fields.map((fieldOrGroup, index) => {
           if (Array.isArray(fieldOrGroup)) {
@@ -169,8 +490,9 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                 ))}
               </div>
             );
+          } else {
+            return <div key={fieldOrGroup.id}>{renderField(fieldOrGroup)}</div>;
           }
-          return <div key={fieldOrGroup.id}>{renderField(fieldOrGroup)}</div>;
         })}
       </div>
 
@@ -180,11 +502,40 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         </p>
       )}
 
+      <AnimatePresence>
+        {showBmiGauge && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            className="mt-8 flex justify-center"
+          >
+            <BMIGauge bmi={calculations.bmi as number} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isComplete && post_screen_note && !showBmiGauge && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="mt-8 text-center"
+          >
+            <div className="inline-block bg-emerald-50 text-emerald-800 font-semibold px-5 py-2.5 rounded-full text-sm tracking-wide">
+              {post_screen_note}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <NavigationButtons
         showBack={showBack}
         onBack={onBack}
-        onNext={onSubmit}
+        onNext={handleSubmit}
         isNextDisabled={!isComplete}
+        nextButtonType="button"
       />
     </ScreenLayout>
   );

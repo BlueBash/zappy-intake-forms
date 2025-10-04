@@ -2,65 +2,73 @@ import { FormConfig } from './types';
 
 const formConfig: FormConfig = {
   "meta": {
-    "product": "Hybrid Weight-Loss Program",
-    "form_name": "Optimized Medical Intake - Compliance & Conversion",
-    "version": "4.0.0",
+    "product": "Physician-Guided Weight Management",
+    "form_name": "Health Assessment & Eligibility",
+    "version": "5.5.0",
     "language": "en-US"
   },
   "settings": {
     "theme": {
-      "primary_hex": "#ef5466",
-      "accent_hex": "#ff6b7a",
+      "primary_hex": "#10b981",
+      "accent_hex": "#34d399",
       "secondary_hex": "#78716c",
       "font_stack": "\"Nunito Sans\", sans-serif",
-      "background_hex": "#fafaf9"
+      "background_hex": "#fafaf8",
+      "selection_states": {
+        "hover_hex": "#d1fae5",
+        "active_hex": "#10b981",
+        "selected_hex": "#059669",
+        "border_selected_hex": "#047857"
+      },
+      "phase_colors": {
+        "qualify": "#10b981",
+        "inspire": "#f59e0b",
+        "assess_safety": "#dc2626",
+        "assess_medical": "#64748b",
+        "treatment": "#8b5cf6"
+      }
     },
     "progress_bar": true,
     "show_back_button": true,
-    "autosave_ms": 800
+    "autosave_ms": 800,
+    "show_phase_indicator": true
   },
   "screens": [
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 1: QUICK QUALIFY
+    // ═══════════════════════════════════════════════════════════
     {
       "id": "welcome",
       "type": "content",
-      "headline": "Your weight loss journey starts here.",
-      "body": "Answer a few questions so our medical team can create a plan that actually works for your body and your life.",
+      "phase": "qualify",
+      "headline": "Welcome! Let's find your perfect plan.",
+      "body": "We'll ask about your goals and health to make sure our program works for you. Takes about 10 minutes.",
       "cta_primary": {
-        "label": "Get Started"
+        "label": "Let's Begin"
       },
       "next": "goal.range"
     },
     {
       "id": "goal.range",
       "type": "single_select",
-      "title": "How much weight are you looking to lose?",
-      "help_text": "Just an estimate is fine.",
-      "auto_advance": false,
+      "phase": "qualify",
+      "title": "How much weight would you like to lose?",
+      "auto_advance": true,
       "options": [
         { "value": "1-15", "label": "1–15 lb" },
         { "value": "16-30", "label": "16–30 lb" },
         { "value": "31-50", "label": "31–50 lb" },
         { "value": "50+", "label": "More than 50 lb" },
-        { "value": "not_sure", "label": "I'm not sure yet" }
+        { "value": "not_sure", "label": "Still figuring it out" }
       ],
       "required": true,
-      "next": "conversion.stat_screen"
-    },
-    {
-      "id": "conversion.stat_screen",
-      "type": "content",
-      "headline": "You're not alone in this.",
-      "body": "Most people struggle with weight loss on their own. Medical support makes a real difference—our members see significantly better results than with diet and exercise alone.",
-      "cta_primary": {
-        "label": "Continue"
-      },
       "next": "demographics.state"
     },
     {
       "id": "demographics.state",
       "type": "single_select",
+      "phase": "qualify",
       "title": "Which state do you live in?",
-      "help_text": "We need to make sure we're licensed to provide care in your state.",
       "auto_advance": false,
       "options": [
         { "value": "AL", "label": "Alabama" },
@@ -121,131 +129,138 @@ const formConfig: FormConfig = {
     {
       "id": "demographics.dob",
       "type": "text",
+      "phase": "qualify",
       "title": "What's your date of birth?",
-      "help_text": "We need this to make sure you're eligible and to calculate safe dosing.",
       "placeholder": "MM/DD/YYYY",
       "mask": "##/##/####",
+      "required": true,
       "validation": {
         "pattern": "^(0[1-9]|1[0-2])\\/(0[1-9]|[12][0-9]|3[01])\\/(19|20)\\d{2}$",
-        "error": "Please enter a valid date in MM/DD/YYYY format."
+        "error": "Enter date as MM/DD/YYYY",
+        "min_age": 12,
+        "max_age": 90
       },
-      "required": true,
-      "next_logic": [
-        {
-          "if": "calc.age < 18",
-          "go_to": "demographics.parental_consent"
-        },
-        {
-          "else": "conversion.social_proof"
-        }
-      ],
       "calculations": [
         {
           "id": "age",
-          "formula": "(new Date() - new Date(demographics.dob)) / (365.25 * 24 * 60 * 60 * 1000)"
+          "formula": "AGE(demographics.dob)"
+        }
+      ],
+      "next_logic": [
+        {
+          "if": "calc.age < 12",
+          "go_to": "qualify.age_exclusion"
+        },
+        {
+          "if": "calc.age > 90",
+          "go_to": "qualify.age_exclusion"
+        },
+        {
+          "if": "calc.age < 18",
+          "go_to": "qualify.parental_consent"
+        },
+        {
+          "else": "assess.body_measurements"
         }
       ]
     },
     {
-      "id": "demographics.parental_consent",
+      "id": "qualify.age_exclusion",
+      "type": "terminal",
+      "phase": "qualify",
+      "status": "warning",
+      "title": "Thanks for your interest",
+      "body": "Our program is designed for ages 12-90, where GLP-1s are FDA-approved and thoroughly studied.\n\nYour doctor can help you find weight management options that are right for you. We appreciate you taking the time today.",
+      "cta_primary": {
+        "label": "Learn More"
+      }
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // PARENTAL CONSENT BRANCH
+    // ═══════════════════════════════════════════════════════════
+    {
+      "id": "qualify.parental_consent",
       "type": "composite",
-      "title": "We'll need a parent or guardian's permission",
-      "help_text": "Since you're under 18, we need consent from a parent or legal guardian before we can move forward.",
+      "phase": "qualify",
+      "title": "We'll need a parent or guardian to consent",
       "fields": [
         {
           "id": "parent_name",
           "type": "text",
-          "label": "Parent or guardian's name",
-          "required": true
-        },
-        {
-          "id": "parent_email",
-          "type": "email",
-          "label": "Their email",
-          "placeholder": "parent@example.com",
-          "required": true
-        },
-        {
-          "id": "parent_phone",
-          "type": "text",
-          "label": "Their phone number",
-          "placeholder": "(555) 123-4567",
-          "required": true
-        }
-      ],
-      "footer_note": "We'll email them with the consent form before taking any next steps.",
-      "next": "conversion.social_proof"
-    },
-    {
-      "id": "conversion.social_proof",
-      "type": "content",
-      "headline": "See what's possible with the right support",
-      "body": "Our members achieve real, lasting results with physician-guided plans. You don't have to figure this out alone.",
-      "cta_primary": {
-        "label": "Continue"
-      },
-      "next": "contact.email"
-    },
-    {
-      "id": "contact.email",
-      "type": "composite",
-      "title": "Create your account",
-      "help_text": "We'll send your treatment plan and all updates here.",
-      "fields": [
-        {
-          "id": "email",
-          "type": "email",
-          "label": "Email address",
-          "placeholder": "you@example.com",
-          "required": true
-        },
-        {
-          "id": "password",
-          "type": "password",
-          "label": "Password",
-          "placeholder": "At least 8 characters",
+          "label": "Parent or guardian's full name",
           "required": true,
           "validation": {
-            "pattern": "^.{8,}$",
-            "error": "Password must be at least 8 characters"
+            "pattern": "^[a-zA-Z\\s\\-']{2,100}$",
+            "error": "Enter a valid name"
           }
+        },
+        {
+          "id": "parental_consent_agreement",
+          "type": "consent_item",
+          "label": "I'm the parent or legal guardian and I consent to this program. I've read the Terms of Service, Privacy Policy, and Telehealth Consent.",
+          "required": true,
+          "links": [
+            { "label": "Terms of Service", "url": "https://hybrid.com/terms" },
+            { "label": "Privacy Policy", "url": "https://hybrid.com/privacy" },
+            { "label": "Telehealth Consent", "url": "https://hybrid.com/telehealth" }
+          ]
         }
       ],
-      "footer_note": "Your health information is encrypted and secure.",
-      "next": "transition.health_history"
+      "next": "transition.parent_consent_complete"
     },
     {
-      "id": "transition.health_history",
+      "id": "transition.parent_consent_complete",
       "type": "content",
-      "headline": "Now let's talk about your health",
-      "body": "We'll ask about your medical history so we can make sure any treatment we recommend is safe for you. Everything you share stays confidential.",
-      "image": "/images/transition-health-history.jpg",
+      "phase": "qualify",
+      "headline": "Perfect—thank you!",
+      "body": "Now let's get some baseline health information to understand where you're starting from.",
       "cta_primary": {
         "label": "Continue"
       },
-      "next": "anthro.body"
+      "next": "assess.body_measurements"
     },
+
+    // ═══════════════════════════════════════════════════════════
+    // BODY DATA & GOALS
+    // ═══════════════════════════════════════════════════════════
     {
-      "id": "anthro.body",
+      "id": "assess.body_measurements",
       "type": "composite",
-      "title": "Let's start with your measurements",
+      "phase": "qualify",
+      "title": "What's your height and weight?",
+      "post_screen_note": "Thanks for sharing. This helps us understand your starting point.",
       "fields": [
         [
           {
             "id": "height_ft",
             "type": "number",
-            "label": "Height (ft)",
+            "label": "Height (feet)",
             "required": true,
             "min": 3,
-            "max": 8
+            "max": 8,
+            "width": "half",
+            "help_text": "Your best estimate is fine",
+            "validation": {
+              "min": 3,
+              "max": 8,
+              "error": "Enter height between 3-8 feet"
+            }
           },
           {
             "id": "height_in",
             "type": "number",
-            "label": "(in)",
+            "label": "Height (inches)",
             "required": true,
             "min": 0,
-            "max": 11
+            "max": 11,
+            "width": "half",
+            "help_text": "Your best estimate is fine",
+            "validation": {
+              "min": 0,
+              "max": 11,
+              "error": "Enter inches between 0-11"
+            }
           }
         ],
         {
@@ -254,193 +269,238 @@ const formConfig: FormConfig = {
           "label": "Current weight (lb)",
           "min": 70,
           "max": 700,
-          "required": true
+          "required": true,
+          "validation": {
+            "min": 70,
+            "max": 700,
+            "error": "Enter weight between 70-700 lbs",
+            "less_than_field": {
+              "field": "highest_weight",
+              "error": "Current weight cannot be higher than your highest weight"
+            }
+          }
         },
         {
           "id": "highest_weight",
           "type": "number",
-          "label": "Highest weight you've been (lb)",
-          "help_text": "Your weight history helps us choose the right approach",
+          "label": "Highest adult weight (lb)",
+          "help_text": "Helps us find the best approach for you",
           "min": 70,
           "max": 700,
-          "required": true
+          "required": true,
+          "validation": {
+            "min": 70,
+            "max": 700,
+            "error": "Enter weight between 70-700 lbs",
+            "greater_than_field": {
+              "field": "weight",
+              "error": "Highest weight must be greater than or equal to current weight"
+            }
+          }
         }
       ],
       "calculations": [
         {
           "id": "bmi",
-          "formula": "703*weight/((height_ft*12+height_in)**2)"
+          "formula": "703 * weight / ((height_ft * 12 + height_in) ** 2)"
         }
       ],
       "next_logic": [
         {
-          "if": "calc.bmi < 18.5",
-          "go_to": "safety.underweight"
+          "if": "calc.bmi < 19",
+          "go_to": "assess.bmi_too_low"
         },
         {
           "if": "calc.bmi < 27",
-          "go_to": "safety.low_bmi"
+          "go_to": "assess.bmi_borderline"
         },
         {
-          "else": "demographics.complete"
+          "else": "assess.goal_weight"
         }
       ]
     },
     {
-      "id": "safety.underweight",
-      "type": "content",
+      "id": "assess.bmi_too_low",
+      "type": "terminal",
+      "phase": "assess_safety",
       "status": "warning",
-      "headline": "You're already at a healthy weight",
-      "body": "Based on your measurements, weight loss medication isn't recommended. If you'd like, we can provide guidance on healthy nutrition and fitness instead.",
+      "title": "Your weight is in a healthy range",
+      "body": "Your BMI is ${Math.round(calc.bmi * 10) / 10}. GLP-1 medications are approved for BMI 27+ (with health conditions) or 30+.\n\nIf you have concerns about your weight, your doctor can help you explore safe approaches.",
       "cta_primary": {
-        "label": "Continue"
-      },
-      "next": "demographics.complete"
+        "label": "Learn More"
+      }
     },
     {
-      "id": "safety.low_bmi",
+      "id": "assess.bmi_borderline",
       "type": "content",
-      "status": "warning",
-      "headline": "We'll need to review your full health picture",
-      "body": "FDA guidelines typically recommend GLP-1 medications for people with a BMI of 27 or higher (if they have weight-related health conditions) or 30 or higher (without other conditions). Our medical team will look at your complete health profile to figure out the best path forward.",
+      "phase": "qualify",
+      "status": "info",
+      "headline": "We'll look at your full health picture",
+      "body": "Your BMI is ${Math.round(calc.bmi * 10) / 10}. GLP-1 medications are typically recommended for:\n• BMI 30 or higher, or\n• BMI 27+ with weight-related health conditions (diabetes, high blood pressure, sleep apnea)\n\nOur provider will review your complete profile to see if medication makes sense for you.",
       "cta_primary": {
-        "label": "Continue"
+        "label": "Got It"
       },
-      "next": "demographics.complete"
+      "next": "assess.goal_weight"
     },
     {
-      "id": "demographics.complete",
-      "type": "composite",
-      "title": "A few more details",
-      "fields": [
-        {
-          "id": "sex_birth",
-          "type": "single_select",
-          "label": "Sex assigned at birth",
-          "help_text": "This affects how your body processes medications",
-          "required": true,
-          "options": [
-            { "value": "male", "label": "Male" },
-            { "value": "female", "label": "Female" },
-            { "value": "intersex", "label": "Intersex" },
-            { "value": "no_say", "label": "Prefer not to say" }
-          ]
-        },
-        {
-          "id": "ethnicity",
-          "type": "multi_select",
-          "label": "Ethnicity (optional)",
-          "help_text": "Some medications work differently across ethnic backgrounds",
-          "options": [
-            { "value": "asian", "label": "Asian" },
-            { "value": "black", "label": "Black or African American" },
-            { "value": "hispanic", "label": "Hispanic or Latino" },
-            { "value": "native_american", "label": "Native American" },
-            { "value": "pacific_islander", "label": "Pacific Islander" },
-            { "value": "white", "label": "White or Caucasian" },
-            { "value": "other", "label": "Other" }
-          ]
-        }
-      ],
-      "next": "transition.safety_screening"
-    },
-    {
-      "id": "transition.safety_screening",
-      "type": "content",
-      "headline": "Now for some health and safety questions",
-      "body": "We're about to ask about some sensitive topics. Everything you share is private and only seen by licensed medical providers. These questions help us keep you safe.",
-      "image": "/images/transition-safety-screening.jpg",
-      "cta_primary": {
-        "label": "Continue"
-      },
-      "next": "anthro.goals"
-    },
-    {
-      "id": "anthro.goals",
-      "type": "composite",
-      "title": "What are you working toward?",
-      "fields": [
-        {
-          "id": "goal_weight",
-          "type": "number",
-          "label": "Your target weight (lb)",
-          "min": 80,
-          "max": 500,
-          "required": true
-        },
-        {
-          "id": "activity_level",
-          "type": "single_select",
-          "label": "How active are you on a typical day?",
-          "required": true,
-          "options": [
-            { "value": "sedentary", "label": "Mostly sedentary - desk work, minimal movement" },
-            { "value": "light", "label": "Lightly active - some walking throughout the day" },
-            { "value": "moderate", "label": "Moderately active - regular walking or exercise" },
-            { "value": "active", "label": "Active - consistent exercise routine" },
-            { "value": "very_active", "label": "Very active - intensive daily training" }
-          ]
-        }
-      ],
-      "next": "safety.eating_disorder"
-    },
-    {
-      "id": "safety.eating_disorder",
-      "type": "multi_select",
-      "title": "Has any of the following applied to you?",
-      "help_text": "Certain eating patterns can affect treatment safety. Your responses are confidential and help our medical team make the right recommendations.",
-      "options": [
-        { "value": "purging", "label": "Self-induced vomiting for weight control" },
-        { "value": "binge", "label": "Episodes of eating large quantities without control" },
-        { "value": "restriction", "label": "Extreme calorie restriction driven by intense weight concerns" },
-        { "value": "diagnosed", "label": "Clinical diagnosis of anorexia, bulimia, or binge eating disorder" },
-        { "value": "none", "label": "None of the above" }
-      ],
+      "id": "assess.goal_weight",
+      "type": "number",
+      "phase": "qualify",
+      "title": "What's your goal weight?",
+      "help_text": "A rough estimate is fine",
+      "label": "Target weight",
+      "suffix": "lb",
+      "min": 80,
+      "max": 500,
       "required": true,
-      "next_logic": [
+      "validation": {
+        "min": 80,
+        "max": 500,
+        "error": "Enter weight between 80-500 lbs",
+        "less_than_field": {
+          "field": "weight",
+          "error": "Goal weight must be less than your current weight"
+        }
+      },
+      "next": "transition.youre_in_good_hands"
+    },
+    {
+      "id": "transition.youre_in_good_hands",
+      "type": "content",
+      "phase": "inspire",
+      "headline": "We're here to help you reach your goal",
+      "body": "Our physicians will review your health and create a plan designed just for you—because your journey is unique.\n\nLet's keep going!",
+      "cta_primary": {
+        "label": "Let's Do This"
+      },
+      "next": "capture.email"
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // EARLY EMAIL CAPTURE
+    // ═══════════════════════════════════════════════════════════
+    {
+      "id": "capture.email",
+      "type": "composite",
+      "phase": "qualify",
+      "title": "Great! How can we reach you?",
+      "fields": [
         {
-          "if": "answer contains ['purging','binge','restriction','diagnosed']",
-          "go_to": "safety.eating_disorder_warning"
+          "id": "email",
+          "type": "email",
+          "label": "Email address",
+          "placeholder": "you@example.com",
+          "help_text": "We'll send your personalized plan and stay in touch throughout your journey.",
+          "required": true,
+          "validation": {
+            "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+            "error": "Enter a valid email address"
+          }
+        }
+      ],
+      "next": "transition.health_intro"
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 3: ASSESS HEALTH
+    // ═══════════════════════════════════════════════════════════
+    {
+      "id": "transition.health_intro",
+      "type": "content",
+      "phase": "assess_medical",
+      "headline": "You're doing great—halfway there!",
+      "body": "Next, we'll ask about your health to make sure treatment is safe and right for you.\n\nMost questions are quick—just check what applies. Takes about 5 minutes.",
+      "cta_primary": {
+        "label": "Let's Go"
+      },
+      "next": "assess.sex_birth"
+    },
+    {
+      "id": "assess.sex_birth",
+      "type": "single_select",
+      "phase": "assess_medical",
+      "field_id": "sex_birth",
+      "title": "What was your sex assigned at birth?",
+      "auto_advance": true,
+      "required": true,
+      "options": [
+        { "value": "male", "label": "Male" },
+        { "value": "female", "label": "Female" },
+        { "value": "intersex", "label": "Intersex" },
+        { "value": "no_say", "label": "Prefer not to say" }
+      ],
+      "next": "assess.ethnicity"
+    },
+    {
+      "id": "assess.ethnicity",
+      "type": "single_select",
+      "phase": "assess_medical",
+      "field_id": "ethnicity",
+      "title": "How would you describe your ethnicity?",
+      "help_text": "Optional—helps us understand medication effects across different backgrounds",
+      "auto_advance": true,
+      "options": [
+        { "value": "asian", "label": "Asian" },
+        { "value": "black", "label": "Black or African American" },
+        { "value": "hispanic", "label": "Hispanic or Latino" },
+        { "value": "indigenous", "label": "Indigenous or Native American" },
+        { "value": "middle_eastern", "label": "Middle Eastern" },
+        { "value": "pacific_islander", "label": "Pacific Islander" },
+        { "value": "white", "label": "White" },
+        { "value": "multiple", "label": "Multiple ethnicities" },
+        { "value": "other", "label": "Other" },
+        { "value": "prefer_not_say", "label": "Prefer not to say" }
+      ],
+      "next": "assess.mental_health"
+    },
+
+    // Mental Health Cluster
+    {
+      "id": "assess.mental_health",
+      "type": "composite",
+      "phase": "assess_safety",
+      "title": "Have you been diagnosed with any of these?",
+      "help_text": "Some medications can affect mood, so we ask for safety",
+      "safety_critical": true,
+      "post_screen_note": "We appreciate your honesty. This helps us provide the safest care.",
+      "fields": [
+        {
+          "id": "mental_health_diagnosis",
+          "type": "multi_select",
+          "label": "Mental health conditions",
+          "options": [
+            { "value": "depression", "label": "Depression" },
+            { "value": "anxiety", "label": "Anxiety disorder" },
+            { "value": "bipolar", "label": "Bipolar disorder" },
+            { "value": "panic", "label": "Panic disorder" },
+            { "value": "ptsd", "label": "PTSD" },
+            { "value": "ocd", "label": "OCD" },
+            { "value": "other", "label": "Other" },
+            { "value": "none", "label": "None of these" }
+          ]
         },
         {
-          "else": "medical.mental_health_diagnosis"
+          "id": "mental_health_other",
+          "type": "text",
+          "label": "Please specify",
+          "placeholder": "Other mental health condition",
+          "required": true,
+          "conditional_display": {
+            "show_if": "mental_health_diagnosis contains 'other'"
+          }
         }
-      ]
-    },
-    {
-      "id": "safety.eating_disorder_warning",
-      "type": "content",
-      "status": "warning",
-      "headline": "Special considerations for your safety",
-      "body": "When eating disorder history is present, weight loss medications carry increased risks including dangerous electrolyte disturbances and potential cardiac complications.\n\nOur medical team will carefully evaluate whether medication-based treatment is appropriate. If you engage in purging behaviors, severe caloric restriction, or your BMI drops below 18.5 during treatment, immediate medical consultation is required.",
-      "cta_primary": {
-        "label": "I Understand These Risks"
-      },
-      "next": "medical.mental_health_diagnosis"
-    },
-    {
-      "id": "medical.mental_health_diagnosis",
-      "type": "multi_select",
-      "title": "Have you been diagnosed with any mental health conditions?",
-      "help_text": "Some medications can affect mood, so we need a complete picture.",
-      "options": [
-        { "value": "depression", "label": "Depression" },
-        { "value": "anxiety", "label": "Anxiety" },
-        { "value": "bipolar", "label": "Bipolar disorder" },
-        { "value": "panic", "label": "Panic disorder" },
-        { "value": "recent_hospitalization", "label": "Psychiatric hospitalization within last 3 months" },
-        { "value": "other", "label": "Other" },
-        { "value": "none", "label": "None of these" }
       ],
-      "other_text_id": "mental_health_other",
-      "next": "medical.suicide_risk"
+      "next": "assess.mental_health_ideation"
     },
     {
-      "id": "medical.suicide_risk",
+      "id": "assess.mental_health_ideation",
       "type": "single_select",
-      "title": "Do you currently have thoughts of harming yourself or others?",
-      "help_text": "We ask this so your provider can determine the safest treatment for you.",
-      "auto_advance": false,
+      "phase": "assess_safety",
+      "field_id": "current_thoughts",
+      "title": "Are you having thoughts of harming yourself or others right now?",
+      "help_text": "This is a critical safety question.",
+      "safety_critical": true,
+      "auto_advance": true,
       "options": [
         { "value": "no", "label": "No" },
         { "value": "yes", "label": "Yes" }
@@ -449,534 +509,1365 @@ const formConfig: FormConfig = {
       "next_logic": [
         {
           "if": "answer == 'yes'",
-          "go_to": "safety.mental_health"
+          "go_to": "assess.mental_health_crisis"
         },
         {
-          "else": "medical.substance_use"
+          "else": "assess.eating_relationship"
         }
       ]
     },
     {
-      "id": "safety.mental_health",
-      "type": "content",
+      "id": "assess.mental_health_crisis",
+      "type": "terminal",
+      "phase": "assess_safety",
       "status": "warning",
-      "headline": "Your safety is our priority",
-      "body": "Thank you for sharing that. Some weight loss medications can affect mood, so we'll need to discuss this carefully with a provider.\n\nIf you're in crisis, please reach the National Suicide Prevention Lifeline at 988 or text HOME to 741741.\n\nOur team will review your case with extra care.",
+      "title": "Your safety comes first",
+      "body": "Your safety comes first. Weight loss medications can affect mood, so we need you to get support before continuing.\n\nWe care about you and want you to get the support you deserve.\n\n**Please reach out now:**",
+      "resources": [
+        {
+          "icon_name": "phone",
+          "label": "988 Crisis Lifeline (24/7)",
+          "value": "Call or text 988"
+        },
+        {
+          "icon_name": "message",
+          "label": "Crisis Text Line",
+          "value": "Text HELLO to 741741"
+        }
+      ],
+      "cta_primary": {
+        "label": "Find Support"
+      }
+    },
+
+    // Eating Disorder Screening
+    {
+      "id": "assess.eating_relationship",
+      "type": "single_select",
+      "phase": "assess_safety",
+      "title": "Have you been diagnosed with an eating disorder?",
+      "safety_critical": true,
+      "auto_advance": true,
+      "options": [
+        { "value": "no", "label": "No" },
+        { "value": "yes", "label": "Yes" }
+      ],
+      "required": true,
+      "next_logic": [
+        {
+          "if": "answer == 'yes'",
+          "go_to": "assess.eating_disorder_type"
+        },
+        {
+          "else": "transition.lifestyle_questions"
+        }
+      ]
+    },
+    {
+      "id": "assess.eating_disorder_type",
+      "type": "multi_select",
+      "phase": "assess_safety",
+      "title": "Which type?",
+      "safety_critical": true,
+      "options": [
+        { "value": "anorexia", "label": "Anorexia nervosa" },
+        { "value": "bulimia", "label": "Bulimia nervosa" },
+        { "value": "binge_eating", "label": "Binge eating disorder" },
+        { "value": "other", "label": "Other or unspecified" }
+      ],
+      "required": true,
+      "next_logic": [
+        {
+          "if": "answer contains 'anorexia' OR answer contains 'bulimia'",
+          "go_to": "assess.eating_disorder_exclusion"
+        },
+        {
+          "else": "assess.eating_disorder_support"
+        }
+      ]
+    },
+    {
+      "id": "assess.eating_disorder_exclusion",
+      "type": "terminal",
+      "phase": "assess_safety",
+      "status": "warning",
+      "title": "We can't safely prescribe GLP-1 medications",
+      "body": "We can't safely prescribe GLP-1 medications with anorexia or bulimia history, as they can cause serious harm.\n\nYour recovery is what matters most. An eating disorder specialist can guide you to approaches that support your health.\n\nWe're rooting for you.\n\n**Support:**",
+      "resources": [
+        {
+          "icon_name": "phone",
+          "label": "NEDA Helpline",
+          "value": "1-800-931-2237"
+        },
+        {
+          "icon_name": "message",
+          "label": "NEDA Crisis Text",
+          "value": "Text NEDA to 741741"
+        }
+      ],
+      "cta_primary": {
+        "label": "Find Support"
+      }
+    },
+    {
+      "id": "assess.eating_disorder_support",
+      "type": "content",
+      "phase": "assess_safety",
+      "status": "warning",
+      "headline": "We'll need to review this carefully",
+      "body": "Eating disorder history comes with risks: electrolyte imbalances, worsening behaviors, cardiac complications.\n\nOur provider will review your case and may require clearance from an eating disorder specialist.\n\nSupport: NEDA 1-800-931-2237 | Text NEDA to 741741",
       "cta_primary": {
         "label": "Continue"
       },
-      "next": "medical.substance_use"
+      "next": "transition.lifestyle_questions"
     },
     {
-      "id": "medical.substance_use",
-      "type": "composite",
-      "title": "Substance use screening",
-      "help_text": "Required for safe prescribing. This information is confidential.",
-      "fields": [
-        {
-          "id": "alcohol",
-          "type": "single_select",
-          "label": "How often do you consume alcohol?",
-          "required": true,
-          "options": [
-            { "value": "none", "label": "I don't drink" },
-            { "value": "social", "label": "Socially (1-4 drinks/week)" },
-            { "value": "moderate", "label": "Moderate (5-10 drinks/week)" },
-            { "value": "heavy", "label": "Heavy (10+ drinks/week)" }
-          ]
-        },
-        {
-          "id": "substances",
-          "type": "multi_select",
-          "label": "Have you used any of these in the past 6 months?",
-          "options": [
-            { "value": "cocaine", "label": "Cocaine" },
-            { "value": "opioids", "label": "Opioids" },
-            { "value": "meth", "label": "Methamphetamine" },
-            { "value": "cannabis", "label": "Cannabis" },
-            { "value": "none", "label": "None of these" }
-          ]
-        }
+      "id": "transition.lifestyle_questions",
+      "type": "content",
+      "phase": "assess_medical",
+      "headline": "A few quick lifestyle questions",
+      "body": "These help us understand your overall health and any factors that might affect treatment.",
+      "cta_primary": {
+        "label": "Let's Go"
+      },
+      "next": "assess.substance_use_alcohol"
+    },
+
+    {
+      "id": "assess.substance_use_alcohol",
+      "type": "single_select",
+      "phase": "assess_medical",
+      "title": "How often do you drink alcohol?",
+      "auto_advance": true,
+      "required": true,
+      "options": [
+        { "value": "none", "label": "I don't drink" },
+        { "value": "occasional", "label": "Occasionally (1-2 drinks/week)" },
+        { "value": "social", "label": "Socially (3-6 drinks/week)" },
+        { "value": "moderate", "label": "Moderate (7-10 drinks/week)" },
+        { "value": "heavy", "label": "Heavy (10+ drinks/week)" }
       ],
+      "next": "assess.substance_use_tobacco"
+    },
+    {
+      "id": "assess.substance_use_tobacco",
+      "type": "single_select",
+      "phase": "assess_medical",
+      "title": "Do you use tobacco or nicotine?",
+      "auto_advance": true,
+      "required": true,
+      "options": [
+        { "value": "no", "label": "No" },
+        { "value": "cigarettes", "label": "Cigarettes" },
+        { "value": "vaping", "label": "Vaping or e-cigarettes" },
+        { "value": "other", "label": "Other tobacco products" }
+      ],
+      "next": "assess.substance_use_recreational"
+    },
+    {
+      "id": "assess.substance_use_recreational",
+      "type": "multi_select",
+      "phase": "assess_medical",
+      "title": "Used any of these in the past 6 months?",
+      "options": [
+        { "value": "cannabis", "label": "Cannabis or marijuana" },
+        { "value": "cocaine", "label": "Cocaine" },
+        { "value": "opioids", "label": "Non-prescribed opioids" },
+        { "value": "stimulants", "label": "Non-prescribed stimulants (Adderall, etc.)" },
+        { "value": "methamphetamine", "label": "Methamphetamine" },
+        { "value": "none", "label": "None of these" }
+      ],
+      "required": true,
       "next": "transition.medical_history"
     },
     {
       "id": "transition.medical_history",
       "type": "content",
-      "headline": "Thank you for sharing that",
-      "body": "That was the hardest part. Now we'll ask about your medical history so we can ensure any treatment is safe and appropriate for you.",
+      "phase": "assess_medical",
+      "headline": "You're doing great—almost through this section!",
+      "body": "Just a few more questions about your medical history, then we'll talk about treatment options.",
       "cta_primary": {
         "label": "Continue"
       },
-      "next": "medical.diabetes"
+      "next": "assess.diabetes"
+    },
+
+    // Medical Conditions Cluster
+    {
+      "id": "assess.diabetes",
+      "type": "single_select",
+      "phase": "assess_medical",
+      "title": "Do you have diabetes?",
+      "auto_advance": true,
+      "options": [
+        { "value": "no", "label": "No" },
+        { "value": "yes", "label": "Yes" }
+      ],
+      "required": true,
+      "next_logic": [
+        {
+          "if": "answer == 'yes'",
+          "go_to": "assess.diabetes_type"
+        },
+        {
+          "if": "sex_birth == 'female'",
+          "go_to": "assess.pregnancy"
+        },
+        {
+          "else": "assess.medical_conditions"
+        }
+      ]
     },
     {
-      "id": "medical.diabetes",
+      "id": "assess.diabetes_type",
       "type": "single_select",
-      "title": "Do you have diabetes?",
+      "phase": "assess_medical",
+      "title": "What type?",
       "auto_advance": false,
       "options": [
-        { "value": "type2", "label": "Type 2 diabetes" },
-        { "value": "type1", "label": "Type 1 diabetes" },
+        { "value": "type1", "label": "Type 1" },
+        { "value": "type2", "label": "Type 2" },
         { "value": "prediabetes", "label": "Prediabetes" },
-        { "value": "no", "label": "No" }
+        { "value": "not_sure", "label": "Not sure" }
       ],
       "required": true,
       "next_logic": [
         {
           "if": "answer == 'type1'",
-          "go_to": "safety.type1"
+          "go_to": "assess.type1_denial"
         },
         {
-          "if": "demographics.sex_birth == 'female'",
-          "go_to": "medical.pregnancy"
+          "if": "sex_birth == 'female'",
+          "go_to": "assess.pregnancy"
         },
         {
-          "else": "medical.conditions"
+          "else": "assess.medical_conditions"
         }
       ]
     },
     {
-      "id": "safety.type1",
-      "type": "content",
+      "id": "assess.type1_denial",
+      "type": "terminal",
+      "phase": "assess_safety",
       "status": "warning",
-      "headline": "GLP-1 medications aren't approved for Type 1",
-      "body": "These medications aren't FDA-approved for managing Type 1 diabetes. But we can still help with lifestyle and nutrition support, and we're happy to coordinate with your endocrinologist on safe weight management approaches.",
+      "title": "Type 1 needs specialized care",
+      "body": "GLP-1s aren't FDA-approved for Type 1 and need very careful coordination with your endocrinologist.\n\nYour diabetes provider can help you explore whether GLP-1s might work for you and what monitoring you'd need.",
       "cta_primary": {
-        "label": "Continue"
-      },
-      "next_logic": [
-        {
-          "if": "demographics.sex_birth == 'female'",
-          "go_to": "medical.pregnancy"
-        },
-        {
-          "else": "medical.conditions"
-        }
-      ]
+        "label": "I Understand"
+      }
     },
     {
-      "id": "medical.pregnancy",
+      "id": "assess.pregnancy",
       "type": "single_select",
-      "title": "Are you pregnant, planning to get pregnant, or nursing?",
-      "auto_advance": false,
+      "phase": "assess_safety",
+      "title": "Are you pregnant, trying to conceive, or nursing?",
+      "auto_advance": true,
       "options": [
-        { "value": "pregnant", "label": "Pregnant" },
-        { "value": "planning", "label": "Planning pregnancy soon" },
-        { "value": "nursing", "label": "Nursing" },
-        { "value": "no", "label": "None of these" }
+        { "value": "no", "label": "No" },
+        { "value": "pregnant", "label": "Currently pregnant" },
+        { "value": "trying", "label": "Trying to conceive or planning to soon" },
+        { "value": "nursing", "label": "Currently breastfeeding" }
       ],
       "required": true,
       "next_logic": [
         {
-          "if": "answer in ['pregnant','planning','nursing']",
-          "go_to": "safety.pregnancy"
+          "if": "answer in ['pregnant','trying','nursing']",
+          "go_to": "assess.pregnancy_info"
         },
         {
-          "else": "medical.conditions"
+          "else": "assess.medical_conditions"
         }
       ]
     },
     {
-      "id": "safety.pregnancy",
-      "type": "content",
+      "id": "assess.pregnancy_info",
+      "type": "terminal",
+      "phase": "assess_safety",
       "status": "warning",
-      "headline": "These medications aren't safe during pregnancy or nursing",
-      "body": "GLP-1 medications aren't recommended if you're pregnant, planning pregnancy, or nursing. We can create a different plan focused on balanced nutrition and safe physical activity instead.",
+      "title": "We'd love to help you after pregnancy",
+      "body": "GLP-1s aren't safe during pregnancy, when trying to conceive, or while breastfeeding.\n\nOnce you've finished breastfeeding, we'd be happy to work with you. Your OB-GYN can help you explore safe options for now.",
       "cta_primary": {
-        "label": "Continue"
-      },
-      "next": "medical.conditions"
+        "label": "Learn More"
+      }
     },
     {
-      "id": "medical.conditions",
+      "id": "assess.medical_conditions",
       "type": "multi_select",
-      "title": "Do you have any of these conditions?",
-      "help_text": "Check everything that applies. We need your complete medical history to prescribe safely.",
+      "phase": "assess_medical",
+      "title": "Now, your medical history",
+      "help_text": "Check all that apply",
       "options": [
-        { "value": "thyroid_cancer", "label": "Medullary thyroid cancer (you or family member)" },
-        { "value": "men2", "label": "MEN2 syndrome (you or family member)" },
-        { "value": "pancreatitis", "label": "History of pancreatitis or gallbladder problems" },
-        { "value": "gastroparesis", "label": "Gastroparesis (slow stomach emptying)" },
-        { "value": "type2_diabetes", "label": "Type 2 diabetes (if not mentioned above)" },
-        { "value": "kidney", "label": "Kidney disease" },
-        { "value": "liver", "label": "Liver disease" },
-        { "value": "hypertension", "label": "High blood pressure" },
-        { "value": "cholesterol", "label": "High cholesterol" },
-        { "value": "heart", "label": "Heart disease or previous heart attack" },
+        { 
+          "value": "thyroid_cancer", 
+          "label": "Medullary thyroid cancer (personal or family)",
+          "risk_level": "critical"
+        },
+        { 
+          "value": "men2", 
+          "label": "MEN2 syndrome",
+          "risk_level": "critical"
+        },
+        { 
+          "value": "pancreatitis", 
+          "label": "Pancreatitis (ever)",
+          "risk_level": "high"
+        },
+        { 
+          "value": "gallbladder_active", 
+          "label": "Current gallbladder disease or gallstones",
+          "risk_level": "high"
+        },
+        { 
+          "value": "gastroparesis", 
+          "label": "Gastroparesis (slow stomach emptying)"
+        },
+        { "value": "kidney_disease", "label": "Kidney disease" },
+        { "value": "liver_disease", "label": "Liver disease" },
+        { "value": "heart_disease", "label": "Heart disease or heart attack" },
         { "value": "stroke", "label": "Stroke or TIA" },
+        { "value": "hypertension", "label": "High blood pressure" },
+        { "value": "high_cholesterol", "label": "High cholesterol" },
         { "value": "sleep_apnea", "label": "Sleep apnea" },
-        { "value": "ibs", "label": "IBS or chronic digestive issues" },
+        { "value": "pcos", "label": "PCOS" },
+        { "value": "thyroid_other", "label": "Thyroid condition (not cancer)" },
         { "value": "gerd", "label": "GERD or chronic reflux" },
-        { "value": "seizures", "label": "Seizure disorder or epilepsy" },
+        { "value": "ibs", "label": "IBS or chronic digestive issues" },
+        { "value": "autoimmune", "label": "Autoimmune condition" },
+        { "value": "cancer_other", "label": "Other cancer history" },
         { "value": "none", "label": "None of these" },
         { "value": "other", "label": "Other condition" }
       ],
-      "other_text_id": "medical.other_detail",
-      "next_logic": [
-        { "if": "answer contains 'thyroid_cancer'", "go_to": "safety.thyroid" },
-        { "if": "answer contains 'men2'", "go_to": "safety.thyroid" },
-        { "if": "answer contains 'pancreatitis'", "go_to": "safety.pancreatitis" },
-        { "else": "medical.medications" }
-      ]
-    },
-    {
-      "id": "safety.thyroid",
-      "type": "content",
-      "status": "warning",
-      "headline": "GLP-1 medications aren't safe with this history",
-      "body": "If you or a family member has had medullary thyroid cancer or MEN2 syndrome, GLP-1 medications aren't recommended. We can build you an alternative weight management plan focused on nutrition, activity, and other treatment options.",
-      "cta_primary": {
-        "label": "Continue"
-      },
-      "next": "medical.medications"
-    },
-    {
-      "id": "safety.pancreatitis",
-      "type": "content",
-      "status": "warning",
-      "headline": "We need to be careful with pancreatitis history",
-      "body": "If you've had pancreatitis or active gallbladder disease, GLP-1 medications might not be safe—they can increase the risk of it happening again. Our medical team will look at whether lifestyle approaches or different medications would be better for you.",
-      "cta_primary": {
-        "label": "Continue"
-      },
-      "next": "medical.medications"
-    },
-    {
-      "id": "medical.medications",
-      "type": "multi_select",
-      "title": "What medications and supplements are you currently taking?",
-      "help_text": "Please include prescriptions, over-the-counter drugs, and any supplements.",
-      "options": [
-        { "value": "insulin", "label": "Insulin or diabetes medications" },
-        { "value": "blood_thinners", "label": "Blood thinners (warfarin, etc.)" },
-        { "value": "heart_meds", "label": "Heart or blood pressure medications" },
-        { "value": "stimulants", "label": "Stimulants (ADHD meds, appetite suppressants)" },
-        { "value": "antidepressants", "label": "Psychiatric medications" },
-        { "value": "thyroid", "label": "Thyroid medication" },
-        { "value": "none", "label": "No prescription medications" },
-        { "value": "other", "label": "Other medications or supplements" }
-      ],
-      "next_logic": [
-        { "if": "answer contains 'other'", "go_to": "medical.medications_other_detail" },
-        { "else": "medical.allergies" }
-      ]
-    },
-    {
-      "id": "medical.medications_other_detail",
-      "type": "text",
-      "title": "What other medications or supplements are you taking?",
-      "placeholder": "List any other prescription medications, OTC drugs, or supplements",
-      "help_text": "Please list the names of any other medications or supplements you're currently taking",
-      "required": true,
-      "next": "medical.allergies"
-    },
-    {
-      "id": "medical.allergies",
-      "type": "text",
-      "title": "Any medication allergies?",
-      "placeholder": "List medications that caused allergic reactions, or write 'None'",
-      "help_text": "This helps us avoid prescribing anything you've reacted to before",
-      "required": true,
-      "next": "transition.treatment_preferences"
-    },
-    {
-      "id": "transition.treatment_preferences",
-      "type": "content",
-      "headline": "Almost done",
-      "body": "Nice work getting through all that. Now let's talk about your treatment preferences so we can design the right plan for you.",
-      "image": "/images/transition-treatment-preferences.jpg",
-      "cta_primary": {
-        "label": "Continue"
-      },
-      "next": "meds.status"
-    },
-    {
-      "id": "meds.status",
-      "type": "single_select",
-      "title": "Have you used GLP-1 medications before?",
-      "help_text": "These include semaglutide (Ozempic, Wegovy), tirzepatide (Mounjaro, Zepbound), and compounded versions.",
-      "auto_advance": false,
-      "options": [
-        { "value": "currently_taking", "label": "I'm currently taking one" },
-        { "value": "past_use", "label": "I've used one before but not now" },
-        { "value": "never", "label": "I've never used one" }
-      ],
-      "required": true,
+      "other_text_id": "medical_conditions_other",
       "next_logic": [
         {
-          "if": "flags contains 'flag_no_medication'",
-          "go_to": "motivation.focus"
+          "if": "answer contains 'thyroid_cancer' OR answer contains 'men2'",
+          "go_to": "assess.thyroid_exclusion"
         },
         {
-          "if": "answer == 'currently_taking'",
-          "go_to": "meds.current_details"
+          "if": "answer contains 'pancreatitis'",
+          "go_to": "assess.pancreatitis_warning"
         },
         {
-          "if": "answer == 'past_use'",
-          "go_to": "meds.past_details"
+          "if": "answer contains 'gallbladder_active'",
+          "go_to": "assess.gallbladder_warning"
         },
         {
-          "else": "meds.interest"
+          "else": "assess.glp1_safety"
         }
       ]
     },
     {
-      "id": "meds.current_details",
+      "id": "assess.thyroid_exclusion",
+      "type": "terminal",
+      "phase": "assess_safety",
+      "status": "warning",
+      "title": "This is a safety contraindication",
+      "body": "With this history, GLP-1s carry significant cancer risk according to FDA data.\n\nWe can't safely prescribe these medications. Your endocrinologist can help you explore alternatives that work for you.",
+      "cta_primary": {
+        "label": "Learn More"
+      }
+    },
+    {
+      "id": "assess.pancreatitis_warning",
+      "type": "content",
+      "phase": "assess_safety",
+      "status": "warning",
+      "headline": "Pancreatitis history needs careful review",
+      "body": "GLP-1s can increase recurrence risk. Our provider will need details about your history and may need gastroenterologist clearance.\n\nDepending on severity and timing, GLP-1s may not be appropriate.",
+      "cta_primary": {
+        "label": "Got It"
+      },
+      "next": "assess.glp1_safety"
+    },
+    {
+      "id": "assess.gallbladder_warning",
+      "type": "content",
+      "phase": "assess_medical",
+      "status": "info",
+      "headline": "Active gallbladder disease needs resolution first",
+      "body": "GLP-1s can worsen gallbladder problems. You may need to resolve this before starting treatment.\n\nOur provider will review your situation.",
+      "cta_primary": {
+        "label": "Understood"
+      },
+      "next": "assess.glp1_safety"
+    },
+    {
+      "id": "assess.glp1_safety",
+      "type": "multi_select",
+      "phase": "assess_safety",
+      "title": "Have you been diagnosed with any of these?",
+      "safety_critical": true,
+      "options": [
+        {
+          "value": "diabetic_retinopathy",
+          "label": "Diabetic retinopathy (eye damage)",
+          "risk_level": "high"
+        },
+        {
+          "value": "glp1_allergy",
+          "label": "Severe allergic reaction to GLP-1 medications",
+          "risk_level": "critical"
+        },
+        {
+          "value": "severe_gastroparesis",
+          "label": "Severe gastroparesis",
+          "risk_level": "high"
+        },
+        {
+          "value": "bariatric_surgery",
+          "label": "Bariatric surgery in the past 18 months",
+          "risk_level": "high"
+        },
+        {
+          "value": "kidney_stage4_5",
+          "label": "Advanced kidney disease (Stage 4-5)",
+          "risk_level": "high"
+        },
+        {
+          "value": "suicide_attempt_history",
+          "label": "History of suicide attempts",
+          "risk_level": "high"
+        },
+        {
+          "value": "other_glp1_current",
+          "label": "Currently on another GLP-1 (Victoza, Byetta, Trulicity, etc.)",
+          "risk_level": "critical"
+        },
+        {
+          "value": "thyroid_nodules",
+          "label": "Thyroid nodules",
+          "risk_level": "medium"
+        },
+        { "value": "none", "label": "None of these" }
+      ],
+      "required": true,
+      "next_logic": [
+        {
+          "if": "answer contains 'glp1_allergy'",
+          "go_to": "assess.glp1_allergy_exclusion"
+        },
+        {
+          "if": "answer contains 'other_glp1_current'",
+          "go_to": "assess.duplicate_glp1_warning"
+        },
+        {
+          "if": "answer contains ['diabetic_retinopathy','severe_gastroparesis','bariatric_surgery','kidney_stage4_5']",
+          "go_to": "assess.glp1_high_risk_warning"
+        },
+        {
+          "else": "assess.current_medications"
+        }
+      ]
+    },
+    {
+      "id": "assess.glp1_allergy_exclusion",
+      "type": "terminal",
+      "phase": "assess_safety",
+      "status": "warning",
+      "title": "Your previous reaction makes this too risky",
+      "body": "A severe allergic reaction to a GLP-1 means another one could cause a more serious—potentially life-threatening—reaction.\n\nYour doctor or allergist can help you explore safe alternatives.",
+      "cta_primary": {
+        "label": "Learn More"
+      }
+    },
+    {
+      "id": "assess.duplicate_glp1_warning",
+      "type": "content",
+      "phase": "assess_safety",
+      "status": "info",
+      "headline": "We'll need to coordinate this carefully",
+      "body": "Since you're already on a GLP-1, we'll coordinate with your current provider if we prescribe a different one.\n\nWe'll get more details about your current medication later.",
+      "cta_primary": {
+        "label": "OK"
+      },
+      "next": "assess.current_medications"
+    },
+    {
+      "id": "assess.glp1_high_risk_warning",
+      "type": "content",
+      "phase": "assess_safety",
+      "status": "warning",
+      "headline": "We'll review this carefully",
+      "body": "These conditions need extra attention with GLP-1s. Our provider will review your case thoroughly and may request additional records or specialist input to ensure your safety.",
+      "cta_primary": {
+        "label": "All Set"
+      },
+      "next": "assess.current_medications"
+    },
+    {
+      "id": "assess.current_medications",
+      "type": "multi_select",
+      "phase": "assess_medical",
+      "title": "What medications are you taking?",
+      "options": [
+        { "value": "insulin", "label": "Insulin" },
+        { "value": "metformin", "label": "Metformin or other diabetes meds" },
+        { "value": "blood_pressure", "label": "Blood pressure meds" },
+        { "value": "blood_thinners", "label": "Blood thinners (warfarin, Eliquis, etc.)" },
+        { "value": "cholesterol", "label": "Cholesterol meds (statins)" },
+        { "value": "thyroid", "label": "Thyroid medication (levothyroxine, etc.)" },
+        { "value": "antidepressants", "label": "Antidepressants or anti-anxiety meds" },
+        { "value": "adhd", "label": "ADHD medications" },
+        { "value": "antipsychotics", "label": "Antipsychotic medications" },
+        { "value": "seizure", "label": "Seizure or epilepsy meds" },
+        { "value": "steroids", "label": "Corticosteroids (prednisone, etc.)" },
+        { "value": "immunosuppressants", "label": "Immunosuppressants" },
+        { "value": "pain_chronic", "label": "Chronic pain medications" },
+        { "value": "none", "label": "No prescription medications" },
+        { "value": "other", "label": "Other medications" }
+      ],
+      "next_logic": [
+        {
+          "if": "answer contains 'insulin'",
+          "go_to": "assess.insulin_exclusion"
+        },
+        {
+          "if": "answer contains 'other'",
+          "go_to": "assess.medications_detail"
+        },
+        {
+          "else": "assess.supplements"
+        }
+      ]
+    },
+    {
+      "id": "assess.medications_detail",
+      "type": "text",
+      "phase": "assess_medical",
+      "title": "List your other medications",
+      "help_text": "Include doses if you know them",
+      "multiline": true,
+      "rows": 6,
+      "required": true,
+      "next": "assess.supplements"
+    },
+    {
+      "id": "assess.insulin_exclusion",
+      "type": "terminal",
+      "phase": "assess_safety",
+      "status": "warning",
+      "title": "We need to coordinate with your diabetes team",
+      "body": "Combining insulin with GLP-1s needs careful coordination to prevent dangerous blood sugar drops.\n\nThis isn't a no—we just need to work with your endocrinologist. Our provider will review and may reach out.\n\n**Don't change your medications.** Your diabetes management is working—we'll coordinate any changes safely.",
+      "cta_primary": {
+        "label": "I Understand"
+      }
+    },
+    {
+      "id": "assess.supplements",
       "type": "composite",
-      "title": "Tell us about your current medication",
+      "phase": "assess_medical",
+      "title": "Any vitamins or supplements?",
       "fields": [
         {
-          "id": "current_med_name",
+          "id": "taking_supplements",
           "type": "single_select",
-          "label": "Which one?",
+          "label": "",
           "required": true,
+          "auto_advance": true,
           "options": [
-            { "value": "semaglutide_brand", "label": "Brand semaglutide (Ozempic/Wegovy)" },
-            { "value": "semaglutide_compounded", "label": "Compounded semaglutide" },
-            { "value": "tirzepatide_brand", "label": "Brand tirzepatide (Mounjaro/Zepbound)" },
-            { "value": "tirzepatide_compounded", "label": "Compounded tirzepatide" },
-            { "value": "liraglutide", "label": "Liraglutide (Saxenda)" },
-            { "value": "other", "label": "Other GLP-1" }
+            { "value": "no", "label": "No" },
+            { "value": "yes", "label": "Yes" }
           ]
         },
         {
-          "id": "current_dose",
-          "type": "single_select",
-          "label": "Current dose",
-          "required": true,
-          // FIX: Added empty `options` array to satisfy the SelectField type when using conditional_options.
-          "options": [],
-          "conditional_options": {
-            "based_on": "current_med_name",
-            "options_map": {
-              "semaglutide_brand": [
-                { "value": "0.25mg_weekly", "label": "0.25 mg weekly" },
-                { "value": "0.5mg_weekly", "label": "0.5 mg weekly" },
-                { "value": "1mg_weekly", "label": "1 mg weekly" },
-                { "value": "1.7mg_weekly", "label": "1.7 mg weekly" },
-                { "value": "2mg_weekly", "label": "2 mg weekly" },
-                { "value": "2.4mg_weekly", "label": "2.4 mg weekly" }
-              ],
-              "semaglutide_compounded": [
-                { "value": "0.25mg_weekly", "label": "0.25 mg weekly" },
-                { "value": "0.5mg_weekly", "label": "0.5 mg weekly" },
-                { "value": "1mg_weekly", "label": "1 mg weekly" },
-                { "value": "1.7mg_weekly", "label": "1.7 mg weekly" },
-                { "value": "2mg_weekly", "label": "2 mg weekly" },
-                { "value": "2.4mg_weekly", "label": "2.4 mg weekly" },
-                { "value": "2.5mg_weekly", "label": "2.5 mg weekly" }
-              ],
-              "tirzepatide_brand": [
-                { "value": "2.5mg_weekly", "label": "2.5 mg weekly" },
-                { "value": "5mg_weekly", "label": "5 mg weekly" },
-                { "value": "7.5mg_weekly", "label": "7.5 mg weekly" },
-                { "value": "10mg_weekly", "label": "10 mg weekly" },
-                { "value": "12.5mg_weekly", "label": "12.5 mg weekly" },
-                { "value": "15mg_weekly", "label": "15 mg weekly" }
-              ],
-              "tirzepatide_compounded": [
-                { "value": "2.5mg_weekly", "label": "2.5 mg weekly" },
-                { "value": "5mg_weekly", "label": "5 mg weekly" },
-                { "value": "7.5mg_weekly", "label": "7.5 mg weekly" },
-                { "value": "10mg_weekly", "label": "10 mg weekly" },
-                { "value": "12.5mg_weekly", "label": "12.5 mg weekly" },
-                { "value": "15mg_weekly", "label": "15 mg weekly" }
-              ],
-              "liraglutide": [
-                { "value": "0.6mg_daily", "label": "0.6 mg daily" },
-                { "value": "1.2mg_daily", "label": "1.2 mg daily" },
-                { "value": "1.8mg_daily", "label": "1.8 mg daily" },
-                { "value": "2.4mg_daily", "label": "2.4 mg daily" },
-                { "value": "3mg_daily", "label": "3 mg daily" }
-              ],
-              "other": [
-                { "value": "other", "label": "Other dose (will specify below)" }
-              ]
-            }
-          }
-        },
-        {
-          "id": "current_dose_other",
+          "id": "supplements_detail",
           "type": "text",
-          "label": "Please specify your dose",
-          "placeholder": "e.g., 0.75 mg weekly",
+          "label": "List them",
+          "placeholder": "Vitamin D 2000 IU daily, fish oil, multivitamin",
+          "multiline": true,
+          "rows": 4,
           "required": true,
           "conditional_display": {
-            "show_if": "current_med_name == 'other' OR current_dose == 'other'"
+            "show_if": "taking_supplements == 'yes'"
+          }
+        }
+      ],
+      "next": "assess.allergies"
+    },
+    {
+      "id": "assess.allergies",
+      "type": "composite",
+      "phase": "assess_medical",
+      "title": "Any medication allergies?",
+      "fields": [
+        {
+          "id": "has_allergies",
+          "type": "single_select",
+          "label": "",
+          "required": true,
+          "auto_advance": true,
+          "options": [
+            { "value": "no", "label": "No" },
+            { "value": "yes", "label": "Yes" }
+          ]
+        },
+        {
+          "id": "allergies_detail",
+          "type": "text",
+          "label": "List them with reactions",
+          "placeholder": "Penicillin (rash), sulfa drugs (hives)",
+          "multiline": true,
+          "rows": 4,
+          "required": true,
+          "conditional_display": {
+            "show_if": "has_allergies == 'yes'"
+          }
+        }
+      ],
+      "next": "transition.treatment_intro"
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 4: TREATMENT & LOGISTICS
+    // ═══════════════════════════════════════════════════════════
+    {
+      "id": "transition.treatment_intro",
+      "type": "content",
+      "phase": "treatment",
+      "headline": "You're through the health questions—nice work!",
+      "body": "Now let's talk treatment. If you've used GLP-1s before, we'd love to know what worked or didn't. This helps us find the right approach for you.",
+      "cta_primary": {
+        "label": "Continue"
+      },
+      "next": "treatment.glp1_experience"
+    },
+    {
+      "id": "treatment.glp1_experience",
+      "type": "composite",
+      "phase": "treatment",
+      "title": "First: have you tried GLP-1 medications before?",
+      "help_text": "Things like Wegovy, Ozempic, Mounjaro, etc.",
+      "fields": [
+        {
+          "id": "glp1_status",
+          "type": "single_select",
+          "label": "",
+          "required": true,
+          "auto_advance": true,
+          "options": [
+            { "value": "never", "label": "No, never used" },
+            { "value": "yes", "label": "Yes, I've used them" }
+          ]
+        }
+      ],
+      "next_logic": [
+        {
+          "if": "glp1_status == 'never'",
+          "go_to": "treatment.medication_preference"
+        },
+        {
+          "else": "treatment.glp1_history"
+        }
+      ]
+    },
+    {
+      "id": "treatment.glp1_history",
+      "type": "composite",
+      "phase": "treatment",
+      "title": "Which GLP-1 medications have you used?",
+      "help_text": "Details appear below each one you check",
+      "fields": [
+        {
+          "id": "used_wegovy",
+          "type": "checkbox",
+          "label": "Wegovy (semaglutide for weight loss)",
+          "value": false
+        },
+        {
+          "id": "wegovy_duration",
+          "type": "text",
+          "label": "  ↳ How long?",
+          "placeholder": "6 months, 1 year, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_wegovy == true"
           }
         },
         {
-          "id": "weeks_on_dose",
-          "type": "number",
-          "label": "How many weeks on this dose?",
-          "min": 0,
-          "max": 104,
-          "required": true
+          "id": "wegovy_dose",
+          "type": "text",
+          "label": "  ↳ What dose?",
+          "placeholder": "1 mg weekly, 2.4 mg weekly, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_wegovy == true"
+          }
         },
         {
-          "id": "current_provider",
+          "id": "wegovy_currently_taking",
+          "type": "single_select",
+          "label": "  ↳ Still taking it?",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ],
+          "conditional_display": {
+            "show_if": "used_wegovy == true"
+          }
+        },
+        {
+          "id": "wegovy_why_stopped",
           "type": "text",
-          "label": "Who's prescribing it?",
-          "placeholder": "e.g., my doctor, telehealth service",
-          "required": true
+          "label": "  ↳ Why did you stop?",
+          "placeholder": "Side effects, cost, reached goal, etc.",
+          "conditional_display": {
+            "show_if": "used_wegovy == true AND wegovy_currently_taking == 'no'"
+          }
+        },
+        {
+          "id": "wegovy_side_effects",
+          "type": "text",
+          "label": "  ↳ Any side effects? (optional)",
+          "placeholder": "Nausea, constipation, fatigue, etc.",
+          "multiline": true,
+          "rows": 2,
+          "conditional_display": {
+            "show_if": "used_wegovy == true"
+          }
+        },
+        
+        {
+          "id": "used_ozempic",
+          "type": "checkbox",
+          "label": "Ozempic (semaglutide for diabetes)",
+          "value": false
+        },
+        {
+          "id": "ozempic_duration",
+          "type": "text",
+          "label": "  ↳ How long?",
+          "placeholder": "6 months, 1 year, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_ozempic == true"
+          }
+        },
+        {
+          "id": "ozempic_dose",
+          "type": "text",
+          "label": "  ↳ What dose?",
+          "placeholder": "0.5 mg weekly, 1 mg weekly, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_ozempic == true"
+          }
+        },
+        {
+          "id": "ozempic_currently_taking",
+          "type": "single_select",
+          "label": "  ↳ Still taking it?",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ],
+          "conditional_display": {
+            "show_if": "used_ozempic == true"
+          }
+        },
+        {
+          "id": "ozempic_why_stopped",
+          "type": "text",
+          "label": "  ↳ Why did you stop?",
+          "placeholder": "Side effects, cost, reached goal, etc.",
+          "conditional_display": {
+            "show_if": "used_ozempic == true AND ozempic_currently_taking == 'no'"
+          }
+        },
+        {
+          "id": "ozempic_side_effects",
+          "type": "text",
+          "label": "  ↳ Any side effects? (optional)",
+          "placeholder": "Nausea, constipation, fatigue, etc.",
+          "multiline": true,
+          "rows": 2,
+          "conditional_display": {
+            "show_if": "used_ozempic == true"
+          }
+        },
+        
+        {
+          "id": "used_semaglutide_compound",
+          "type": "checkbox",
+          "label": "Compounded semaglutide",
+          "value": false
+        },
+        {
+          "id": "semaglutide_compound_duration",
+          "type": "text",
+          "label": "  ↳ How long?",
+          "placeholder": "6 months, 1 year, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_semaglutide_compound == true"
+          }
+        },
+        {
+          "id": "semaglutide_compound_dose",
+          "type": "text",
+          "label": "  ↳ What dose?",
+          "placeholder": "1 mg weekly, 2.5 mg weekly, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_semaglutide_compound == true"
+          }
+        },
+        {
+          "id": "semaglutide_compound_currently_taking",
+          "type": "single_select",
+          "label": "  ↳ Still taking it?",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ],
+          "conditional_display": {
+            "show_if": "used_semaglutide_compound == true"
+          }
+        },
+        {
+          "id": "semaglutide_compound_why_stopped",
+          "type": "text",
+          "label": "  ↳ Why did you stop?",
+          "placeholder": "Side effects, cost, reached goal, etc.",
+          "conditional_display": {
+            "show_if": "used_semaglutide_compound == true AND semaglutide_compound_currently_taking == 'no'"
+          }
+        },
+        {
+          "id": "semaglutide_compound_side_effects",
+          "type": "text",
+          "label": "  ↳ Any side effects? (optional)",
+          "placeholder": "Nausea, constipation, fatigue, etc.",
+          "multiline": true,
+          "rows": 2,
+          "conditional_display": {
+            "show_if": "used_semaglutide_compound == true"
+          }
+        },
+        
+        {
+          "id": "used_zepbound",
+          "type": "checkbox",
+          "label": "Zepbound (tirzepatide for weight loss)",
+          "value": false
+        },
+        {
+          "id": "zepbound_duration",
+          "type": "text",
+          "label": "  ↳ How long?",
+          "placeholder": "6 months, 1 year, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_zepbound == true"
+          }
+        },
+        {
+          "id": "zepbound_dose",
+          "type": "text",
+          "label": "  ↳ What dose?",
+          "placeholder": "5 mg weekly, 10 mg weekly, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_zepbound == true"
+          }
+        },
+        {
+          "id": "zepbound_currently_taking",
+          "type": "single_select",
+          "label": "  ↳ Still taking it?",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ],
+          "conditional_display": {
+            "show_if": "used_zepbound == true"
+          }
+        },
+        {
+          "id": "zepbound_why_stopped",
+          "type": "text",
+          "label": "  ↳ Why did you stop?",
+          "placeholder": "Side effects, cost, reached goal, etc.",
+          "conditional_display": {
+            "show_if": "used_zepbound == true AND zepbound_currently_taking == 'no'"
+          }
+        },
+        {
+          "id": "zepbound_side_effects",
+          "type": "text",
+          "label": "  ↳ Any side effects? (optional)",
+          "placeholder": "Nausea, constipation, fatigue, etc.",
+          "multiline": true,
+          "rows": 2,
+          "conditional_display": {
+            "show_if": "used_zepbound == true"
+          }
+        },
+        
+        {
+          "id": "used_mounjaro",
+          "type": "checkbox",
+          "label": "Mounjaro (tirzepatide for diabetes)",
+          "value": false
+        },
+        {
+          "id": "mounjaro_duration",
+          "type": "text",
+          "label": "  ↳ How long?",
+          "placeholder": "6 months, 1 year, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_mounjaro == true"
+          }
+        },
+        {
+          "id": "mounjaro_dose",
+          "type": "text",
+          "label": "  ↳ What dose?",
+          "placeholder": "5 mg weekly, 10 mg weekly, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_mounjaro == true"
+          }
+        },
+        {
+          "id": "mounjaro_currently_taking",
+          "type": "single_select",
+          "label": "  ↳ Still taking it?",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ],
+          "conditional_display": {
+            "show_if": "used_mounjaro == true"
+          }
+        },
+        {
+          "id": "mounjaro_why_stopped",
+          "type": "text",
+          "label": "  ↳ Why did you stop?",
+          "placeholder": "Side effects, cost, reached goal, etc.",
+          "conditional_display": {
+            "show_if": "used_mounjaro == true AND mounjaro_currently_taking == 'no'"
+          }
+        },
+        {
+          "id": "mounjaro_side_effects",
+          "type": "text",
+          "label": "  ↳ Any side effects? (optional)",
+          "placeholder": "Nausea, constipation, fatigue, etc.",
+          "multiline": true,
+          "rows": 2,
+          "conditional_display": {
+            "show_if": "used_mounjaro == true"
+          }
+        },
+        
+        {
+          "id": "used_tirzepatide_compound",
+          "type": "checkbox",
+          "label": "Compounded tirzepatide",
+          "value": false
+        },
+        {
+          "id": "tirzepatide_compound_duration",
+          "type": "text",
+          "label": "  ↳ How long?",
+          "placeholder": "6 months, 1 year, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_tirzepatide_compound == true"
+          }
+        },
+        {
+          "id": "tirzepatide_compound_dose",
+          "type": "text",
+          "label": "  ↳ What dose?",
+          "placeholder": "5 mg weekly, 10 mg weekly, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_tirzepatide_compound == true"
+          }
+        },
+        {
+          "id": "tirzepatide_compound_currently_taking",
+          "type": "single_select",
+          "label": "  ↳ Still taking it?",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ],
+          "conditional_display": {
+            "show_if": "used_tirzepatide_compound == true"
+          }
+        },
+        {
+          "id": "tirzepatide_compound_why_stopped",
+          "type": "text",
+          "label": "  ↳ Why did you stop?",
+          "placeholder": "Side effects, cost, reached goal, etc.",
+          "conditional_display": {
+            "show_if": "used_tirzepatide_compound == true AND tirzepatide_compound_currently_taking == 'no'"
+          }
+        },
+        {
+          "id": "tirzepatide_compound_side_effects",
+          "type": "text",
+          "label": "  ↳ Any side effects? (optional)",
+          "placeholder": "Nausea, constipation, fatigue, etc.",
+          "multiline": true,
+          "rows": 2,
+          "conditional_display": {
+            "show_if": "used_tirzepatide_compound == true"
+          }
+        },
+        
+        {
+          "id": "used_saxenda",
+          "type": "checkbox",
+          "label": "Saxenda (liraglutide)",
+          "value": false
+        },
+        {
+          "id": "saxenda_duration",
+          "type": "text",
+          "label": "  ↳ How long?",
+          "placeholder": "6 months, 1 year, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_saxenda == true"
+          }
+        },
+        {
+          "id": "saxenda_dose",
+          "type": "text",
+          "label": "  ↳ What dose?",
+          "placeholder": "3 mg daily, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_saxenda == true"
+          }
+        },
+        {
+          "id": "saxenda_currently_taking",
+          "type": "single_select",
+          "label": "  ↳ Still taking it?",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ],
+          "conditional_display": {
+            "show_if": "used_saxenda == true"
+          }
+        },
+        {
+          "id": "saxenda_why_stopped",
+          "type": "text",
+          "label": "  ↳ Why did you stop?",
+          "placeholder": "Side effects, cost, reached goal, etc.",
+          "conditional_display": {
+            "show_if": "used_saxenda == true AND saxenda_currently_taking == 'no'"
+          }
+        },
+        {
+          "id": "saxenda_side_effects",
+          "type": "text",
+          "label": "  ↳ Any side effects? (optional)",
+          "placeholder": "Nausea, constipation, fatigue, etc.",
+          "multiline": true,
+          "rows": 2,
+          "conditional_display": {
+            "show_if": "used_saxenda == true"
+          }
+        },
+        
+        {
+          "id": "used_victoza",
+          "type": "checkbox",
+          "label": "Victoza (liraglutide)",
+          "value": false
+        },
+        {
+          "id": "victoza_duration",
+          "type": "text",
+          "label": "  ↳ How long?",
+          "placeholder": "6 months, 1 year, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_victoza == true"
+          }
+        },
+        {
+          "id": "victoza_dose",
+          "type": "text",
+          "label": "  ↳ What dose?",
+          "placeholder": "1.2 mg daily, 1.8 mg daily, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_victoza == true"
+          }
+        },
+        {
+          "id": "victoza_currently_taking",
+          "type": "single_select",
+          "label": "  ↳ Still taking it?",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ],
+          "conditional_display": {
+            "show_if": "used_victoza == true"
+          }
+        },
+        {
+          "id": "victoza_why_stopped",
+          "type": "text",
+          "label": "  ↳ Why did you stop?",
+          "placeholder": "Side effects, cost, reached goal, etc.",
+          "conditional_display": {
+            "show_if": "used_victoza == true AND victoza_currently_taking == 'no'"
+          }
+        },
+        {
+          "id": "victoza_side_effects",
+          "type": "text",
+          "label": "  ↳ Any side effects? (optional)",
+          "placeholder": "Nausea, constipation, fatigue, etc.",
+          "multiline": true,
+          "rows": 2,
+          "conditional_display": {
+            "show_if": "used_victoza == true"
+          }
+        },
+        
+        {
+          "id": "used_other",
+          "type": "checkbox",
+          "label": "Other GLP-1",
+          "value": false
+        },
+        {
+          "id": "other_name",
+          "type": "text",
+          "label": "  ↳ Which medication?",
+          "placeholder": "Name of medication",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_other == true"
+          }
+        },
+        {
+          "id": "other_duration",
+          "type": "text",
+          "label": "  ↳ How long?",
+          "placeholder": "6 months, 1 year, etc.",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_other == true"
+          }
+        },
+        {
+          "id": "other_dose",
+          "type": "text",
+          "label": "  ↳ What dose?",
+          "placeholder": "Dose and frequency",
+          "required": true,
+          "conditional_display": {
+            "show_if": "used_other == true"
+          }
+        },
+        {
+          "id": "other_currently_taking",
+          "type": "single_select",
+          "label": "  ↳ Still taking it?",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ],
+          "conditional_display": {
+            "show_if": "used_other == true"
+          }
+        },
+        {
+          "id": "other_why_stopped",
+          "type": "text",
+          "label": "  ↳ Why did you stop?",
+          "placeholder": "Side effects, cost, reached goal, etc.",
+          "conditional_display": {
+            "show_if": "used_other == true AND other_currently_taking == 'no'"
+          }
+        },
+        {
+          "id": "other_side_effects",
+          "type": "text",
+          "label": "  ↳ Any side effects? (optional)",
+          "placeholder": "Nausea, constipation, fatigue, etc.",
+          "multiline": true,
+          "rows": 2,
+          "conditional_display": {
+            "show_if": "used_other == true"
+          }
         }
       ],
-      "next": "meds.provider_switch"
+      "validation": {
+        "at_least_one_checked": {
+          "fields": [
+            "used_wegovy",
+            "used_ozempic",
+            "used_semaglutide_compound",
+            "used_zepbound",
+            "used_mounjaro",
+            "used_tirzepatide_compound",
+            "used_saxenda",
+            "used_victoza",
+            "used_other"
+          ],
+          "error": "Please check at least one GLP-1 medication you've used"
+        },
+        "max_currently_taking": {
+          "limit": 1,
+          "fields": [
+            "wegovy_currently_taking",
+            "ozempic_currently_taking",
+            "semaglutide_compound_currently_taking",
+            "zepbound_currently_taking",
+            "mounjaro_currently_taking",
+            "tirzepatide_compound_currently_taking",
+            "saxenda_currently_taking",
+            "victoza_currently_taking",
+            "other_currently_taking"
+          ],
+          "error": "You can only be currently taking one GLP-1 medication"
+        }
+      },
+      "next": "treatment.medication_preference"
     },
     {
-      "id": "meds.provider_switch",
-      "type": "single_select",
-      "title": "If we prescribe a GLP-1, will you stop your current one?",
-      "help_text": "It's not safe to take GLP-1 medications from multiple providers at the same time.",
-      "auto_advance": false,
+      "id": "treatment.medication_preference",
+      "type": "multi_select",
+      "phase": "treatment",
+      "title": "Which medications interest you?",
       "options": [
-        { "value": "yes_switch", "label": "Yes, I'll stop my current medication and let my provider know" },
-        { "value": "no_continue", "label": "No, I want to stay with my current provider" }
+        { "value": "semaglutide_brand", "label": "Brand semaglutide (Wegovy, Ozempic)" },
+        { "value": "semaglutide_compound", "label": "Compounded semaglutide" },
+        { "value": "tirzepatide_brand", "label": "Brand tirzepatide (Zepbound, Mounjaro)" },
+        { "value": "tirzepatide_compound", "label": "Compounded tirzepatide" },
+        { "value": "either", "label": "Either—open to provider recommendation" },
+        { "value": "not_sure", "label": "Not sure—want to discuss with provider" }
       ],
       "required": true,
-      "next": "meds.side_effects"
+      "next": "treatment.side_effect_history"
     },
     {
-      "id": "meds.past_details",
+      "id": "treatment.side_effect_history",
+      "type": "multi_select",
+      "phase": "treatment",
+      "title": "Do you usually have side effects with medications?",
+      "help_text": "Select any that apply to your past experiences.",
+      "options": [
+        { "value": "nausea", "label": "Nausea or stomach upset" },
+        { "value": "constipation_diarrhea", "label": "Constipation or diarrhea" },
+        { "value": "fatigue", "label": "Fatigue or low energy" },
+        { "value": "headaches", "label": "Headaches" },
+        { "value": "insomnia", "label": "Difficulty sleeping" },
+        { "value": "none", "label": "None, I tolerate medications well" },
+        { "value": "other", "label": "Other" }
+      ],
+      "other_text_id": "side_effect_history_other",
+      "required": true,
+      "next": "treatment.side_effect_plan_interest"
+    },
+    {
+      "id": "treatment.side_effect_plan_interest",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Would you be interested in a personalized plan that minimizes your side effects?",
+      "auto_advance": true,
+      "options": [
+        { "value": "yes", "label": "Yes, definitely" },
+        { "value": "maybe", "label": "Maybe, I'd like to learn more" },
+        { "value": "no", "label": "No, I'm not concerned" }
+      ],
+      "required": true,
+      "next": "assess.previous_attempts"
+    },
+    {
+      "id": "assess.previous_attempts",
       "type": "composite",
-      "title": "Tell us about your past experience",
+      "phase": "treatment",
+      "title": "Tell us a bit about your journey",
       "fields": [
         {
-          "id": "past_med_name",
-          "type": "text",
-          "label": "Which medication?",
-          "placeholder": "e.g., Wegovy, compounded semaglutide",
-          "required": true
+          "id": "activity_level",
+          "type": "single_select",
+          "label": "How active are you right now?",
+          "required": true,
+          "options": [
+            { "value": "sedentary", "label": "Mostly sedentary (desk work, little movement)" },
+            { "value": "light", "label": "Lightly active (some walking daily)" },
+            { "value": "moderate", "label": "Moderately active (regular walks or exercise)" },
+            { "value": "active", "label": "Active (consistent exercise routine)" },
+            { "value": "very_active", "label": "Very active (intensive daily training)" }
+          ]
         },
         {
-          "id": "past_duration",
+          "id": "journey_notes",
           "type": "text",
-          "label": "How long did you use it?",
-          "placeholder": "e.g., 4 months",
-          "required": true
-        },
-        {
-          "id": "why_stopped",
-          "type": "text",
-          "label": "Why did you stop?",
-          "placeholder": "e.g., side effects, cost, reached my goal",
-          "required": true
+          "label": "Anything else we should know? (optional)",
+          "help_text": "Share whatever feels important—we're listening and here to help.",
+          "placeholder": "Feel free to share what's on your mind...",
+          "multiline": true,
+          "rows": 6,
+          "required": false
         }
       ],
-      "next": "meds.side_effects"
+      "next": "transition.final_section"
     },
     {
-      "id": "meds.side_effects",
-      "type": "multi_select",
-      "title": "Did you have any side effects?",
-      "help_text": "This helps us plan your treatment better.",
-      "options": [
-        { "value": "nausea", "label": "Nausea" },
-        { "value": "vomiting", "label": "Vomiting" },
-        { "value": "constipation", "label": "Constipation" },
-        { "value": "diarrhea", "label": "Diarrhea" },
-        { "value": "reflux", "label": "Acid reflux" },
-        { "value": "fatigue", "label": "Fatigue" },
-        { "value": "none", "label": "No side effects" }
-      ],
-      "next": "motivation.focus"
-    },
-    {
-      "id": "meds.interest",
-      "type": "single_select",
-      "title": "Are you interested in medication as part of your plan?",
-      "auto_advance": false,
-      "options": [
-        { "value": "yes", "label": "Yes" },
-        { "value": "maybe", "label": "I'd like to learn more first" },
-        { "value": "no", "label": "No, I'd prefer no medication" }
-      ],
-      "required": true,
-      "next": "motivation.focus"
-    },
-    {
-      "id": "motivation.focus",
-      "type": "multi_select",
-      "title": "What do you want help with most?",
-      "help_text": "Pick as many as you want.",
-      "options": [
-        { "value": "nutrition", "label": "Nutrition" },
-        { "value": "activity", "label": "Exercise and movement" },
-        { "value": "habits", "label": "Building better habits" },
-        { "value": "mindset", "label": "Mindset and motivation" },
-        { "value": "other", "label": "Something else" }
-      ],
-      "other_text_id": "motivation.other_detail",
-      "next": "motivation.journey"
-    },
-    {
-      "id": "motivation.journey",
-      "type": "text",
-      "title": "Tell us about your weight loss journey",
-      "placeholder": "Share anything you think would help us understand your situation better - what you've tried, what's been hard, what you're hoping for...",
-      "help_text": "This is optional, but it helps us personalize your plan. Write as much or as little as you'd like.",
-      "required": false,
-      "multiline": true,
-      "next": "side_effects.baseline"
-    },
-    {
-      "id": "side_effects.baseline",
-      "type": "multi_select",
-      "title": "Do you currently experience any of these symptoms?",
-      "help_text": "We're asking about your baseline, before starting any new treatment.",
-      "options": [
-        { "value": "nausea", "label": "Nausea" },
-        { "value": "vomiting", "label": "Vomiting" },
-        { "value": "constipation", "label": "Constipation" },
-        { "value": "diarrhea", "label": "Diarrhea" },
-        { "value": "reflux", "label": "Heartburn or acid reflux" },
-        { "value": "bloating", "label": "Bloating" },
-        { "value": "fatigue", "label": "Fatigue or low energy" },
-        { "value": "headaches", "label": "Frequent headaches" },
-        { "value": "none", "label": "None of these" }
-      ],
-      "next": "side_effects.management_interest"
-    },
-    {
-      "id": "side_effects.management_interest",
-      "type": "single_select",
-      "title": "Would you be interested in personalized treatment to help manage side effects?",
-      "help_text": "If you experience side effects from your medication, we can provide additional support and treatments to help manage them.",
-      "auto_advance": false,
-      "options": [
-        { "value": "yes", "label": "Yes, I'd like side effect management if needed" },
-        { "value": "no", "label": "No, I'd prefer to manage them on my own" },
-        { "value": "not_sure", "label": "I'm not sure, tell me more later" }
-      ],
-      "required": true,
-      "next": "treatment.medication_selection"
-    },
-    {
-      "id": "treatment.medication_selection",
+      "id": "transition.final_section",
       "type": "content",
-      "headline": "Which medication sounds right for you?",
-      "body": "We'll show available medications based on your state so you can choose the best option.",
-      "next": "contact.details"
+      "phase": "treatment",
+      "headline": "Almost there!",
+      "body": "Just need your contact and shipping info, then you're all set. Your provider will review everything within 24 hours.",
+      "cta_primary": {
+        "label": "Finish Up"
+      },
+      "next": "logistics.contact_info"
     },
     {
-      "id": "contact.details",
+      "id": "logistics.contact_info",
       "type": "composite",
-      "title": "Where should we reach you?",
-      "help_text": "We'll use this to send updates and, if prescribed, ship your medication.",
+      "phase": "treatment",
+      "title": "Where can we reach you?",
       "fields": [
         [
           {
             "id": "first_name",
             "type": "text",
-            "label": "First Name",
-            "required": true
+            "label": "First name",
+            "required": true,
+            "validation": {
+              "pattern": "^[a-zA-Z\\s\\-']{1,50}$",
+              "error": "Enter a valid first name"
+            }
           },
           {
             "id": "last_name",
             "type": "text",
-            "label": "Last Name",
-            "required": true
+            "label": "Last name",
+            "required": true,
+            "validation": {
+              "pattern": "^[a-zA-Z\\s\\-']{1,50}$",
+              "error": "Enter a valid last name"
+            }
           }
         ],
         {
@@ -984,261 +1875,414 @@ const formConfig: FormConfig = {
           "type": "text",
           "label": "Phone number",
           "placeholder": "(555) 123-4567",
-          "required": true
-        },
-        {
-          "id": "shipping_address",
-          "type": "text",
-          "label": "Street address",
-          "placeholder": "123 Main St, Apt 4B",
-          "required": true
-        },
-        {
-          "id": "shipping_city",
-          "type": "text",
-          "label": "City",
-          "required": true
-        },
-        {
-          "id": "shipping_state",
-          "type": "single_select",
-          "label": "State",
-          "required": true,
-          "options": [
-            { "value": "AL", "label": "Alabama" },
-            { "value": "AK", "label": "Alaska" },
-            { "value": "AZ", "label": "Arizona" },
-            { "value": "AR", "label": "Arkansas" },
-            { "value": "CA", "label": "California" },
-            { "value": "CO", "label": "Colorado" },
-            { "value": "CT", "label": "Connecticut" },
-            { "value": "DE", "label": "Delaware" },
-            { "value": "FL", "label": "Florida" },
-            { "value": "GA", "label": "Georgia" },
-            { "value": "HI", "label": "Hawaii" },
-            { "value": "ID", "label": "Idaho" },
-            { "value": "IL", "label": "Illinois" },
-            { "value": "IN", "label": "Indiana" },
-            { "value": "IA", "label": "Iowa" },
-            { "value": "KS", "label": "Kansas" },
-            { "value": "KY", "label": "Kentucky" },
-            { "value": "LA", "label": "Louisiana" },
-            { "value": "ME", "label": "Maine" },
-            { "value": "MD", "label": "Maryland" },
-            { "value": "MA", "label": "Massachusetts" },
-            { "value": "MI", "label": "Michigan" },
-            { "value": "MN", "label": "Minnesota" },
-            { "value": "MS", "label": "Mississippi" },
-            { "value": "MO", "label": "Missouri" },
-            { "value": "MT", "label": "Montana" },
-            { "value": "NE", "label": "Nebraska" },
-            { "value": "NV", "label": "Nevada" },
-            { "value": "NH", "label": "New Hampshire" },
-            { "value": "NJ", "label": "New Jersey" },
-            { "value": "NM", "label": "New Mexico" },
-            { "value": "NY", "label": "New York" },
-            { "value": "NC", "label": "North Carolina" },
-            { "value": "ND", "label": "North Dakota" },
-            { "value": "OH", "label": "Ohio" },
-            { "value": "OK", "label": "Oklahoma" },
-            { "value": "OR", "label": "Oregon" },
-            { "value": "PA", "label": "Pennsylvania" },
-            { "value": "RI", "label": "Rhode Island" },
-            { "value": "SC", "label": "South Carolina" },
-            { "value": "SD", "label": "South Dakota" },
-            { "value": "TN", "label": "Tennessee" },
-            { "value": "TX", "label": "Texas" },
-            { "value": "UT", "label": "Utah" },
-            { "value": "VT", "label": "Vermont" },
-            { "value": "VA", "label": "Virginia" },
-            { "value": "WA", "label": "Washington" },
-            { "value": "WV", "label": "West Virginia" },
-            { "value": "WI", "label": "Wisconsin" },
-            { "value": "WY", "label": "Wyoming" },
-            { "value": "DC", "label": "District of Columbia" }
-          ]
-        },
-        {
-          "id": "shipping_zip",
-          "type": "text",
-          "label": "ZIP code",
-          "placeholder": "12345",
+          "mask": "(###) ###-####",
           "required": true,
           "validation": {
-            "pattern": "^\\d{5}(-\\d{4})?$",
-            "error": "Please enter a valid ZIP code"
+            "pattern": "^\\(\\d{3}\\) \\d{3}-\\d{4}$",
+            "error": "Enter a valid phone number"
+          }
+        }
+      ],
+      "next": "logistics.shipping_address"
+    },
+    {
+      "id": "logistics.shipping_address",
+      "type": "composite",
+      "phase": "treatment",
+      "title": "Where should we ship your medication?",
+      "fields": [
+        {
+          "id": "address_line1",
+          "type": "text",
+          "label": "Street address",
+          "placeholder": "123 Main Street",
+          "required": true,
+          "validation": {
+            "pattern": "^[a-zA-Z0-9\\s,.-]{5,100}$",
+            "error": "Enter a valid street address"
           }
         },
         {
-          "id": "notification_consent",
-          "type": "single_select",
-          "label": "May we send important updates by SMS and email?",
-          "help_text": "We’ll use this to share order updates, appointment reminders, and support messages.",
-          "required": true,
-          "options": [
-            { "value": "true", "label": "Yes, keep me updated by SMS and email" },
-            { "value": "false", "label": "No, email only please" }
-          ]
-        }
-      ],
-      "next": "treatment.plan_selection"
-    },
-    {
-      "id": "treatment.plan_selection",
-      "type": "content",
-      "headline": "Choose your treatment plan",
-      "body": "Select a plan and apply any discount code you may have.",
-      "next": "consent.terms"
-    },
-    {
-      "id": "consent.terms",
-      "type": "consent",
-      "title": "Last step",
-      "items": [
+          "id": "address_line2",
+          "type": "text",
+          "label": "Apt, suite, etc. (optional)",
+          "placeholder": "Apt 4B",
+          "validation": {
+            "pattern": "^[a-zA-Z0-9\\s,.-]{0,50}$",
+            "error": "Enter a valid apartment/suite"
+          }
+        },
         {
-          "id": "tos",
-          "label": "I agree to the Terms of Use, Privacy Policy, and Telehealth Consent.",
+          "id": "city",
+          "type": "text",
+          "label": "City",
+          "required": true,
+          "validation": {
+            "pattern": "^[a-zA-Z\\s\\-']{2,50}$",
+            "error": "Enter a valid city"
+          }
+        },
+        [
+          {
+            "id": "state",
+            "type": "single_select",
+            "label": "State",
+            "required": true,
+            "options": [
+              { "value": "AL", "label": "AL" },
+              { "value": "AK", "label": "AK" },
+              { "value": "AZ", "label": "AZ" },
+              { "value": "AR", "label": "AR" },
+              { "value": "CA", "label": "CA" },
+              { "value": "CO", "label": "CO" },
+              { "value": "CT", "label": "CT" },
+              { "value": "DE", "label": "DE" },
+              { "value": "FL", "label": "FL" },
+              { "value": "GA", "label": "GA" },
+              { "value": "HI", "label": "HI" },
+              { "value": "ID", "label": "ID" },
+              { "value": "IL", "label": "IL" },
+              { "value": "IN", "label": "IN" },
+              { "value": "IA", "label": "IA" },
+              { "value": "KS", "label": "KS" },
+              { "value": "KY", "label": "KY" },
+              { "value": "LA", "label": "LA" },
+              { "value": "ME", "label": "ME" },
+              { "value": "MD", "label": "MD" },
+              { "value": "MA", "label": "MA" },
+              { "value": "MI", "label": "MI" },
+              { "value": "MN", "label": "MN" },
+              { "value": "MS", "label": "MS" },
+              { "value": "MO", "label": "MO" },
+              { "value": "MT", "label": "MT" },
+              { "value": "NE", "label": "NE" },
+              { "value": "NV", "label": "NV" },
+              { "value": "NH", "label": "New Hampshire" },
+              { "value": "NJ", "label": "New Jersey" },
+              { "value": "NM", "label": "New Mexico" },
+              { "value": "NY", "label": "New York" },
+              { "value": "NC", "label": "North Carolina" },
+              { "value": "ND", "label": "North Dakota" },
+              { "value": "OH", "label": "Ohio" },
+              { "value": "OK", "label": "OK" },
+              { "value": "OR", "label": "Oregon" },
+              { "value": "PA", "label": "Pennsylvania" },
+              { "value": "RI", "label": "RI" },
+              { "value": "SC", "label": "SC" },
+              { "value": "SD", "label": "SD" },
+              { "value": "TN", "label": "TN" },
+              { "value": "TX", "label": "TX" },
+              { "value": "UT", "label": "UT" },
+              { "value": "VT", "label": "VT" },
+              { "value": "VA", "label": "VA" },
+              { "value": "WA", "label": "WA" },
+              { "value": "WV", "label": "WV" },
+              { "value": "WI", "label": "WI" },
+              { "value": "WY", "label": "WY" },
+              { "value": "DC", "label": "DC" }
+            ]
+          },
+          {
+            "id": "zip_code",
+            "type": "text",
+            "label": "ZIP",
+            "placeholder": "12345",
+            "mask": "#####",
+            "required": true,
+            "validation": {
+              "pattern": "^\\d{5}$",
+              "error": "Enter a valid 5-digit ZIP"
+            }
+          }
+        ]
+      ],
+      "next": "logistics.create_password"
+    },
+    {
+      "id": "logistics.create_password",
+      "type": "composite",
+      "phase": "treatment",
+      "title": "Create your account",
+      "fields": [
+        {
+          "id": "password",
+          "type": "password",
+          "label": "Password",
+          "placeholder": "At least 8 characters",
+          "required": true,
+          "validation": {
+            "pattern": "^.{8,}$",
+            "error": "Must be at least 8 characters"
+          }
+        },
+        {
+          "id": "password_confirm",
+          "type": "password",
+          "label": "Confirm password",
+          "placeholder": "Re-enter password",
+          "required": true,
+          "validation": {
+            "matches": "password",
+            "error": "Passwords don't match"
+          }
+        },
+        {
+          "id": "all_consents",
+          "type": "consent_item",
+          "label": "By creating an account, I agree to the Terms of Service, Privacy Policy, Telehealth Consent, and HIPAA Authorization. I understand prescriptions are at provider discretion.",
           "links": [
-            { "label": "Terms of Use", "url": "https://hybrid.com/terms" },
+            { "label": "Terms of Service", "url": "https://hybrid.com/terms" },
             { "label": "Privacy Policy", "url": "https://hybrid.com/privacy" },
-            { "label": "Telehealth Consent", "url": "https://hybrid.com/telehealth" }
+            { "label": "Telehealth Consent", "url": "https://hybrid.com/telehealth" },
+            { "label": "HIPAA Authorization", "url": "https://hybrid.com/hipaa" }
           ],
           "required": true
         },
         {
           "id": "marketing_opt_in",
-          "label": "Send me health tips and updates",
+          "type": "consent_item",
+          "label": "Send me helpful tips and updates",
           "required": false
         }
       ],
-      "next": "review.summary"
+      "next": "complete.success"
     },
     {
-      "id": "review.summary",
-      "type": "review",
-      "title": "Does everything look right?",
-      "help_text": "Please double-check your answers before submitting.",
-      "next": "end"
-    },
-    {
-      "id": "end",
+      "id": "complete.success",
       "type": "terminal",
+      "phase": "treatment",
       "status": "success",
-      "title": "Thanks for completing your assessment",
-      "body": "We've received your information. Watch your email for next steps."
+      "title": "You did it!",
+      "body": "Thanks for trusting us with your health information. Here's what happens next:",
+      "next_steps": [
+        { "icon": "✓", "icon_name": "review", "label": "Physician review (24 hrs)", "status": "pending" },
+        { "icon": "→", "icon_name": "plan", "label": "Treatment plan (48 hrs)", "status": "pending" },
+        { "icon": "→", "icon_name": "journey", "label": "Start your journey", "status": "pending" }
+      ],
+      "cta_primary": {
+        "label": "View Your Dashboard"
+      }
     }
   ],
+
   "eligibility_rules": [
     {
+      "rule": "age_out_of_range",
+      "if": "calc.age < 12 OR calc.age > 90",
+      "action": "flag_no_medication",
+      "severity": "critical"
+    },
+    {
       "rule": "underweight_no_meds",
-      "if": "calc.bmi < 18.5",
-      "action": "flag_no_medication"
+      "if": "calc.bmi < 19",
+      "action": "flag_no_medication",
+      "severity": "critical"
     },
     {
       "rule": "low_bmi_review",
       "if": "calc.bmi < 27",
-      "action": "flag_requires_comorbidity_check"
+      "action": "flag_requires_comorbidity_check",
+      "severity": "medium"
     },
     {
-      "rule": "thyroid_no_meds",
-      "if": "medical.conditions contains ['thyroid_cancer','men2']",
-      "action": "flag_no_medication"
+      "rule": "anorexia_bulimia_exclusion",
+      "if": "assess.eating_disorder_type contains 'anorexia' OR assess.eating_disorder_type contains 'bulimia'",
+      "action": "flag_no_medication",
+      "severity": "critical"
     },
     {
-      "rule": "pancreatitis_no_meds",
-      "if": "medical.conditions contains 'pancreatitis'",
-      "action": "flag_no_medication"
+      "rule": "thyroid_cancer_exclusion",
+      "if": "assess.medical_conditions contains 'thyroid_cancer'",
+      "action": "flag_no_medication",
+      "severity": "critical"
+    },
+    {
+      "rule": "men2_exclusion",
+      "if": "assess.medical_conditions contains 'men2'",
+      "action": "flag_no_medication",
+      "severity": "critical"
+    },
+    {
+      "rule": "glp1_allergy_exclusion",
+      "if": "assess.glp1_safety contains 'glp1_allergy'",
+      "action": "flag_no_medication",
+      "severity": "critical"
+    },
+    {
+      "rule": "pregnancy_exclusion",
+      "if": "assess.pregnancy in ['pregnant','trying','nursing']",
+      "action": "flag_no_medication",
+      "severity": "critical"
+    },
+    {
+      "rule": "insulin_requires_coordination",
+      "if": "assess.current_medications contains 'insulin'",
+      "action": "flag_requires_specialist_clearance",
+      "severity": "critical"
+    },
+    {
+      "rule": "type1_requires_specialist_clearance",
+      "if": "assess.diabetes_type == 'type1'",
+      "action": "flag_no_medication",
+      "severity": "critical"
+    },
+    {
+      "rule": "active_suicidal_ideation",
+      "if": "current_thoughts == 'yes'",
+      "action": "flag_mental_health_urgent_review",
+      "severity": "critical"
+    },
+    {
+      "rule": "pancreatitis_review",
+      "if": "assess.medical_conditions contains 'pancreatitis'",
+      "action": "flag_high_risk_requires_review",
+      "severity": "high"
+    },
+    {
+      "rule": "active_gallbladder_review",
+      "if": "assess.medical_conditions contains 'gallbladder_active'",
+      "action": "flag_high_risk_requires_review",
+      "severity": "high"
     },
     {
       "rule": "eating_disorder_flag",
-      "if": "safety.eating_disorder contains ['purging','binge','restriction','diagnosed']",
-      "action": "flag_eating_disorder_review"
+      "if": "assess.eating_relationship == 'yes'",
+      "action": "flag_eating_disorder_review",
+      "severity": "high"
     },
     {
-      "rule": "type1_no_meds",
-      "if": "medical.diabetes == 'type1'",
-      "action": "flag_no_medication"
+      "rule": "recent_psych_hospitalization",
+      "if": "recent_hospitalization == 'yes'",
+      "action": "flag_mental_health_review",
+      "severity": "high"
     },
     {
-      "rule": "pregnant_no_meds",
-      "if": "medical.pregnancy in ['pregnant','planning','nursing']",
-      "action": "flag_no_medication"
+      "rule": "heavy_alcohol_use",
+      "if": "alcohol_use == 'heavy'",
+      "action": "flag_substance_review",
+      "severity": "medium"
     },
     {
-      "rule": "mental_health_flag",
-      "if": "medical.suicide_risk == 'yes'",
-      "action": "flag_mental_health_review"
-    },
-    {
-      "rule": "substance_use_flag",
-      "if": "medical.substance_use.alcohol == 'heavy' or medical.substance_use.substances contains ['cocaine','meth','opioids']",
-      "action": "flag_substance_review"
+      "rule": "hard_drug_use",
+      "if": "recreational_substances contains ['cocaine','methamphetamine','opioids']",
+      "action": "flag_substance_review",
+      "severity": "high"
     },
     {
       "rule": "pediatric_consent_required",
-      "if": "calc.age < 18",
-      "action": "flag_parental_consent_required"
+      "if": "calc.age >= 12 AND calc.age < 18",
+      "action": "flag_parental_consent_required",
+      "severity": "high"
     }
   ],
+
   "provider_packet": {
     "include_fields": [
-      "goal.range",
-      "demographics.state",
-      "demographics.dob",
-      "demographics.sex_birth",
-      "demographics.ethnicity",
+      "email",
       "first_name",
       "last_name",
-      "email",
+      "phone",
+      "demographics.dob",
+      "calc.age",
+      "demographics.state",
+      "sex_birth",
+      "ethnicity",
       "parent_name",
-      "parent_email",
-      "parent_phone",
+      "goal.range",
       "height_ft",
       "height_in",
       "weight",
       "highest_weight",
       "goal_weight",
+      "calc.bmi",
       "activity_level",
-      "safety.eating_disorder",
-      "medical.mental_health_diagnosis",
+      "assess.eating_relationship",
+      "assess.eating_disorder_type",
+      "mental_health_diagnosis",
       "mental_health_other",
-      "medical.suicide_risk",
-      "medical.substance_use.alcohol",
-      "medical.substance_use.substances",
-      "medical.diabetes",
-      "medical.pregnancy",
-      "medical.conditions",
-      "medical.other_detail",
-      "medical.medications",
-      "medical.medications_other_detail",
-      "medical.allergies",
-      "meds.status",
-      "current_med_name",
-      "current_dose",
-      "weeks_on_dose",
-      "current_provider",
-      "meds.provider_switch",
-      "past_med_name",
-      "past_duration",
-      "why_stopped",
-      "meds.side_effects",
-      "meds.interest",
-      "motivation.focus",
-      "motivation.other_detail",
-      "motivation.journey",
-      "side_effects.baseline",
-      "side_effects.management_interest",
-      "phone",
-      "shipping_address",
-      "shipping_city",
-      "shipping_state",
-      "shipping_zip",
-      "selected_medication",
-      "selected_plan_name",
-      "selected_plan_price_display",
-      "discount_code"
+      "recent_hospitalization",
+      "current_thoughts",
+      "alcohol_use",
+      "tobacco_use",
+      "recreational_substances",
+      "assess.diabetes",
+      "assess.diabetes_type",
+      "assess.pregnancy",
+      "assess.medical_conditions",
+      "medical_conditions_other",
+      "assess.current_medications",
+      "medications_detail",
+      "taking_supplements",
+      "supplements_detail",
+      "has_allergies",
+      "allergies_detail",
+      "activity_level",
+      "journey_notes",
+      "glp1_status",
+      "medications_used",
+      "wegovy_duration",
+      "wegovy_dose",
+      "wegovy_currently_taking",
+      "wegovy_why_stopped",
+      "wegovy_side_effects",
+      "ozempic_duration",
+      "ozempic_dose",
+      "ozempic_currently_taking",
+      "ozempic_why_stopped",
+      "ozempic_side_effects",
+      "semaglutide_compound_duration",
+      "semaglutide_compound_dose",
+      "semaglutide_compound_currently_taking",
+      "semaglutide_compound_why_stopped",
+      "semaglutide_compound_side_effects",
+      "zepbound_duration",
+      "zepbound_dose",
+      "zepbound_currently_taking",
+      "zepbound_why_stopped",
+      "zepbound_side_effects",
+      "mounjaro_duration",
+      "mounjaro_dose",
+      "mounjaro_currently_taking",
+      "mounjaro_why_stopped",
+      "mounjaro_side_effects",
+      "tirzepatide_compound_duration",
+      "tirzepatide_compound_dose",
+      "tirzepatide_compound_currently_taking",
+      "tirzepatide_compound_why_stopped",
+      "tirzepatide_compound_side_effects",
+      "saxenda_duration",
+      "saxenda_dose",
+      "saxenda_currently_taking",
+      "saxenda_why_stopped",
+      "saxenda_side_effects",
+      "victoza_duration",
+      "victoza_dose",
+      "victoza_currently_taking",
+      "victoza_why_stopped",
+      "victoza_side_effects",
+      "other_name",
+      "other_duration",
+      "other_dose",
+      "other_currently_taking",
+      "other_why_stopped",
+      "other_side_effects",
+      "treatment.medication_preference",
+      "treatment.side_effect_history",
+      "side_effect_history_other",
+      "treatment.side_effect_plan_interest",
+      "address_line1",
+      "address_line2",
+      "city",
+      "state",
+      "zip_code"
     ],
-    "summary_template": "Patient: {email} | Phone: {phone} | State: {demographics.state} | Age: {calc.age} | Sex: {demographics.sex_birth} | BMI: {calc.bmi:.1f} | Goal: -{goal.range} lb to {goal_weight} lb | ED History: {safety.eating_disorder} | Mental Health: {medical.mental_health_diagnosis} | Suicide Risk: {medical.suicide_risk} | Diabetes: {medical.diabetes} | Current GLP-1: {meds.status} | Conditions: {medical.conditions} | Medications: {medical.medications} | Allergies: {medical.allergies} | Side Effect Management: {side_effects.management_interest}"
+    "summary_template": "PATIENT: {first_name} {last_name} | DOB: {demographics.dob} (Age {calc.age}) | {sex_birth} | {demographics.state}\n\nGOALS: Current {weight}lb → Goal {goal_weight}lb ({goal.range}) | BMI: {calc.bmi:.1f} | Activity: {activity_level}\n\nRED FLAGS: {flags}\n\nED HISTORY: {assess.eating_relationship} | Type: {assess.eating_disorder_type}\nMENTAL HEALTH: {mental_health_diagnosis} | Suicidal ideation: {current_thoughts} | Recent psych hospitalization: {recent_hospitalization}\nSUBSTANCE: Alcohol: {assess.substance_use_alcohol} | Tobacco: {assess.substance_use_tobacco} | Other: {assess.substance_use_recreational}\n\nMEDICAL: Diabetes: {assess.diabetes_type} | Pregnancy: {assess.pregnancy} | Conditions: {assess.medical_conditions}\nMEDICATIONS: {assess.current_medications}, {medications_detail}\nALLERGIES: {allergies_detail}\n\nGLP-1 EXPERIENCE: {glp1_status} | Medications used: {medications_used} | Currently taking: {currently_taking}\nExperience notes: {glp1_experience_notes}\nMEDICATION INTEREST: {treatment.medication_preference}\nSUPPORT NEEDS: {treatment.side_effect_management}\n\nADDITIONAL NOTES: {journey_notes}",
+    "risk_stratification": {
+      "critical": ["age_out_of_range", "underweight_no_meds", "anorexia_bulimia_exclusion", "thyroid_cancer_exclusion", "men2_exclusion", "pregnancy_exclusion", "glp1_allergy_exclusion", "insulin_requires_coordination", "type1_requires_specialist_clearance", "active_suicidal_ideation"],
+      "high": ["eating_disorder_flag", "pancreatitis_review", "active_gallbladder_review", "hard_drug_use", "recent_psych_hospitalization"],
+      "medium": ["low_bmi_review", "heavy_alcohol_use"],
+      "review_required": ["pediatric_consent_required"]
+    }
   }
 };
 

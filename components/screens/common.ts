@@ -8,4 +8,6 @@ export interface ScreenProps {
   onSubmit: () => void;
   showBack: boolean;
   onBack: () => void;
+  headerSize?: string;
+  calculations?: Record<string, any>;
 }

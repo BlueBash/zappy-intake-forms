@@ -3,10 +3,14 @@ import { ScreenProps } from './common';
 import { ContentScreen as ContentScreenType, ConsentItem } from '../../types';
 import NavigationButtons from '../common/NavigationButtons';
 import Checkbox from '../ui/Checkbox';
-import { BloomingPlantIllustration } from '../ui/Illustrations';
+import { WelcomeIllustration } from '../ui/Illustrations';
+import { interpolateText } from '../../utils/stringInterpolator';
 
-const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ screen, onSubmit, showBack, onBack, updateAnswer, answers }) => {
+const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ screen, onSubmit, showBack, onBack, updateAnswer, answers, calculations = {}, headerSize = 'text-4xl sm:text-5xl' }) => {
   const { headline, body, cta_primary, status, consent_items, image } = screen;
+
+  const interpolatedHeadline = interpolateText(headline, calculations, answers);
+  const interpolatedBody = interpolateText(body, calculations, answers);
 
   const initialConsents = consent_items?.reduce((acc, item) => {
     acc[item.id] = !!answers[item.id];
@@ -57,16 +61,15 @@ const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ 
   };
 
   const statusBorderClass = status ? `border-l-4 pl-8 ${status === 'warning' ? 'border-amber-400' : 'border-emerald-500'}` : '';
-  const isTransitionScreen = image && image.includes('transition');
 
   return (
     <div className={`w-full text-center flex-grow flex flex-col justify-center items-center ${statusBorderClass}`}>
-        {isTransitionScreen && <BloomingPlantIllustration className="w-48 h-48 mb-8 text-primary" />}
+        {image === 'welcome_illustration' && <WelcomeIllustration className="w-48 h-48 mb-8 text-primary" />}
 
-        <h2 className="text-4xl sm:text-5xl font-semibold mb-4 text-stone-900 leading-tight -tracking-wider">
-            {headline}
+        <h2 className={`${headerSize} font-semibold mb-4 text-stone-900 leading-tight -tracking-wider`}>
+            {interpolatedHeadline}
         </h2>
-        {body && <p className="text-lg sm:text-xl mb-12 max-w-xl text-stone-600 leading-relaxed">{body}</p>}
+        {interpolatedBody && <p className="text-lg sm:text-xl mb-12 max-w-xl text-stone-600 leading-relaxed whitespace-pre-line">{interpolatedBody}</p>}
         
         {consent_items && (
           <div className="w-full max-w-[580px] space-y-4 mb-8 text-left">

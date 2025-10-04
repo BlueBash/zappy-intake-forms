@@ -23,7 +23,8 @@ import PlanSelectionScreen from './components/screens/PlanSelectionScreen';
 const App: React.FC = () => {
   const { 
     currentScreen, 
-    answers, 
+    answers,
+    calculations,
     progress, 
     goToNext, 
     goToPrev,
@@ -42,6 +43,11 @@ const App: React.FC = () => {
     document.documentElement.style.setProperty('--secondary-color', formConfig.settings.theme.secondary_hex);
     document.documentElement.style.setProperty('--background-color', formConfig.settings.theme.background_hex);
   }, []);
+
+  // Scroll to top whenever screen changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentScreen.id]);
 
   useEffect(() => {
     if (currentScreen.id !== 'review.summary' && submitError) {
@@ -121,6 +127,7 @@ const App: React.FC = () => {
     const commonProps = {
       key: screen.id,
       answers,
+      calculations,
       updateAnswer,
       onSubmit: goToNext,
       showBack: history.length > 0,

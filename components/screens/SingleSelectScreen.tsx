@@ -9,13 +9,15 @@ import { SingleSelectScreen as SingleSelectScreenType } from '../../types';
 const DROPDOWN_THRESHOLD = 8;
 
 const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack }) => {
-  const { id, title, help_text, options = [], required, auto_advance = true } = screen;
-  const selectedValue = answers[id];
+  const { id, title, help_text, options = [], required, auto_advance = true, field_id } = screen;
+  // Use field_id if provided, otherwise use id
+  const answerId = field_id || id;
+  const selectedValue = answers[answerId];
 
   if (screen.id === 'demographics.state') {
     const stateValue = selectedValue || '';
     const handleStateChange = (code: string) => {
-      updateAnswer(id, code);
+      updateAnswer(answerId, code);
     };
 
     return (
@@ -38,7 +40,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   }
 
   const handleButtonSelect = (value: string) => {
-    updateAnswer(id, value);
+    updateAnswer(answerId, value);
     if (auto_advance) {
         // Auto-submit on selection for a faster flow
         setTimeout(onSubmit, 200);
@@ -46,7 +48,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   };
 
   const handleDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    updateAnswer(id, e.target.value);
+    updateAnswer(answerId, e.target.value);
   };
   
   const isComplete = !required || (selectedValue !== undefined && selectedValue !== '');
@@ -60,7 +62,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
     <ScreenLayout title={title} helpText={help_text}>
       {renderAsDropdown ? (
         <Select
-          id={id}
+          id={answerId}
           options={options}
           value={selectedValue || ''}
           onChange={handleDropdownChange}

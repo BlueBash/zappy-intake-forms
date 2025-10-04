@@ -1,9 +1,10 @@
 import React from 'react';
 import { ScreenProps } from './common';
-import { FriendlyCheckmark } from '../ui/Illustrations';
+import { FriendlyCheckmark, PhoneIcon, MessageIcon, ReviewIcon, PlanIcon, JourneyIcon } from '../ui/Illustrations';
 import { TerminalScreen as TerminalScreenType } from '../../types';
+import { interpolateText } from '../../utils/stringInterpolator';
 
-const iconMap = {
+const statusIconMap = {
     success: (
         <FriendlyCheckmark className="w-24 h-24" />
     ),
@@ -14,23 +15,69 @@ const iconMap = {
     ),
 };
 
+const customIconMap: Record<string, React.FC<{ className?: string }>> = {
+    phone: PhoneIcon,
+    message: MessageIcon,
+    review: ReviewIcon,
+    plan: PlanIcon,
+    journey: JourneyIcon,
+};
 
-const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = ({ screen }) => {
-  const { title, body, status } = screen;
-  const icon = status ? iconMap[status] : null;
+const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = ({ screen, calculations = {} }) => {
+  const { title, body, status, resources, next_steps } = screen;
+  const icon = status ? statusIconMap[status] : null;
+
+  const interpolatedTitle = interpolateText(title, calculations);
+  const interpolatedBody = interpolateText(body, calculations);
 
   return (
     <div className="text-center w-full flex flex-col items-center py-16">
       {icon && <div className="mb-8">{icon}</div>}
-      {title && (
+      {interpolatedTitle && (
         <h2 className="text-4xl sm:text-5xl font-semibold mb-5 text-stone-900 leading-tight -tracking-wider">
-          {title}
+          {interpolatedTitle}
         </h2>
       )}
-      {body && (
-        <p className="text-lg sm:text-xl max-w-[580px] text-stone-600 leading-relaxed">
-          {body}
+      {interpolatedBody && (
+        <p className="text-lg sm:text-xl max-w-[580px] text-stone-600 leading-relaxed whitespace-pre-line mb-8">
+          {interpolatedBody}
         </p>
+      )}
+
+      {resources && resources.length > 0 && (
+        <div className="w-full max-w-md space-y-3 my-8">
+          {resources.map((resource, index) => {
+            const IconComponent = resource.icon_name ? customIconMap[resource.icon_name] : null;
+            return (
+              <div key={index} className="bg-slate-50 p-4 rounded-lg text-left flex items-center gap-4 border border-slate-200">
+                {IconComponent && <IconComponent className="w-8 h-8 text-slate-500 flex-shrink-0" />}
+                <div>
+                  <p className="font-semibold text-slate-700">{resource.label}</p>
+                  <p className="text-slate-600">{resource.value}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {next_steps && next_steps.length > 0 && (
+        <div className="w-full max-w-md space-y-3 my-8">
+          {next_steps.map((step, index) => {
+            const IconComponent = step.icon_name ? customIconMap[step.icon_name] : null;
+            return (
+              <div key={index} className="bg-white p-4 rounded-lg text-left flex items-center gap-4 border-2 border-primary-100">
+                {IconComponent ? 
+                  <IconComponent className="w-8 h-8 text-primary flex-shrink-0" /> :
+                  <span className="text-primary font-bold text-xl">{step.icon}</span>
+                }
+                <div>
+                  <p className="font-semibold text-primary-800">{step.label}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
