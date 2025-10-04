@@ -1103,7 +1103,7 @@ const formConfig: FormConfig = {
           "go_to": "assess.allergies_detail"
         },
         {
-          "else": "transition.treatment_intro"
+          "else": "assess.previous_attempts"
         }
       ]
     },
