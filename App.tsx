@@ -19,6 +19,8 @@ import TerminalScreen from './components/screens/TerminalScreen';
 import ReviewScreen from './components/screens/ReviewScreen';
 import MedicationSelectionScreen from './components/screens/MedicationSelectionScreen';
 import PlanSelectionScreen from './components/screens/PlanSelectionScreen';
+import MedicationOptionsScreen from './components/screens/MedicationOptionsScreen';
+import DiscountCodeScreen from './components/screens/DiscountCodeScreen';
 
 const App: React.FC = () => {
   const { 
@@ -62,6 +64,8 @@ const App: React.FC = () => {
       setSubmitError(null);
       setIsSubmitting(true);
 
+      console.warn('[Consultation] handleReviewSubmit triggered');
+
       const responses = JSON.parse(JSON.stringify(answers));
 
       const existingAddress = responses.address || {};
@@ -89,13 +93,18 @@ const App: React.FC = () => {
         responses.notification_consent = 'false';
       }
 
+      responses.selected_plan_details = responses.selected_plan_details || answers['selected_plan_details'] || null;
+      responses.medication_preferences = responses.medication_preferences || answers['medication_preferences'] || [];
+      responses.medication_pharmacy_preferences = responses.medication_pharmacy_preferences || answers['medication_pharmacy_preferences'] || {};
+
       const payload = {
-        condition: responses.condition || 'weight_loss',
+        condition: responses.condition || 'Weight Loss',
         responses,
         intake_form: formConfig,
         timestamp: new Date().toISOString(),
       };
 
+      console.warn('[Consultation] Submitting payload', payload);
       await apiClient.submitConsultation(payload);
       goToNext();
     } catch (error) {
@@ -125,7 +134,6 @@ const App: React.FC = () => {
 
   const renderScreen = (screen: Screen) => {
     const commonProps = {
-      key: screen.id,
       answers,
       calculations,
       updateAnswer,
@@ -134,33 +142,38 @@ const App: React.FC = () => {
       onBack: goToPrev,
     };
 
-    if (screen.id === 'treatment.medication_selection') {
-      return <MedicationSelectionScreen {...commonProps} screen={screen} />;
+    if (screen.id === 'treatment.medication_preference') {
+      return <MedicationOptionsScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 
-    if (screen.id === 'treatment.plan_selection') {
-      return <PlanSelectionScreen {...commonProps} screen={screen} />;
+    if (screen.id.startsWith('treatment.plan_selection')) {
+      return <PlanSelectionScreen key={screen.id} {...commonProps} screen={screen} />;
     }
-    
+
+    if (screen.id === 'logistics.discount_code') {
+      return <DiscountCodeScreen key={screen.id} {...commonProps} screen={screen} />;
+    }
+
     switch (screen.type) {
       case 'single_select':
-        return <SingleSelectScreen {...commonProps} screen={screen} />;
+        return <SingleSelectScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'multi_select':
-        return <MultiSelectScreen {...commonProps} screen={screen} />;
+        return <MultiSelectScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'composite':
-        return <CompositeScreen {...commonProps} screen={screen} />;
+        return <CompositeScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'content':
-        return <ContentScreen {...commonProps} screen={screen} />;
+        return <ContentScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'text':
-        return <TextScreen {...commonProps} screen={screen} />;
+        return <TextScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'number':
-        return <NumberScreen {...commonProps} screen={screen} />;
+        return <NumberScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'date':
-        return <DateScreen {...commonProps} screen={screen} />;
+        return <DateScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'consent':
-        return <ConsentScreen {...commonProps} screen={screen} />;
+        return <ConsentScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'review':
         return <ReviewScreen 
+                  key={screen.id}
                   {...commonProps} 
                   screen={screen}
                   onSubmit={handleReviewSubmit}
@@ -171,7 +184,7 @@ const App: React.FC = () => {
                   submissionError={submitError}
                />;
       case 'terminal':
-        return <TerminalScreen {...commonProps} screen={screen} />;
+        return <TerminalScreen key={screen.id} {...commonProps} screen={screen} />;
       default:
         return <div>Unknown screen type: {(screen as any).type}</div>;
     }

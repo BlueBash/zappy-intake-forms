@@ -84,17 +84,23 @@ const post = async <T>(path: string, body: unknown): Promise<T> => {
 };
 
 export const apiClient = {
-  getPackages: (region: string, condition: string, medication?: string) =>
+  getPackages: (
+    state: string,
+    serviceType: string,
+    medication?: string,
+    pharmacyName?: string
+  ) =>
     get<PackagesResponse>('/consultations/packages', {
-      region,
-      condition,
+      state,
+      service_type: serviceType,
       medication,
+      pharmacy_name: pharmacyName,
     }),
 
-  getMedications: (region: string, condition: string) =>
+  getMedications: (state: string, serviceType: string) =>
     get<MedicationsResponse>('/consultations/medications', {
-      region,
-      condition,
+      state,
+      service_type: serviceType,
     }),
 
   applyDiscount: (discountCode: string) =>

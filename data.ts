@@ -65,59 +65,7 @@ const formConfig: FormConfig = {
       "phase": "qualify",
       "title": "Which state do you live in?",
       "auto_advance": false,
-      "options": [
-        { "value": "AL", "label": "Alabama" },
-        { "value": "AK", "label": "Alaska" },
-        { "value": "AZ", "label": "Arizona" },
-        { "value": "AR", "label": "Arkansas" },
-        { "value": "CA", "label": "California" },
-        { "value": "CO", "label": "Colorado" },
-        { "value": "CT", "label": "Connecticut" },
-        { "value": "DE", "label": "Delaware" },
-        { "value": "FL", "label": "Florida" },
-        { "value": "GA", "label": "Georgia" },
-        { "value": "HI", "label": "Hawaii" },
-        { "value": "ID", "label": "Idaho" },
-        { "value": "IL", "label": "Illinois" },
-        { "value": "IN", "label": "Indiana" },
-        { "value": "IA", "label": "Iowa" },
-        { "value": "KS", "label": "Kansas" },
-        { "value": "KY", "label": "Kentucky" },
-        { "value": "LA", "label": "Louisiana" },
-        { "value": "ME", "label": "Maine" },
-        { "value": "MD", "label": "Maryland" },
-        { "value": "MA", "label": "Massachusetts" },
-        { "value": "MI", "label": "Michigan" },
-        { "value": "MN", "label": "Minnesota" },
-        { "value": "MS", "label": "Mississippi" },
-        { "value": "MO", "label": "Missouri" },
-        { "value": "MT", "label": "Montana" },
-        { "value": "NE", "label": "Nebraska" },
-        { "value": "NV", "label": "Nevada" },
-        { "value": "NH", "label": "New Hampshire" },
-        { "value": "NJ", "label": "New Jersey" },
-        { "value": "NM", "label": "New Mexico" },
-        { "value": "NY", "label": "New York" },
-        { "value": "NC", "label": "North Carolina" },
-        { "value": "ND", "label": "North Dakota" },
-        { "value": "OH", "label": "Ohio" },
-        { "value": "OK", "label": "Oklahoma" },
-        { "value": "OR", "label": "Oregon" },
-        { "value": "PA", "label": "Pennsylvania" },
-        { "value": "RI", "label": "Rhode Island" },
-        { "value": "SC", "label": "South Carolina" },
-        { "value": "SD", "label": "South Dakota" },
-        { "value": "TN", "label": "Tennessee" },
-        { "value": "TX", "label": "Texas" },
-        { "value": "UT", "label": "Utah" },
-        { "value": "VT", "label": "Vermont" },
-        { "value": "VA", "label": "Virginia" },
-        { "value": "WA", "label": "Washington" },
-        { "value": "WV", "label": "West Virginia" },
-        { "value": "WI", "label": "Wisconsin" },
-        { "value": "WY", "label": "Wyoming" },
-        { "value": "DC", "label": "District of Columbia" }
-      ],
+      "options": [],
       "required": true,
       "next": "demographics.dob"
     },
@@ -320,7 +268,7 @@ const formConfig: FormConfig = {
       "phase": "assess_safety",
       "status": "warning",
       "title": "Your weight is in a healthy range",
-      "body": "Your BMI is ${Math.round(calc.bmi * 10) / 10}. GLP-1 medications are approved for BMI 27+ (with health conditions) or 30+.\n\nIf you have concerns about your weight, your doctor can help you explore safe approaches.",
+      "body": "Your BMI is ${calc.bmi}. GLP-1 medications are approved for BMI 27+ (with health conditions) or 30+.\n\nIf you have concerns about your weight, your doctor can help you explore safe approaches.",
       "cta_primary": {
         "label": "Learn More"
       }
@@ -331,7 +279,7 @@ const formConfig: FormConfig = {
       "phase": "qualify",
       "status": "info",
       "headline": "We'll look at your full health picture",
-      "body": "Your BMI is ${Math.round(calc.bmi * 10) / 10}. GLP-1 medications are typically recommended for:\n• BMI 30 or higher, or\n• BMI 27+ with weight-related health conditions (diabetes, high blood pressure, sleep apnea)\n\nOur provider will review your complete profile to see if medication makes sense for you.",
+      "body": "Your BMI is ${calc.bmi}. GLP-1 medications are typically recommended for:\n• BMI 30 or higher, or\n• BMI 27+ with weight-related health conditions (diabetes, high blood pressure, sleep apnea)\n\nOur provider will review your complete profile to see if medication makes sense for you.",
       "cta_primary": {
         "label": "Got It"
       },
@@ -1803,7 +1751,7 @@ const formConfig: FormConfig = {
         }
       ],
       "validation": {
-        "at_least_one_checked": {
+        "require_any": {
           "fields": [
             "used_wegovy",
             "used_ozempic",
@@ -1840,36 +1788,8 @@ const formConfig: FormConfig = {
       "type": "multi_select",
       "phase": "treatment",
       "title": "Which medications interest you?",
-      "options": [
-        { "value": "semaglutide_brand", "label": "Brand semaglutide (Wegovy, Ozempic)" },
-        { "value": "semaglutide_compound", "label": "Compounded semaglutide" },
-        { "value": "tirzepatide_brand", "label": "Brand tirzepatide (Zepbound, Mounjaro)" },
-        { "value": "tirzepatide_compound", "label": "Compounded tirzepatide" },
-        { "value": "either", "label": "Either—open to provider recommendation" },
-        { "value": "not_sure", "label": "Not sure—want to discuss with provider" }
-      ],
       "required": true,
-      "next_logic": [
-        {
-          "if": "answer contains 'semaglutide_brand'",
-          "go_to": "treatment.plan_selection.semaglutide_brand"
-        },
-        {
-          "if": "answer contains 'semaglutide_compound'",
-          "go_to": "treatment.plan_selection.semaglutide_compound"
-        },
-        {
-          "if": "answer contains 'tirzepatide_brand'",
-          "go_to": "treatment.plan_selection.tirzepatide_brand"
-        },
-        {
-          "if": "answer contains 'tirzepatide_compound'",
-          "go_to": "treatment.plan_selection.tirzepatide_compound"
-        },
-        {
-          "else": "treatment.plan_selection.generic"
-        }
-      ]
+      "next": "treatment.plan_selection.generic"
     },
     {
       "id": "treatment.plan_selection.semaglutide_brand",
@@ -1878,11 +1798,6 @@ const formConfig: FormConfig = {
       "title": "Choose Your Brand Semaglutide Plan",
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
-      "options": [
-        { "value": "monthly", "label": "1 Month Plan - $999/mo" },
-        { "value": "3_month", "label": "3 Month Plan - $899/mo (Save 10%)" },
-        { "value": "6_month", "label": "6 Month Plan - $799/mo (Save 20%)" }
-      ],
       "required": true,
       "next": "logistics.discount_code"
     },
@@ -1893,11 +1808,6 @@ const formConfig: FormConfig = {
       "title": "Choose Your Compounded Semaglutide Plan",
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
-      "options": [
-        { "value": "monthly", "label": "1 Month Plan - $299/mo" },
-        { "value": "3_month", "label": "3 Month Plan - $269/mo (Save 10%)" },
-        { "value": "6_month", "label": "6 Month Plan - $239/mo (Save 20%)" }
-      ],
       "required": true,
       "next": "logistics.discount_code"
     },
@@ -1908,11 +1818,6 @@ const formConfig: FormConfig = {
       "title": "Choose Your Brand Tirzepatide Plan",
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
-      "options": [
-        { "value": "monthly", "label": "1 Month Plan - $1299/mo" },
-        { "value": "3_month", "label": "3 Month Plan - $1169/mo (Save 10%)" },
-        { "value": "6_month", "label": "6 Month Plan - $1039/mo (Save 20%)" }
-      ],
       "required": true,
       "next": "logistics.discount_code"
     },
@@ -1923,11 +1828,6 @@ const formConfig: FormConfig = {
       "title": "Choose Your Compounded Tirzepatide Plan",
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
-      "options": [
-        { "value": "monthly", "label": "1 Month Plan - $499/mo" },
-        { "value": "3_month", "label": "3 Month Plan - $449/mo (Save 10%)" },
-        { "value": "6_month", "label": "6 Month Plan - $399/mo (Save 20%)" }
-      ],
       "required": true,
       "next": "logistics.discount_code"
     },
@@ -1938,11 +1838,6 @@ const formConfig: FormConfig = {
       "title": "Choose Your Plan",
       "help_text": "Your provider will recommend the best medication for you. Prices shown are for compounded options.",
       "auto_advance": true,
-      "options": [
-        { "value": "monthly", "label": "1 Month Plan - from $299/mo" },
-        { "value": "3_month", "label": "3 Month Plan - from $269/mo" },
-        { "value": "6_month", "label": "6 Month Plan - from $239/mo" }
-      ],
       "required": true,
       "next": "logistics.discount_code"
     },
@@ -1954,24 +1849,6 @@ const formConfig: FormConfig = {
       "help_text": "Enter it below to apply it to your plan (optional)",
       "placeholder": "DISCOUNT20",
       "required": false,
-      "next": "logistics.pharmacy_selection"
-    },
-    {
-      "id": "logistics.pharmacy_selection",
-      "type": "single_select",
-      "phase": "treatment",
-      "title": "Choose your preferred pharmacy",
-      "help_text": "We'll send your prescription here",
-      "required": true,
-      "options": [
-        { "value": "mail_order", "label": "Mail order pharmacy (delivered to your door)" },
-        { "value": "cvs", "label": "CVS Pharmacy" },
-        { "value": "walgreens", "label": "Walgreens" },
-        { "value": "walmart", "label": "Walmart Pharmacy" },
-        { "value": "kroger", "label": "Kroger Pharmacy" },
-        { "value": "rite_aid", "label": "Rite Aid" },
-        { "value": "other", "label": "Other local pharmacy" }
-      ],
       "next": "transition.final_section"
     },
     {
@@ -2071,59 +1948,7 @@ const formConfig: FormConfig = {
             "type": "single_select",
             "label": "State",
             "required": true,
-            "options": [
-              { "value": "AL", "label": "AL" },
-              { "value": "AK", "label": "AK" },
-              { "value": "AZ", "label": "AZ" },
-              { "value": "AR", "label": "AR" },
-              { "value": "CA", "label": "CA" },
-              { "value": "CO", "label": "CO" },
-              { "value": "CT", "label": "CT" },
-              { "value": "DE", "label": "DE" },
-              { "value": "FL", "label": "FL" },
-              { "value": "GA", "label": "GA" },
-              { "value": "HI", "label": "HI" },
-              { "value": "ID", "label": "ID" },
-              { "value": "IL", "label": "IL" },
-              { "value": "IN", "label": "IN" },
-              { "value": "IA", "label": "IA" },
-              { "value": "KS", "label": "KS" },
-              { "value": "KY", "label": "KY" },
-              { "value": "LA", "label": "LA" },
-              { "value": "ME", "label": "ME" },
-              { "value": "MD", "label": "MD" },
-              { "value": "MA", "label": "MA" },
-              { "value": "MI", "label": "MI" },
-              { "value": "MN", "label": "MN" },
-              { "value": "MS", "label": "MS" },
-              { "value": "MO", "label": "MO" },
-              { "value": "MT", "label": "MT" },
-              { "value": "NE", "label": "NE" },
-              { "value": "NV", "label": "NV" },
-              { "value": "NH", "label": "New Hampshire" },
-              { "value": "NJ", "label": "New Jersey" },
-              { "value": "NM", "label": "New Mexico" },
-              { "value": "NY", "label": "New York" },
-              { "value": "NC", "label": "North Carolina" },
-              { "value": "ND", "label": "North Dakota" },
-              { "value": "OH", "label": "Ohio" },
-              { "value": "OK", "label": "OK" },
-              { "value": "OR", "label": "Oregon" },
-              { "value": "PA", "label": "Pennsylvania" },
-              { "value": "RI", "label": "RI" },
-              { "value": "SC", "label": "SC" },
-              { "value": "SD", "label": "SD" },
-              { "value": "TN", "label": "TN" },
-              { "value": "TX", "label": "TX" },
-              { "value": "UT", "label": "UT" },
-              { "value": "VT", "label": "VT" },
-              { "value": "VA", "label": "VA" },
-              { "value": "WA", "label": "WA" },
-              { "value": "WV", "label": "WV" },
-              { "value": "WI", "label": "WI" },
-              { "value": "WY", "label": "WY" },
-              { "value": "DC", "label": "DC" }
-            ]
+            "options": []
           },
           {
             "id": "zip_code",
@@ -2182,12 +2007,20 @@ const formConfig: FormConfig = {
           "required": true
         },
         {
-          "id": "marketing_opt_in",
+          "id": "notification_consent",
           "type": "consent_item",
           "label": "Send me helpful tips and updates",
           "required": false
         }
       ],
+      "next": "review.summary"
+    },
+    {
+      "id": "review.summary",
+      "type": "review",
+      "phase": "treatment",
+      "title": "Does everything look right?",
+      "help_text": "Review your answers before you submit so we can get started right away.",
       "next": "complete.success"
     },
     {
@@ -2417,7 +2250,9 @@ const formConfig: FormConfig = {
       "address_line2",
       "city",
       "state",
-      "zip_code"
+      "zip_code",
+      "medication_preferences",
+      "medication_pharmacy_preferences"
     ],
     "summary_template": "PATIENT: {first_name} {last_name} | DOB: {demographics.dob} (Age {calc.age}) | {sex_birth} | {demographics.state}\n\nGOALS: Current {weight}lb → Goal {goal_weight}lb ({goal.range}) | BMI: {calc.bmi:.1f} | Activity: {activity_level}\n\nRED FLAGS: {flags}\n\nED HISTORY: {assess.eating_relationship} | Type: {assess.eating_disorder_type}\nMENTAL HEALTH: {mental_health_diagnosis} | Suicidal ideation: {current_thoughts} | Recent psych hospitalization: {recent_hospitalization}\nSUBSTANCE: Alcohol: {assess.substance_use_alcohol} | Tobacco: {assess.substance_use_tobacco} | Other: {assess.substance_use_recreational}\n\nMEDICAL: Diabetes: {assess.diabetes_type} | Pregnancy: {assess.pregnancy} | Conditions: {assess.medical_conditions}\nMEDICATIONS: {assess.current_medications}, {medications_detail}\nALLERGIES: {allergies_detail}\n\nGLP-1 EXPERIENCE: {glp1_status} | Medications used: {medications_used} | Currently taking: {currently_taking}\nExperience notes: {glp1_experience_notes}\nMEDICATION INTEREST: {treatment.medication_preference}\nSUPPORT NEEDS: {treatment.side_effect_management}\n\nADDITIONAL NOTES: {journey_notes}",
     "risk_stratification": {

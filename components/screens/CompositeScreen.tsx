@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ScreenProps } from './common';
 import { CompositeScreen as CompositeScreenType, Field, FieldOrFieldGroup, SelectField, TextField, ConsentItemField, Link, MedicationDetailsGroupField, CheckboxField } from '../../types';
@@ -10,6 +10,7 @@ import Checkbox from '../ui/Checkbox';
 import CheckboxGroup from '../common/CheckboxGroup';
 import SingleSelectButtonGroup from '../common/SingleSelectButtonGroup';
 import { BMIGauge } from '../ui/Illustrations';
+import RegionDropdown from '../common/RegionDropdown';
 
 const checkCondition = (condition: string, answers: Record<string, any>): boolean => {
   const containsMatch = condition.match(/(\w+)\s+contains\s+['"]?([\w\s/.-]+)['"]?/);
@@ -57,6 +58,13 @@ const applyPhoneMask = (value: string): string => {
 const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, headerSize, calculations = {} }) => {
   const { title, help_text, fields, footer_note, validation, post_screen_note } = screen;
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+
+  useEffect(() => {
+    const initialState = answers['demographics.state'];
+    if (initialState && (answers['state'] === undefined || answers['state'] === null || answers['state'] === '')) {
+      updateAnswer('state', initialState);
+    }
+  }, [answers, updateAnswer]);
 
   const allFields = useMemo(() => {
     const flattened: Field[] = [];
@@ -361,28 +369,32 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           />
         );
       case 'single_select': {
+        if (field.id === 'state') {
+          return (
+            <div>
+              {field.label && (
+                <label className="block text-base font-bold mb-2 text-stone-800 tracking-tight">
+                  {field.label}
+                </label>
+              )}
+              {field.help_text && (
+                <p className="text-sm -mt-2 mb-3 text-stone-600">{field.help_text}</p>
+              )}
+              <RegionDropdown
+                value={value || ''}
+                onChange={(stateCode) => updateAnswer(field.id, stateCode)}
+                placeholder={field.placeholder || 'Select state'}
+              />
+              {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
+            </div>
+          );
+        }
+
         const selectField = field as SelectField;
         const options = selectField.conditional_options 
             ? (selectField.conditional_options.options_map[answers[selectField.conditional_options.based_on]] || [])
             : selectField.options;
-        
-        const renderAsDropdown = field.id === 'state';
-        
-        if (renderAsDropdown) {
-            return (
-                <Select
-                    id={field.id}
-                    label={field.label}
-                    help_text={field.help_text}
-                    options={options}
-                    value={value || ''}
-                    onChange={(e) => updateAnswer(field.id, e.target.value)}
-                    onBlur={() => handleBlur(field.id)}
-                    error={errors[field.id]}
-                />
-            );
-        }
-        
+
         return (
             <div>
                 {field.label && (

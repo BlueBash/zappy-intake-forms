@@ -2,11 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { apiClient, type PackagePlan } from '../../utils/api';
 
 interface PlanSelectionProps {
-  condition: string;
-  region: string;
+  serviceType: string;
+  state: string;
   medication?: string;
+  pharmacyName?: string;
   selectedPlanId: string;
   onSelect: (planId: string, plan: PackagePlan | null) => void;
+  requiresDoseStrategy: boolean;
+  doseStrategy: string;
+  onDoseStrategyChange: (value: string) => void;
 }
 
 const formatCurrency = (value?: number) => {
@@ -19,11 +23,15 @@ const formatCurrency = (value?: number) => {
 };
 
 const PlanSelection: React.FC<PlanSelectionProps> = ({
-  condition,
-  region,
+  serviceType,
+  state,
   medication,
+  pharmacyName,
   selectedPlanId,
   onSelect,
+  requiresDoseStrategy,
+  doseStrategy,
+  onDoseStrategyChange,
 }) => {
   const [plans, setPlans] = useState<PackagePlan[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,7 +39,7 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({
 
   useEffect(() => {
     const fetchPlans = async () => {
-      if (!region || !condition) {
+      if (!state || !serviceType) {
         setPlans([]);
         return;
       }
@@ -40,7 +48,7 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({
       setError('');
 
       try {
-        const packages = await apiClient.getPackages(region, condition, medication);
+        const packages = await apiClient.getPackages(state, serviceType, medication, pharmacyName);
         setPlans(packages || []);
       } catch (fetchError) {
         console.error(fetchError);
@@ -52,9 +60,9 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({
     };
 
     fetchPlans();
-  }, [condition, region, medication]);
+  }, [serviceType, state, medication, pharmacyName]);
 
-  if (!region) {
+  if (!state) {
     return <p className="text-center text-stone-500">Select your state to view available plans.</p>;
   }
 
@@ -67,27 +75,35 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({
   }
 
   if (plans.length === 0) {
-    return <p className="text-center text-stone-500">No plans available for your region yet.</p>;
+    return <p className="text-center text-stone-500">No plans available for your state yet.</p>;
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-stone-900 text-center mb-2">Choose your treatment plan</h2>
+      {/*<h2 className="text-2xl font-bold text-stone-900 text-center mb-2">Choose your treatment plan</h2>
       <p className="text-stone-600 text-center mb-6">
         Select the plan that best fits your goals and budget.
       </p>
-
+*/}
       <div className="flex gap-6 overflow-x-auto pb-4 px-2">
         {plans.map((plan) => {
           const price = plan.invoice_amount ?? plan.invoiceAmount;
           const isSelected = selectedPlanId === plan.id;
+          const showDoseStrategy = isSelected && requiresDoseStrategy;
 
           return (
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               key={plan.id}
               onClick={() => onSelect(plan.id, plan)}
-              className={`relative rounded-2xl p-6 text-left transition-all min-w-[280px] max-w-[320px] flex-1 border-2 ${
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onSelect(plan.id, plan);
+                }
+              }}
+              className={`relative rounded-2xl p-6 text-left transition-all min-w-[280px] max-w-[320px] flex-1 border-2 cursor-pointer select-none ${
                 isSelected
                   ? 'bg-primary/5 border-primary shadow-lg'
                   : 'bg-white border-stone-200 hover:border-primary hover:shadow'
@@ -130,6 +146,39 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({
                 </ul>
               )}
 
+              {showDoseStrategy && (
+                <div className="mt-4 space-y-2 text-left">
+                  <p className="text-sm font-medium text-stone-700">
+                    How should we manage your dose during this program?
+                  </p>
+                  <p className="text-xs text-stone-500">
+                    Maintenance keeps your dose steady each month. Escalation increases the dose each month when clinically appropriate.
+                  </p>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="dose-strategy"
+                      value="maintenance"
+                      checked={doseStrategy === 'maintenance'}
+                      onChange={() => onDoseStrategyChange('maintenance')}
+                      className="w-4 h-4 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-stone-700">Maintenance – keep my dose the same each month</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="dose-strategy"
+                      value="escalation"
+                      checked={doseStrategy === 'escalation'}
+                      onChange={() => onDoseStrategyChange('escalation')}
+                      className="w-4 h-4 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-stone-700">Escalation – increase my dose each month as appropriate</span>
+                  </label>
+                </div>
+              )}
+
               <div className="mt-6">
                 <span
                   className={`block w-full text-center py-3 rounded-full font-semibold transition-colors ${
@@ -139,7 +188,7 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({
                   {isSelected ? 'Selected ✓' : 'Select plan'}
                 </span>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>

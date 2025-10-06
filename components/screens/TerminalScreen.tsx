@@ -3,6 +3,7 @@ import { ScreenProps } from './common';
 import { FriendlyCheckmark, PhoneIcon, MessageIcon, ReviewIcon, PlanIcon, JourneyIcon } from '../ui/Illustrations';
 import { TerminalScreen as TerminalScreenType } from '../../types';
 import { interpolateText } from '../../utils/stringInterpolator';
+import Button from '../ui/Button';
 
 const statusIconMap = {
     success: (
@@ -23,7 +24,7 @@ const customIconMap: Record<string, React.FC<{ className?: string }>> = {
     journey: JourneyIcon,
 };
 
-const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = ({ screen, calculations = {} }) => {
+const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = ({ screen, calculations = {}, showBack, onBack }) => {
   const { title, body, status, resources, next_steps } = screen;
   const icon = status ? statusIconMap[status] : null;
 
@@ -77,6 +78,18 @@ const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = (
               </div>
             );
           })}
+        </div>
+      )}
+
+      {showBack && (!next_steps || next_steps.length === 0) && (
+        <div className="mt-8">
+          <Button
+            variant="secondary"
+            onClick={onBack}
+            aria-label="Go back to the previous question"
+          >
+            Back
+          </Button>
         </div>
       )}
     </div>

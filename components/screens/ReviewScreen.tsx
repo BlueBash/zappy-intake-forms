@@ -10,6 +10,7 @@ const CUSTOM_LABELS: Record<string, string> = {
   selected_plan_price_display: 'Plan price',
   discount_code: 'Discount code',
   notification_consent: 'SMS/email consent',
+  dose_strategy: 'Dose strategy preference',
 };
 
 interface ReviewScreenProps {
@@ -102,6 +103,7 @@ const getGroup = (id: string): string => {
     if (id.startsWith('safety.') || id.startsWith('medical.')) return 'Medical History';
     if (id.startsWith('goals.') || id.startsWith('motivation.')) return 'Goals & Motivation';
     if (id.startsWith('meds.') || id.startsWith('selected_plan') || id === 'selected_medication' || id.startsWith('discount_')) return 'Medication';
+    if (id === 'dose_strategy') return 'Medication';
     return 'Other';
 };
 

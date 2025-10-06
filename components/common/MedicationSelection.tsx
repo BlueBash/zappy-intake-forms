@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { apiClient, type MedicationOption } from '../../utils/api';
 
 interface MedicationSelectionProps {
-  condition: string;
-  region: string;
+  serviceType: string;
+  state: string;
   selectedMedication: string;
   onSelect: (medication: string) => void;
 }
 
 const MedicationSelection: React.FC<MedicationSelectionProps> = ({
-  condition,
-  region,
+  serviceType,
+  state,
   selectedMedication,
   onSelect,
 }) => {
@@ -20,7 +20,7 @@ const MedicationSelection: React.FC<MedicationSelectionProps> = ({
 
   useEffect(() => {
     const fetchMedications = async () => {
-      if (!region || !condition) {
+      if (!state || !serviceType) {
         setMedications([]);
         return;
       }
@@ -29,7 +29,7 @@ const MedicationSelection: React.FC<MedicationSelectionProps> = ({
       setError('');
 
       try {
-        const data = await apiClient.getMedications(region, condition);
+        const data = await apiClient.getMedications(state, serviceType);
         setMedications(data.medications || []);
       } catch (fetchError) {
         console.error(fetchError);
@@ -41,9 +41,9 @@ const MedicationSelection: React.FC<MedicationSelectionProps> = ({
     };
 
     fetchMedications();
-  }, [region, condition]);
+  }, [state, serviceType]);
 
-  if (!region) {
+  if (!state) {
     return <p className="text-center text-stone-500">Select your state to see medication options.</p>;
   }
 

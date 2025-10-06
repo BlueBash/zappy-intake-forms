@@ -2,8 +2,9 @@ import React from 'react';
 import { ScreenProps } from './common';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
-import Select from '../ui/Select';
 import RegionDropdown from '../common/RegionDropdown';
+import Select from '../ui/Select';
+import Button from '../ui/Button';
 import { SingleSelectScreen as SingleSelectScreenType } from '../../types';
 
 const DROPDOWN_THRESHOLD = 15;
@@ -14,10 +15,17 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   const answerId = field_id || id;
   const selectedValue = answers[answerId];
 
+  const syncAnswer = (value: string) => {
+    updateAnswer(answerId, value);
+    if (answerId !== id) {
+      updateAnswer(id, value);
+    }
+  };
+
   if (screen.id === 'demographics.state') {
     const stateValue = selectedValue || '';
     const handleStateChange = (code: string) => {
-      updateAnswer(answerId, code);
+      syncAnswer(code);
     };
 
     return (
@@ -40,7 +48,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   }
 
   const handleButtonSelect = (value: string) => {
-    updateAnswer(answerId, value);
+    syncAnswer(value);
     if (auto_advance) {
         // Auto-submit on selection for a faster flow
         setTimeout(onSubmit, 200);
@@ -48,7 +56,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   };
 
   const handleDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    updateAnswer(answerId, e.target.value);
+    syncAnswer(e.target.value);
   };
   
   const isComplete = !required || (selectedValue !== undefined && selectedValue !== '');
@@ -57,6 +65,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
 
   // For dropdowns, we never auto_advance and always show nav buttons.
   const showNavButtons = !auto_advance || renderAsDropdown;
+  const showBackOnly = auto_advance && !renderAsDropdown && showBack;
 
   return (
     <ScreenLayout title={title} helpText={help_text}>
@@ -93,6 +102,18 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
           onNext={onSubmit}
           isNextDisabled={!isComplete}
         />
+      )}
+
+      {!showNavButtons && showBackOnly && (
+        <div className="w-full flex justify-start mt-10">
+          <Button
+            variant="secondary"
+            onClick={onBack}
+            aria-label="Go back to the previous question"
+          >
+            Back
+          </Button>
+        </div>
       )}
     </ScreenLayout>
   );

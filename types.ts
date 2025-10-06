@@ -164,7 +164,7 @@ export interface SingleSelectScreen extends BaseScreen {
   title: string;
   help_text?: string;
   auto_advance?: boolean;
-  options: Option[];
+  options?: Option[];
   required?: boolean;
   field_id?: string;
   safety_critical?: boolean;
@@ -174,7 +174,7 @@ export interface MultiSelectScreen extends BaseScreen {
   type: 'multi_select';
   title: string;
   help_text?: string;
-  options: Option[];
+  options?: Option[];
   other_text_id?: string;
   required?: boolean;
   safety_critical?: boolean;
