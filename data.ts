@@ -20,13 +20,8 @@ const formConfig: FormConfig = {
         "selected_hex": "#059669",
         "border_selected_hex": "#047857"
       },
-      "phase_colors": {
-        "qualify": "#10b981",
-        "inspire": "#f59e0b",
-        "assess_safety": "#dc2626",
-        "assess_medical": "#64748b",
-        "treatment": "#8b5cf6"
-      }
+      "lavender_accent": "#E8E7F3",
+      "lavender_primary": "#8B7FC5"
     },
     "progress_bar": true,
     "show_back_button": true,

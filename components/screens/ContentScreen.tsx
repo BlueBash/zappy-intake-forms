@@ -61,9 +61,10 @@ const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ 
   };
 
   const statusBorderClass = status ? `border-l-4 pl-8 ${status === 'warning' ? 'border-amber-400' : 'border-emerald-500'}` : '';
+  const isInspirePhase = screen.phase === 'inspire';
 
   return (
-    <div className={`w-full text-center flex-grow flex flex-col justify-center items-center ${statusBorderClass}`}>
+    <div className={`w-full text-center flex-grow flex flex-col justify-center items-center ${statusBorderClass} ${isInspirePhase ? 'inspire-phase-content' : ''}`}>
         {image === 'welcome_illustration' && <WelcomeIllustration className="w-48 h-48 mb-8 text-primary" />}
 
         <h2 className={`${headerSize} font-semibold mb-4 text-stone-900 leading-tight -tracking-wider`}>

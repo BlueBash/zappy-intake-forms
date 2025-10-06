@@ -300,7 +300,8 @@ export interface Theme {
     selected_hex: string;
     border_selected_hex: string;
   };
-  phase_colors?: Record<string, string>;
+  lavender_accent?: string;
+  lavender_primary?: string;
 }
 
 export interface Settings {
