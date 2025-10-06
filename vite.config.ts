@@ -10,7 +10,8 @@ export default defineConfig(({ mode }) => {
         allowedHosts: [
           'localhost',
           '127.0.0.1',
-          'e0ef76fd0afc.ngrok-free.app', // 👈 add your ngrok host here
+          'e0ef76fd0afc.ngrok-free.app',
+          'master.d2t3qldyvkubpq.amplifyapp.com'
         ],
       },
       plugins: [react()],
