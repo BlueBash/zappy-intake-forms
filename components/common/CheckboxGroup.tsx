@@ -91,39 +91,26 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
       <div className="space-y-3">
         {options.map(option => {
           const isDisabled = exclusiveSelected && option.value !== exclusiveOptionValue;
+          const isSelected = selectedValues.includes(option.value);
           return (
-            <button
+            <Checkbox
               key={option.value}
-              type="button"
-              className={`
-                w-full text-left p-0 bg-transparent rounded-lg transition-all duration-200
-                border-2 
-                ${selectedValues.includes(option.value)
-                  ? 'border-primary ring-4 ring-primary/10'
-                  : isDisabled
-                    ? 'border-stone-200 opacity-60 cursor-not-allowed'
-                    : 'border-stone-200 hover:border-stone-300 cursor-pointer'
-                }
-              `}
-              onClick={() => {
+              id={`${id}-${option.value}`}
+              label={option.label}
+              checked={isSelected}
+              onChange={() => {
                 if (isDisabled) return;
                 handleToggle(option.value);
               }}
-              aria-disabled={isDisabled}
-            >
-              <div className="p-4">
-                <Checkbox
-                  id={`${id}-${option.value}`}
-                  label={option.label}
-                  checked={selectedValues.includes(option.value)}
-                  onChange={() => {
-                    if (isDisabled) return;
-                    handleToggle(option.value);
-                  }}
-                  disabled={isDisabled}
-                />
-              </div>
-            </button>
+              disabled={isDisabled}
+              className={`w-full rounded-lg transition-all duration-200 border-2 p-4 ${
+                isSelected
+                  ? 'border-primary ring-4 ring-primary/10 bg-white'
+                  : isDisabled
+                    ? 'border-stone-200 opacity-60 cursor-not-allowed bg-white'
+                    : 'border-stone-200 hover:border-stone-300 bg-white'
+              }`}
+            />
           );
         })}
       </div>
