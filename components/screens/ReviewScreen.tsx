@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import ScreenLayout from '../common/ScreenLayout';
 // FIX: Import the specific ReviewScreen type and alias it.
 import { Screen, Option, Field, ReviewScreen as ReviewScreenType } from '../../types';
@@ -98,7 +98,16 @@ const formatAnswer = (answer: any, id: string, allScreens: Screen[], answers: Re
 const groupOrder = ['Your Details', 'Measurements', 'Medical History', 'Goals & Motivation', 'Medication'];
 
 const getGroup = (id: string): string => {
-    if (id.startsWith('demographics.') || id.startsWith('contact.') || id === 'email' || id === 'password' || id === 'notification_consent') return 'Your Details';
+    if (
+      id.startsWith('demographics.') ||
+      id.startsWith('contact.') ||
+      id === 'email' ||
+      id === 'password' ||
+      id === 'notification_consent' ||
+      ['address_line1', 'address_line2', 'city', 'state', 'zip_code'].includes(id)
+    ) {
+      return 'Your Details';
+    }
     if (id.startsWith('anthro.') || id === 'goal.range' || ['weight', 'height_ft', 'highest_weight'].includes(id) ) return 'Measurements';
     if (id.startsWith('safety.') || id.startsWith('medical.')) return 'Medical History';
     if (id.startsWith('goals.') || id.startsWith('motivation.')) return 'Goals & Motivation';
@@ -121,6 +130,44 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({
   submissionError = null,
 }) => {
   const { title, help_text } = screen;
+  const [addressWarning, setAddressWarning] = useState<string | null>(null);
+
+  const fullAddressMissing = useMemo(() => {
+    const address = answers.address || {};
+    const street = address.street || address.line1 || (answers.shipping_address ?? '');
+    const city = address.locality || address.city || (answers.shipping_city ?? '');
+    const state = address.region || address.state || (answers.shipping_state ?? '');
+    const postal = address.postalCode || address.postal_code || (answers.shipping_zip ?? '');
+
+    const missingLabels: string[] = [];
+    if (!street || (typeof street === 'string' && street.trim().length === 0)) missingLabels.push('Street address');
+    if (!city || (typeof city === 'string' && city.trim().length === 0)) missingLabels.push('City');
+    if (!state || (typeof state === 'string' && state.trim().length === 0)) missingLabels.push('State');
+    if (!postal || (typeof postal === 'string' && postal.trim().length === 0)) missingLabels.push('ZIP code');
+
+    return {
+      isMissing: missingLabels.length > 0,
+      missingLabels,
+    };
+  }, [answers.address, answers.shipping_address, answers.shipping_city, answers.shipping_state, answers.shipping_zip]);
+
+  const handleSubmit = () => {
+    if (fullAddressMissing.isMissing) {
+      setAddressWarning(
+        `Please complete your address before submitting: ${fullAddressMissing.missingLabels.join(', ')}.`
+      );
+
+      if (answers.address_line1 || answers.city || answers.state || answers.zip_code) {
+        goToScreen('logistics.shipping_address');
+      } else {
+        goToScreen('logistics.address');
+      }
+      return;
+    }
+
+    setAddressWarning(null);
+    onSubmit();
+  };
 
   const summaryItemsByGroup = useMemo(() => {
     const items: { id: string; label: string; answer: string; screenId: string; }[] = [];
@@ -200,10 +247,15 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({
       <NavigationButtons
         showBack={showBack}
         onBack={onBack}
-        onNext={onSubmit}
+        onNext={handleSubmit}
         nextLabel="Looks Good, Submit"
         isNextLoading={isSubmitting}
       />
+      {addressWarning && (
+        <div className="mt-4 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+          {addressWarning}
+        </div>
+      )}
     </ScreenLayout>
   );
 };
