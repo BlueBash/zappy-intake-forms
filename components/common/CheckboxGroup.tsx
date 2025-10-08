@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Option } from '../../types';
 import Checkbox from '../ui/Checkbox';
 
@@ -9,14 +9,73 @@ interface CheckboxGroupProps {
   options: Option[];
   selectedValues: string[];
   onChange: (newValues: string[]) => void;
+  exclusiveValue?: string;
+  exclusiveMessage?: string;
 }
 
-const CheckboxGroup: React.FC<CheckboxGroupProps> = ({ id, label, help_text, options, selectedValues, onChange }) => {
+const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
+  id,
+  label,
+  help_text,
+  options,
+  selectedValues,
+  onChange,
+  exclusiveValue,
+  exclusiveMessage,
+}) => {
+  const [clearedMessage, setClearedMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!clearedMessage) return;
+    const timer = window.setTimeout(() => setClearedMessage(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [clearedMessage]);
+
+  const exclusiveOptionValue = useMemo(() => {
+    if (exclusiveValue) return exclusiveValue;
+    const hasNone = options.some((option) => option.value === 'none');
+    return hasNone ? 'none' : undefined;
+  }, [exclusiveValue, options]);
+
+  const exclusiveOptionLabel = exclusiveOptionValue
+    ? options.find((option) => option.value === exclusiveOptionValue)?.label ?? exclusiveOptionValue
+    : undefined;
+
+  const exclusiveSelected = exclusiveOptionValue ? selectedValues.includes(exclusiveOptionValue) : false;
+
   const handleToggle = (value: string) => {
-    const newValues = selectedValues.includes(value)
-      ? selectedValues.filter(v => v !== value)
-      : [...selectedValues, value];
+    if (exclusiveOptionValue && value === exclusiveOptionValue) {
+      const alreadySelected = selectedValues.includes(exclusiveOptionValue);
+      if (alreadySelected) {
+        const newValues = selectedValues.filter((v) => v !== exclusiveOptionValue);
+        onChange(newValues);
+        setClearedMessage(null);
+      } else {
+        const hadOtherSelections = selectedValues.some((v) => v !== exclusiveOptionValue);
+        onChange([exclusiveOptionValue]);
+        if (hadOtherSelections) {
+          setClearedMessage(
+            exclusiveMessage ??
+              `We cleared your other selections so we can record "${exclusiveOptionLabel ?? 'None of these'}".`
+          );
+        } else {
+          setClearedMessage(null);
+        }
+      }
+      return;
+    }
+
+    let workingValues = selectedValues;
+    if (exclusiveOptionValue && selectedValues.includes(exclusiveOptionValue)) {
+      workingValues = selectedValues.filter((v) => v !== exclusiveOptionValue);
+    }
+
+    const newValues = workingValues.includes(value)
+      ? workingValues.filter((v) => v !== value)
+      : [...workingValues, value];
+
     onChange(newValues);
+    setClearedMessage(null);
   };
 
   return (
@@ -30,29 +89,53 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({ id, label, help_text, opt
         </p>
       )}
       <div className="space-y-3">
-        {options.map(option => (
-          <div
-            key={option.value}
-            className={`
-              p-4 bg-white rounded-lg cursor-pointer transition-all duration-200
-              border-2 
-              ${selectedValues.includes(option.value)
-                ? 'border-primary ring-4 ring-primary/10'
-                : 'border-stone-200 hover:border-stone-300'
-              }
-            `}
-            onClick={() => handleToggle(option.value)}
-          >
-            <Checkbox
-              id={`${id}-${option.value}`}
-              label={option.label}
-              checked={selectedValues.includes(option.value)}
-              // The outer div's onClick handles the logic, this just syncs the visual state
-              onChange={() => {}}
-            />
-          </div>
-        ))}
+        {options.map(option => {
+          const isDisabled = exclusiveSelected && option.value !== exclusiveOptionValue;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              className={`
+                w-full text-left p-0 bg-transparent rounded-lg transition-all duration-200
+                border-2 
+                ${selectedValues.includes(option.value)
+                  ? 'border-primary ring-4 ring-primary/10'
+                  : isDisabled
+                    ? 'border-stone-200 opacity-60 cursor-not-allowed'
+                    : 'border-stone-200 hover:border-stone-300 cursor-pointer'
+                }
+              `}
+              onClick={() => {
+                if (isDisabled) return;
+                handleToggle(option.value);
+              }}
+              aria-disabled={isDisabled}
+            >
+              <div className="p-4">
+                <Checkbox
+                  id={`${id}-${option.value}`}
+                  label={option.label}
+                  checked={selectedValues.includes(option.value)}
+                  onChange={() => {
+                    if (isDisabled) return;
+                    handleToggle(option.value);
+                  }}
+                  disabled={isDisabled}
+                />
+              </div>
+            </button>
+          );
+        })}
       </div>
+      {clearedMessage && (
+        <div
+          className="mt-4 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary"
+          role="status"
+          aria-live="polite"
+        >
+          {clearedMessage}
+        </div>
+      )}
     </div>
   );
 };

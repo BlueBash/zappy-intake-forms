@@ -28,6 +28,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
           variant="secondary"
           onClick={onBack}
           aria-label="Go back to the previous question"
+          type="button"
           className="w-full sm:w-auto"
         >
           Back

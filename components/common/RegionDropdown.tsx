@@ -83,10 +83,14 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
   const selectedRegion = US_STATES.find((state) => state.code === value);
   const displayValue = isOpen ? searchTerm : selectedRegion?.name || '';
 
-  const filteredRegions = US_STATES.filter((state) =>
-    state.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    state.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const normalizedTerm = searchTerm.trim().toLowerCase();
+
+  const filteredRegions = US_STATES.filter((state) => {
+    if (!normalizedTerm) return true;
+    const name = state.name.toLowerCase();
+    const code = state.code.toLowerCase();
+    return name.startsWith(normalizedTerm) || code.startsWith(normalizedTerm);
+  });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

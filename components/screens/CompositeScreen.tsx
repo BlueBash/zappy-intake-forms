@@ -133,7 +133,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           const otherValueStr = currentAnswers[otherFieldId];
           if (otherValueStr !== undefined && otherValueStr !== null && otherValueStr !== '') {
             const otherValue = parseFloat(otherValueStr);
-            if (!isNaN(otherValue) && numValue <= otherValue) {
+            if (!isNaN(otherValue) && numValue < otherValue) {
               return field.validation.greater_than_field.error;
             }
           }
@@ -143,7 +143,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           const otherValueStr = currentAnswers[otherFieldId];
           if (otherValueStr !== undefined && otherValueStr !== null && otherValueStr !== '') {
             const otherValue = parseFloat(otherValueStr);
-            if (!isNaN(otherValue) && numValue >= otherValue) {
+            if (!isNaN(otherValue) && numValue > otherValue) {
               return field.validation.less_than_field.error;
             }
           }
@@ -418,15 +418,25 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
       }
       case 'multi_select': {
           const multiSelectField = field as SelectField;
+          const handleMultiSelectChange = (newValues: string[]) => {
+            if (field.id === 'mental_health_diagnosis' && !newValues.includes('other')) {
+              updateAnswer('mental_health_other', '');
+            }
+            updateAnswer(field.id, newValues);
+          };
           return (
-            <CheckboxGroup
+            <div>
+              <CheckboxGroup
                 id={field.id}
                 label={field.label}
                 help_text={field.help_text}
                 options={multiSelectField.options}
                 selectedValues={value || []}
-                onChange={(newValues) => updateAnswer(field.id, newValues)}
-            />
+                onChange={handleMultiSelectChange}
+                exclusiveValue="none"
+              />
+              {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
+            </div>
           )
       }
       case 'medication_details_group': {

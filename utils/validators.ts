@@ -125,11 +125,11 @@ export const validateCrossField = (
     return undefined;
   }
   
-  if (operator === 'greater_than' && numValue <= numOther) {
+  if (operator === 'greater_than' && numValue < numOther) {
     return errorMessage;
   }
-  
-  if (operator === 'less_than' && numValue >= numOther) {
+
+  if (operator === 'less_than' && numValue > numOther) {
     return errorMessage;
   }
   

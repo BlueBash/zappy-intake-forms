@@ -35,6 +35,56 @@ interface DiscountResponse {
   discount?: Discount;
 }
 
+export interface PaymentIntentResponse {
+  client_secret?: string;
+  clientSecret?: string;
+  publishable_key?: string;
+  publishableKey?: string;
+  amount?: number;
+  currency?: string;
+  status?: string;
+  payment_intent_id?: string;
+  paymentIntentId?: string;
+  customer_email?: string;
+  customerEmail?: string;
+  [key: string]: unknown;
+}
+
+export interface InvoiceResponse {
+  id: string;
+  number?: string | null;
+  amount_due?: number | null;
+  amountDue?: number | null;
+  currency?: string | null;
+  status?: string | null;
+  description?: string | null;
+  client_email?: string | null;
+  clientEmail?: string | null;
+  due_date?: string | null;
+  dueDate?: string | null;
+  payment_intent_payload?: PaymentIntentResponse | null;
+  paymentIntentPayload?: PaymentIntentResponse | null;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface InvoicePaymentIntentResponse {
+  invoice: InvoiceResponse;
+  payment_intent?: PaymentIntentResponse;
+  paymentIntent?: PaymentIntentResponse;
+}
+
+export interface CreatePaymentIntentPayload {
+  amount?: number;
+  currency?: string;
+  email?: string;
+  plan_id?: string;
+  planId?: string;
+  metadata?: Record<string, string | number>;
+  payment_intent_id?: string;
+  paymentIntentId?: string;
+}
+
 const BASE_URL = import.meta.env.VITE_BACKEND_API_BASE || 'http://localhost:3005';
 const API_KEY = import.meta.env.VITE_BACKEND_API_KEY || '';
 
@@ -110,6 +160,15 @@ export const apiClient = {
 
   submitConsultation: (payload: Record<string, unknown>) =>
     post<{ message?: string }>('/consultations', payload),
+
+  createPaymentIntent: (payload: CreatePaymentIntentPayload) =>
+    post<PaymentIntentResponse>('/payments/payment-intent', payload),
+
+  getPaymentIntent: (paymentIntentId: string) =>
+    get<PaymentIntentResponse>(`/payments/payment-intent/${paymentIntentId}`),
+
+  getInvoicePaymentIntent: (invoiceId: string) =>
+    post<InvoicePaymentIntentResponse>(`/stripe/invoices/${invoiceId}/payment-intent`, {}),
 };
 
 export type ApiClient = typeof apiClient;

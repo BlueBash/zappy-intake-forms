@@ -11,6 +11,7 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
   const [error, setError] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isDobField = id === 'demographics.dob';
   
   useEffect(() => {
     if (multiline) {
@@ -46,7 +47,7 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
 
   const validate = (currentValue: string): boolean => {
     if (required && !currentValue) {
-      setError('This field is required.');
+      setError(isDobField ? 'Enter your date of birth to continue.' : 'This field is required.');
       return false;
     }
 
@@ -56,7 +57,11 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
     }
 
     if (validation?.pattern && !new RegExp(validation.pattern).test(currentValue)) {
-      setError(validation.error);
+      const patternMessage =
+        (isDobField && 'Enter your date of birth as MM/DD/YYYY.') ||
+        validation.error ||
+        'Enter a valid value.';
+      setError(patternMessage);
       return false;
     }
 
@@ -71,28 +76,52 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
         const inputDate = new Date(year, month - 1, day);
         // Check if the date is valid (e.g., not Feb 30)
         if (isNaN(inputDate.getTime()) || inputDate.getFullYear() !== year || inputDate.getMonth() !== month - 1 || inputDate.getDate() !== day) {
-          setError(validation?.error || "Please enter a valid date.");
+          setError(
+            (isDobField && 'That date doesn’t look right. Double-check the month, day, and year.') ||
+            validation?.error ||
+            'Please enter a valid date.'
+          );
+          return false;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (inputDate > today) {
+          setError(
+            isDobField
+              ? 'Dates in the future don’t work—please use your actual birth date.'
+              : 'Date cannot be in the future.'
+          );
           return false;
         }
 
         // Age validation
         if (validation?.min_age !== undefined || validation?.max_age !== undefined) {
-          const today = new Date();
           let age = today.getFullYear() - inputDate.getFullYear();
           const m = today.getMonth() - inputDate.getMonth();
           if (m < 0 || (m === 0 && today.getDate() < inputDate.getDate())) {
             age--;
           }
-          if ((validation.min_age !== undefined && age < validation.min_age) || (validation.max_age !== undefined && age > validation.max_age)) {
-            setError(validation.error);
+          if (validation.min_age !== undefined && age < validation.min_age) {
+            setError(
+              isDobField
+                ? `We’re only able to continue with patients who are at least ${validation.min_age} years old.`
+                : (validation.error || 'Value is below the minimum allowed.')
+            );
+            return false;
+          }
+          if (validation.max_age !== undefined && age > validation.max_age) {
+            setError(
+              isDobField
+                ? `We’re only able to support patients up to ${validation.max_age} years old.`
+                : (validation.error || 'Value is above the maximum allowed.')
+            );
             return false;
           }
         }
-        
-        // min_today validation
+        // min_today validation (for future-only fields like appointments)
         if (min_today) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
           if (inputDate < today) {
             setError("Date cannot be in the past.");
             return false;

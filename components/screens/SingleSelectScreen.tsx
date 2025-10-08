@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ScreenProps } from './common';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
@@ -14,6 +14,32 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   // Use field_id if provided, otherwise use id
   const answerId = field_id || id;
   const selectedValue = answers[answerId];
+  const [isStateRestricted, setIsStateRestricted] = useState(false);
+  const redirectTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const shouldRestrict = screen.id === 'demographics.state' && selectedValue === 'AL';
+
+    setIsStateRestricted((prev) => (prev === shouldRestrict ? prev : shouldRestrict));
+
+    if (redirectTimerRef.current) {
+      window.clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
+    }
+
+    if (shouldRestrict) {
+      redirectTimerRef.current = window.setTimeout(() => {
+        window.location.href = 'https://zappyhealth.com';
+      }, 3000);
+    }
+
+    return () => {
+      if (redirectTimerRef.current) {
+        window.clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = null;
+      }
+    };
+  }, [screen.id, selectedValue]);
 
   const syncAnswer = (value: string) => {
     updateAnswer(answerId, value);
@@ -36,12 +62,21 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
             onChange={handleStateChange}
             placeholder="Select your state"
           />
+          {isStateRestricted && (
+            <div
+              className="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-600 shadow-inner shadow-rose-100/60"
+              role="alert"
+              aria-live="assertive"
+            >
+              Unfortunately, we are not able to service patients in Alabama. Redirecting you to ZappyHealth.com…
+            </div>
+          )}
         </div>
         <NavigationButtons
           showBack={showBack}
           onBack={onBack}
           onNext={onSubmit}
-          isNextDisabled={!stateValue}
+          isNextDisabled={!stateValue || isStateRestricted}
         />
       </ScreenLayout>
     );
