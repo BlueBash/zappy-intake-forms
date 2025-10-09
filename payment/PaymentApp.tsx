@@ -692,6 +692,7 @@ const PaymentApp: React.FC = () => {
     []
   );
 
+
   useEffect(() => {
     let isActive = true;
     const initialize = async () => {
