@@ -134,10 +134,30 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({
 
   const fullAddressMissing = useMemo(() => {
     const address = answers.address || {};
-    const street = address.street || address.line1 || (answers.shipping_address ?? '');
-    const city = address.locality || address.city || (answers.shipping_city ?? '');
-    const state = address.region || address.state || (answers.shipping_state ?? '');
-    const postal = address.postalCode || address.postal_code || (answers.shipping_zip ?? '');
+    const street =
+      address.street ||
+      address.line1 ||
+      answers.address_line1 ||
+      answers.shipping_address ||
+      '';
+    const city =
+      address.locality ||
+      address.city ||
+      answers.city ||
+      answers.shipping_city ||
+      '';
+    const state =
+      address.region ||
+      address.state ||
+      answers.state ||
+      answers.shipping_state ||
+      '';
+    const postal =
+      address.postalCode ||
+      address.postal_code ||
+      answers.zip_code ||
+      answers.shipping_zip ||
+      '';
 
     const missingLabels: string[] = [];
     if (!street || (typeof street === 'string' && street.trim().length === 0)) missingLabels.push('Street address');
@@ -149,7 +169,17 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({
       isMissing: missingLabels.length > 0,
       missingLabels,
     };
-  }, [answers.address, answers.shipping_address, answers.shipping_city, answers.shipping_state, answers.shipping_zip]);
+  }, [
+    answers.address,
+    answers.address_line1,
+    answers.city,
+    answers.state,
+    answers.zip_code,
+    answers.shipping_address,
+    answers.shipping_city,
+    answers.shipping_state,
+    answers.shipping_zip,
+  ]);
 
   const handleSubmit = () => {
     if (fullAddressMissing.isMissing) {
@@ -157,11 +187,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({
         `Please complete your address before submitting: ${fullAddressMissing.missingLabels.join(', ')}.`
       );
 
-      if (answers.address_line1 || answers.city || answers.state || answers.zip_code) {
-        goToScreen('logistics.shipping_address');
-      } else {
-        goToScreen('logistics.address');
-      }
+      goToScreen('logistics.shipping_address');
       return;
     }
 

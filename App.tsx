@@ -69,17 +69,41 @@ const App: React.FC = () => {
       const responses = JSON.parse(JSON.stringify(answers));
 
       const existingAddress = responses.address || {};
-      const street = responses.shipping_address || existingAddress.street || '';
-      const locality = responses.shipping_city || existingAddress.locality || existingAddress.city || '';
-      const region = responses.shipping_state || existingAddress.region || '';
-      const postalCode = responses.shipping_zip || existingAddress.postalCode || existingAddress.postal_code || '';
-      const country = existingAddress.country || 'US';
+      const normalizeString = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
+      const street =
+        normalizeString(responses.address_line1) ||
+        normalizeString(responses.shipping_address) ||
+        normalizeString(existingAddress.street);
+      const unit =
+        normalizeString(responses.address_line2) ||
+        normalizeString(existingAddress.unit) ||
+        normalizeString(existingAddress.address_line2);
+      const locality =
+        normalizeString(responses.city) ||
+        normalizeString(responses.shipping_city) ||
+        normalizeString(existingAddress.locality) ||
+        normalizeString(existingAddress.city);
+      const region =
+        normalizeString(responses.state) ||
+        normalizeString(responses.shipping_state) ||
+        normalizeString(existingAddress.region);
+      const postalCode =
+        normalizeString(responses.zip_code) ||
+        normalizeString(responses.shipping_zip) ||
+        normalizeString(existingAddress.postalCode) ||
+        normalizeString(existingAddress.postal_code);
+      const country = (
+        normalizeString(responses.country) ||
+        normalizeString(existingAddress.country) ||
+        'US'
+      ).toUpperCase();
       const isDefault = typeof existingAddress.default === 'boolean' ? existingAddress.default : false;
 
       responses.address = {
         street,
+        unit,
         locality,
-        region,
+        region: region.toUpperCase(),
         postalCode,
         country,
         default: isDefault,

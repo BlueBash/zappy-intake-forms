@@ -95,6 +95,278 @@ const StatusBadge: React.FC<{ status?: string | null }> = ({ status }) => {
   );
 };
 
+type PrimitiveRecord = Record<string, unknown>;
+
+interface PackageMetadataSummary {
+  plan?: string | null;
+  medication?: string | null;
+  serviceType?: string | null;
+  pharmacyId?: string | null;
+}
+
+interface DiscountMetadataSummary {
+  code?: string | null;
+  amount?: number | null;
+  percentage?: number | null;
+  description?: string | null;
+}
+
+interface InvoiceMetadataSummary {
+  baseAmount?: number | null;
+  finalAmount?: number | null;
+  medication?: string | null;
+  service?: string | null;
+  pharmacy?: string | null;
+  preferredPlan?: string | null;
+  starterPack?: boolean | null;
+  packageInfo?: PackageMetadataSummary | null;
+  discountInfo?: DiscountMetadataSummary | null;
+}
+
+const parseRecord = (value: unknown): PrimitiveRecord | null => {
+  if (!value) return null;
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as PrimitiveRecord;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    return value as PrimitiveRecord;
+  }
+
+  return null;
+};
+
+const coerceNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const cleaned = value.replace(/[$,\s]/g, '');
+    const parsed = Number(cleaned);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const coerceString = (value: unknown): string | null => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  return null;
+};
+
+const coerceBoolean = (value: unknown): boolean | null => {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', 'yes', '1'].includes(normalized)) return true;
+    if (['false', 'no', '0'].includes(normalized)) return false;
+  }
+
+  if (typeof value === 'number') {
+    if (value === 0) return false;
+    if (!Number.isNaN(value)) return true;
+  }
+
+  return null;
+};
+
+const getFirstValue = (sources: PrimitiveRecord[], keys: string[]): unknown => {
+  for (const source of sources) {
+    for (const key of keys) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        const value = source[key];
+        if (value !== undefined && value !== null) {
+          return value;
+        }
+      }
+    }
+  }
+  return null;
+};
+
+const getFirstCoercedValue = <T,>(
+  sources: PrimitiveRecord[],
+  keys: string[],
+  resolver: (value: unknown) => T | null
+): T | null => {
+  for (const source of sources) {
+    for (const key of keys) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        const resolved = resolver(source[key]);
+        if (resolved !== null && resolved !== undefined) {
+          return resolved;
+        }
+      }
+    }
+  }
+  return null;
+};
+
+const extractPackageSummary = (value: unknown): PackageMetadataSummary | null => {
+  const record = parseRecord(value);
+  if (!record) return null;
+
+  const resolve = (keys: string[]) => getFirstCoercedValue([record], keys, coerceString);
+
+  const summary: PackageMetadataSummary = {
+    plan: resolve(['plan', 'name']),
+    medication: resolve(['medication']),
+    serviceType: resolve(['service_type', 'serviceType']),
+    pharmacyId: resolve(['pharmacy', 'pharmacy_name', 'pharmacyName', 'pharmacy_id', 'pharmacyId']),
+  };
+
+  if (summary.plan || summary.medication || summary.serviceType || summary.pharmacyId) {
+    return summary;
+  }
+
+  return null;
+};
+
+const extractDiscountSummary = (value: unknown): DiscountMetadataSummary | null => {
+  const record = parseRecord(value);
+  if (!record) return null;
+
+  const summary: DiscountMetadataSummary = {
+    code: getFirstCoercedValue([record], ['code', 'name'], coerceString),
+    amount: getFirstCoercedValue([record], ['amount', 'value', 'discount_amount', 'discountAmount'], coerceNumber),
+    percentage: getFirstCoercedValue([record], ['percentage', 'percent', 'discount_percentage', 'discountPercentage'], coerceNumber),
+    description: getFirstCoercedValue([record], ['description'], coerceString),
+  };
+
+  if (summary.code || summary.amount || summary.percentage || summary.description) {
+    return summary;
+  }
+
+  return null;
+};
+
+const extractInvoiceMetadataSummary = (
+  invoice: InvoiceResponse | null,
+  paymentIntent: PaymentIntentResponse | null
+): InvoiceMetadataSummary | null => {
+  const metadataSources: PrimitiveRecord[] = [];
+
+  const invoiceMetadata = parseRecord(invoice?.metadata ?? null);
+  if (invoiceMetadata) {
+    metadataSources.push(invoiceMetadata);
+  }
+
+  const paymentIntentMetadata = parseRecord(paymentIntent?.metadata ?? null);
+  if (paymentIntentMetadata) {
+    metadataSources.push(paymentIntentMetadata);
+  }
+
+  if (metadataSources.length === 0) {
+    return null;
+  }
+
+  const discountValue = getFirstValue(metadataSources, ['discount', 'discount_details', 'discountDetails']);
+  let discountInfo = extractDiscountSummary(discountValue);
+  if (!discountInfo) {
+    const fallbackDiscount: DiscountMetadataSummary = {
+      code: getFirstCoercedValue(metadataSources, ['discount_code', 'discountCode'], coerceString),
+      amount: getFirstCoercedValue(metadataSources, ['discount_amount', 'discountAmount'], coerceNumber),
+      percentage: getFirstCoercedValue(metadataSources, ['discount_percentage', 'discountPercentage'], coerceNumber),
+      description: getFirstCoercedValue(
+        metadataSources,
+        ['discount_description', 'discountDescription'],
+        coerceString
+      ),
+    };
+    if (
+      fallbackDiscount.code ||
+      fallbackDiscount.amount ||
+      fallbackDiscount.percentage ||
+      fallbackDiscount.description
+    ) {
+      discountInfo = fallbackDiscount;
+    }
+  }
+
+  const summary: InvoiceMetadataSummary = {
+    baseAmount: getFirstCoercedValue(metadataSources, ['base_amount', 'baseAmount'], coerceNumber),
+    finalAmount:
+      getFirstCoercedValue(metadataSources, ['final_amount', 'finalAmount'], coerceNumber) ??
+      coerceNumber(invoice?.amount_due ?? invoice?.amountDue),
+    medication: getFirstCoercedValue(metadataSources, ['medication'], coerceString),
+    service: getFirstCoercedValue(metadataSources, ['service', 'service_type', 'serviceType'], coerceString),
+    pharmacy: getFirstCoercedValue(metadataSources, ['pharmacy', 'pharmacy_name', 'pharmacyName'], coerceString),
+    preferredPlan: getFirstCoercedValue(
+      metadataSources,
+      ['preferred_plan', 'preferredPlan', 'package_plan', 'packagePlan'],
+      coerceString
+    ),
+    starterPack: getFirstCoercedValue(metadataSources, ['starter_pack', 'starterPack'], coerceBoolean),
+    discountInfo: discountInfo ?? null,
+  };
+
+  const packageValue = getFirstValue(metadataSources, ['package', 'package_details', 'packageDetails']);
+  let packageInfo = extractPackageSummary(packageValue);
+  if (!packageInfo) {
+    const fallbackPackage: PackageMetadataSummary = {
+      plan: getFirstCoercedValue(metadataSources, ['package_plan', 'packagePlan'], coerceString),
+      medication: getFirstCoercedValue(metadataSources, ['package_medication', 'packageMedication'], coerceString),
+      serviceType: getFirstCoercedValue(metadataSources, ['package_service_type', 'packageServiceType'], coerceString),
+      pharmacyId: getFirstCoercedValue(
+        metadataSources,
+        ['package_pharmacy_id', 'packagePharmacyId', 'package_pharmacy_name', 'packagePharmacyName'],
+        coerceString
+      ),
+    };
+
+    if (fallbackPackage.plan || fallbackPackage.medication || fallbackPackage.serviceType || fallbackPackage.pharmacyId) {
+      packageInfo = fallbackPackage;
+    }
+  }
+
+  summary.packageInfo = packageInfo ?? null;
+
+  if (
+    summary.baseAmount === null &&
+    summary.finalAmount === null &&
+    !summary.medication &&
+    !summary.service &&
+    !summary.pharmacy &&
+    !summary.preferredPlan &&
+    summary.starterPack === null &&
+    !summary.packageInfo &&
+    !summary.discountInfo
+  ) {
+    return null;
+  }
+
+  return summary;
+};
+
+const formatCurrencyFromMajorUnits = (amount: number | null | undefined, currency: string): string | null => {
+  if (amount === null || amount === undefined || Number.isNaN(amount)) {
+    return null;
+  }
+
+  const normalizedCurrency = (currency || 'usd').toLowerCase();
+  const multiplier = ZERO_DECIMAL_CURRENCIES.has(normalizedCurrency) ? 1 : 100;
+  return formatCurrency(Math.round(amount * multiplier), currency);
+};
+
 interface FeedbackMessage {
   type: 'success' | 'error' | 'info';
   text: string;
@@ -382,6 +654,7 @@ const PaymentApp: React.FC = () => {
   const [customerEmail, setCustomerEmail] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
   const [invoiceDetails, setInvoiceDetails] = useState<InvoiceResponse | null>(null);
+  const [paymentIntentDetails, setPaymentIntentDetails] = useState<PaymentIntentResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -455,6 +728,9 @@ const PaymentApp: React.FC = () => {
           setCurrency(currencyParam);
         }
 
+        setPaymentIntentDetails(null);
+        setInvoiceDetails(null);
+
         if (invoiceId) {
           const response = await apiClient.getInvoicePaymentIntent(invoiceId);
           if (!isActive) return;
@@ -485,6 +761,8 @@ const PaymentApp: React.FC = () => {
           if (keyFromResponse) {
             setStripeFromKey(keyFromResponse);
           }
+
+          setPaymentIntentDetails(paymentIntentData ?? null);
 
           initializeFromResponse(
             paymentIntentData,
@@ -527,6 +805,7 @@ const PaymentApp: React.FC = () => {
           if (parsedAmountParam !== null) {
             setAmount(parsedAmountParam);
           }
+          setPaymentIntentDetails(null);
           setIsLoading(false);
           return;
         }
@@ -540,6 +819,7 @@ const PaymentApp: React.FC = () => {
             setStripeFromKey(keyFromResponse);
           }
 
+          setPaymentIntentDetails(response ?? null);
           initializeFromResponse(response, currencyParam, parsedAmountParam);
           setIsLoading(false);
           return;
@@ -562,6 +842,7 @@ const PaymentApp: React.FC = () => {
             setStripeFromKey(keyFromResponse);
           }
 
+          setPaymentIntentDetails(response ?? null);
           initializeFromResponse(response, currencyParam, parsedAmountParam);
           setIsLoading(false);
           return;
@@ -583,6 +864,52 @@ const PaymentApp: React.FC = () => {
   }, [initializeFromResponse, setStripeFromKey]);
 
   const formattedAmount = useMemo(() => formatCurrency(amount, currency), [amount, currency]);
+
+  const metadataSummary = useMemo(
+    () => extractInvoiceMetadataSummary(invoiceDetails, paymentIntentDetails),
+    [invoiceDetails, paymentIntentDetails]
+  );
+
+  const metadataBaseAmount = metadataSummary?.baseAmount ?? null;
+  const metadataFinalAmount = metadataSummary?.finalAmount ?? null;
+  const packageSummary = metadataSummary?.packageInfo ?? null;
+  const discountSummary = metadataSummary?.discountInfo ?? null;
+
+  const baseAmountLabel = useMemo(
+    () => formatCurrencyFromMajorUnits(metadataBaseAmount, currency),
+    [metadataBaseAmount, currency]
+  );
+  const discountAmountValue = discountSummary?.amount ?? null;
+  const discountAmountLabel = useMemo(
+    () => formatCurrencyFromMajorUnits(discountAmountValue, currency),
+    [discountAmountValue, currency]
+  );
+  const amountDueLabel = formattedAmount ?? formatCurrencyFromMajorUnits(metadataFinalAmount, currency);
+
+  const packagePlanLabel = metadataSummary?.preferredPlan ?? packageSummary?.plan ?? null;
+  const serviceLabel = metadataSummary?.service ?? packageSummary?.serviceType ?? null;
+  const medicationLabel = metadataSummary?.medication ?? packageSummary?.medication ?? null;
+  const pharmacyLabel =
+    metadataSummary?.pharmacy ?? packageSummary?.pharmacyId ?? null;
+  const starterPackValue = metadataSummary?.starterPack;
+  const starterPackLabel =
+    typeof starterPackValue === 'boolean' ? (starterPackValue ? 'Yes' : 'No') : null;
+
+  const discountPercentageLabel =
+    discountSummary && typeof discountSummary.percentage === 'number' && discountSummary.percentage > 0
+      ? `${discountSummary.percentage}%`
+      : null;
+
+  const shouldShowPackageCard = Boolean(
+    packagePlanLabel || serviceLabel || medicationLabel || pharmacyLabel || starterPackLabel
+  );
+
+  const shouldShowDiscountCard = Boolean(
+    discountSummary &&
+      (discountSummary.code || discountAmountLabel || discountPercentageLabel || discountSummary.description)
+  );
+
+  const shouldShowAmountBreakdown = Boolean(baseAmountLabel || discountAmountLabel);
 
   const invoiceReference = useMemo(() => {
     if (!invoiceDetails) return null;
@@ -636,7 +963,7 @@ const PaymentApp: React.FC = () => {
   if (isPaid) {
     return (
       <PaidInvoiceView
-        amountLabel={formattedAmount}
+        amountLabel={amountDueLabel ?? undefined}
         invoiceReference={invoiceReference}
         customerEmail={customerEmail}
         description={description}
@@ -717,13 +1044,98 @@ const PaymentApp: React.FC = () => {
                 <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
                   <p className="text-xs uppercase tracking-wide text-emerald-500/80">Amount due</p>
                   <p className="mt-2 text-2xl font-semibold text-slate-900">
-                    {formattedAmount ?? 'Pending'}
+                    {amountDueLabel ?? 'Pending'}
                   </p>
+                  {shouldShowAmountBreakdown && (
+                    <div className="mt-4 space-y-2 border-t border-emerald-100 pt-4 text-sm text-slate-600">
+                      {baseAmountLabel && (
+                        <div className="flex items-center justify-between">
+                          <span>Base amount</span>
+                          <span className="font-medium text-slate-900">{baseAmountLabel}</span>
+                        </div>
+                      )}
+                      {discountAmountLabel && (
+                        <div className="flex items-center justify-between text-emerald-600">
+                          <span>
+                            Discount{discountSummary?.code ? ` (${discountSummary.code})` : ''}
+                          </span>
+                          <span className="font-medium">-{discountAmountLabel}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
+                {shouldShowPackageCard && (
+                  <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
+                    <p className="text-xs uppercase tracking-wide text-emerald-500/80">Package details</p>
+                    <div className="mt-3 space-y-2 text-sm text-slate-600">
+                      {packagePlanLabel && (
+                        <div className="flex items-center justify-between text-slate-900">
+                          <span>Plan</span>
+                          <span className="font-medium">{packagePlanLabel}</span>
+                        </div>
+                      )}
+                      {serviceLabel && (
+                        <div className="flex items-center justify-between">
+                          <span>Service</span>
+                          <span className="font-medium text-slate-900">{serviceLabel}</span>
+                        </div>
+                      )}
+                      {medicationLabel && (
+                        <div className="flex items-center justify-between">
+                          <span>Medication</span>
+                          <span className="font-medium text-slate-900">{medicationLabel}</span>
+                        </div>
+                      )}
+                      {pharmacyLabel && (
+                        <div className="flex items-center justify-between">
+                          <span>Pharmacy</span>
+                          <span className="font-medium text-slate-900">{pharmacyLabel}</span>
+                        </div>
+                      )}
+                      {starterPackLabel && (
+                        <div className="flex items-center justify-between">
+                          <span>Starter pack</span>
+                          <span className="font-medium text-slate-900">{starterPackLabel}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {invoiceReference && (
                   <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
                     <p className="text-xs uppercase tracking-wide text-emerald-500/80">Invoice</p>
                     <p className="mt-2 text-base font-medium text-slate-900">{invoiceReference}</p>
+                  </div>
+                )}
+                {shouldShowDiscountCard && (
+                  <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
+                    <p className="text-xs uppercase tracking-wide text-emerald-500/80">Discount</p>
+                    <div className="mt-3 space-y-2 text-sm text-slate-600">
+                      {discountSummary?.code && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-500/80">
+                            Code
+                          </span>
+                          <span className="text-sm font-semibold text-emerald-600">{discountSummary.code}</span>
+                        </div>
+                      )}
+                      {discountAmountLabel && (
+                        <div className="flex items-center justify-between text-emerald-600">
+                          <span>Amount</span>
+                          <span className="font-medium">-{discountAmountLabel}</span>
+                        </div>
+                      )}
+                      {discountPercentageLabel && (
+                        <div className="flex items-center justify-between">
+                          <span>Percentage</span>
+                          <span className="font-medium text-slate-900">{discountPercentageLabel}</span>
+                        </div>
+                      )}
+                    </div>
+                    {discountSummary?.description && (
+                      <p className="mt-3 text-xs leading-relaxed text-slate-500">{discountSummary.description}</p>
+                    )}
                   </div>
                 )}
                 {customerEmail && (
