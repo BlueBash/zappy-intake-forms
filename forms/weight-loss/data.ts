@@ -333,7 +333,7 @@ const formConfig: FormConfig = {
           "id": "email",
           "type": "email",
           "label": "Email address",
-          "placeholder": "you@example.com",
+          "placeholder": "john.doe@zappyhealth.com",
           "help_text": "We'll send your personalized plan and stay in touch throughout your journey.",
           "required": true,
           "validation": {

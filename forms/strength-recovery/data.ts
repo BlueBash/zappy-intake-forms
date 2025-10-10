@@ -549,7 +549,7 @@ const formConfig: FormConfig = {
           "id": "email",
           "type": "text",
           "label": "Email address",
-          "placeholder": "you@example.com",
+          "placeholder": "john.doe@zappyhealth.com",
           "required": true,
           "validation": {
             "pattern": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
@@ -628,18 +628,7 @@ const formConfig: FormConfig = {
               "error": "Enter a valid 5-digit ZIP"
             }
           }
-        ],
-        {
-          "id": "country",
-          "type": "single_select",
-          "label": "Country",
-          "required": true,
-          "options": [
-            { "value": "united_states", "label": "United States" },
-            { "value": "canada", "label": "Canada" },
-            { "value": "other", "label": "Other" }
-          ]
-        }
+        ]
       ],
       "next": "logistics.create_password"
     },

@@ -5,6 +5,29 @@ import type { StripeElementsOptions } from '@stripe/stripe-js';
 
 import { apiClient, CreatePaymentIntentPayload, InvoiceResponse, PaymentIntentResponse } from '../utils/api';
 
+const BrandHeader: React.FC = () => (
+  <header className="relative z-10 flex w-full items-center justify-between border-b border-emerald-100/70 bg-white/85 px-5 py-3 shadow-sm shadow-emerald-100/40 backdrop-blur md:px-8">
+    <a href="https://zappyhealth.com" className="inline-flex items-center gap-3" aria-label="ZappyHealth home">
+      <img
+        src="https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2.webp"
+        srcSet="https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2.webp 352w, https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2-300x109.webp 300w"
+        sizes="(max-width: 180px) 100vw, 180px"
+        width={180}
+        height={72}
+        alt="ZappyHealth"
+        loading="lazy"
+        className="h-7 w-auto sm:h-8"
+      />
+      <span className="hidden text-sm font-semibold uppercase tracking-[0.24em] text-emerald-500/90 sm:inline">
+        Payments
+      </span>
+    </a>
+    <p className="hidden text-xs font-medium uppercase tracking-[0.32em] text-emerald-500/70 md:inline">
+      Secure checkout
+    </p>
+  </header>
+);
+
 const ZERO_DECIMAL_CURRENCIES = new Set(['bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'uha', 'vnd', 'vuv', 'xaf', 'xof', 'xpf']);
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -514,27 +537,36 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 };
 
 const LoadingState: React.FC = () => (
-  <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-white to-primary/10 px-6 py-20">
-    <div className="w-full max-w-sm rounded-[28px] border border-primary/20 bg-white px-10 py-12 text-center shadow-xl shadow-primary/15">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
-        <div className="h-9 w-9 animate-spin rounded-full border-3 border-primary/40 border-t-primary" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-white to-primary/10 flex flex-col overflow-hidden">
+      <div className="w-full px-4 pt-6 sm:px-6">
+        <BrandHeader />
       </div>
-      <h2 className="mt-6 text-lg font-semibold text-slate-800">Preparing your payment session…</h2>
-      <p className="mt-3 text-sm text-slate-500">
-        Securely loading Stripe checkout. This should only take a moment.
-      </p>
+      <div className="flex flex-1 items-center justify-center px-4 pb-10 sm:px-6">
+      <div className="w-full max-w-sm rounded-[28px] border border-primary/20 bg-white px-10 py-12 text-center shadow-xl shadow-primary/15">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
+          <div className="h-9 w-9 animate-spin rounded-full border-3 border-primary/40 border-t-primary" />
+        </div>
+        <h2 className="mt-6 text-lg font-semibold text-slate-800">Preparing your payment session…</h2>
+        <p className="mt-3 text-sm text-slate-500">
+          Securely loading Stripe checkout. This should only take a moment.
+        </p>
+      </div>
     </div>
   </div>
 );
 
 const ErrorState: React.FC<{ message: string }> = ({ message }) => (
-  <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-white to-primary/10 px-4 py-20">
-    <div className="w-full max-w-xl overflow-hidden rounded-[32px] border border-primary/15 bg-white shadow-xl shadow-primary/15">
-      <div className="relative bg-gradient-to-b from-primary/10 via-white to-white px-10 pb-16 pt-20 text-center">
-        <div className="absolute -top-12 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full bg-gradient-to-b from-primary to-emerald-500 shadow-lg shadow-primary/30">
-          <div className="absolute inset-0 animate-ping rounded-full bg-primary/40 blur-md" />
-          <div className="relative flex h-full w-full items-center justify-center text-white">
-            <svg
+    <div className="min-h-screen bg-gradient-to-br from-background via-white to-primary/10 flex flex-col overflow-hidden">
+      <div className="w-full px-4 pt-6 sm:px-6">
+        <BrandHeader />
+      </div>
+      <div className="flex flex-1 items-center justify-center px-4 pb-10">
+      <div className="w-full max-w-xl overflow-hidden rounded-[32px] border border-primary/15 bg-white shadow-xl shadow-primary/15">
+        <div className="relative bg-gradient-to-b from-primary/10 via-white to-white px-10 pb-16 pt-20 text-center">
+          <div className="absolute -top-12 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full bg-gradient-to-b from-primary to-emerald-500 shadow-lg shadow-primary/30">
+            <div className="absolute inset-0 animate-ping rounded-full bg-primary/40 blur-md" />
+            <div className="relative flex h-full w-full items-center justify-center text-white">
+              <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="none"
@@ -572,6 +604,7 @@ const ErrorState: React.FC<{ message: string }> = ({ message }) => (
             </div>
           </div>
         </div>
+        </div>
       </div>
     </div>
   </div>
@@ -594,51 +627,56 @@ const PaidInvoiceView: React.FC<{
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background via-white to-emerald-50 px-4 py-20">
-      <div className="w-full max-w-xl rounded-[32px] border border-emerald-100 bg-white p-10 text-center shadow-xl shadow-emerald-100">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="h-9 w-9"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
-        </div>
-        <h1 className="mt-6 text-2xl font-semibold text-slate-900">Invoice already paid</h1>
-        <p className="mt-3 text-sm text-slate-600">
-          Thanks for taking care of this invoice. We&apos;re redirecting you back to ZappyHealth—feel free to close
-          this tab if you&apos;re not automatically redirected.
-        </p>
-        <div className="mt-8 space-y-4 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-6 text-left shadow-inner shadow-emerald-100/60">
-          {amountLabel && (
-            <div className="flex items-center justify-between text-sm font-medium text-slate-900">
-              <span>Paid amount</span>
-              <span>{amountLabel}</span>
-            </div>
-          )}
-          {invoiceReference && (
-            <div className="text-sm text-slate-600">
-              <span className="font-semibold text-slate-800">Invoice</span> {invoiceReference}
-            </div>
-          )}
-          {customerEmail && (
-            <div className="text-sm text-slate-600">
-              <span className="font-semibold text-slate-800">Receipt sent to</span> {customerEmail}
-            </div>
-          )}
-          {description && (
-            <div className="text-sm text-slate-600">
-              <span className="font-semibold text-slate-800">Description</span> {description}
-            </div>
-          )}
-        </div>
-        <div className="mt-10 flex items-center justify-center gap-2 text-xs uppercase tracking-wide text-emerald-600">
-          <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-          Redirecting you in&nbsp;<span className="font-semibold">3 seconds</span>
+    <div className="min-h-screen bg-gradient-to-br from-background via-white to-emerald-50 flex flex-col overflow-hidden">
+      <div className="w-full px-4 pt-6 sm:px-6">
+        <BrandHeader />
+      </div>
+      <div className="flex flex-1 flex-col items-center justify-center px-4 pb-10">
+        <div className="w-full max-w-xl rounded-[32px] border border-emerald-100 bg-white p-10 text-center shadow-xl shadow-emerald-100">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-9 w-9"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          </div>
+          <h1 className="mt-6 text-2xl font-semibold text-slate-900">Invoice already paid</h1>
+          <p className="mt-3 text-sm text-slate-600">
+            Thanks for taking care of this invoice. We&apos;re redirecting you back to ZappyHealth—feel free to close
+            this tab if you&apos;re not automatically redirected.
+          </p>
+          <div className="mt-8 space-y-4 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-6 text-left shadow-inner shadow-emerald-100/60">
+            {amountLabel && (
+              <div className="flex items-center justify-between text-sm font-medium text-slate-900">
+                <span>Paid amount</span>
+                <span>{amountLabel}</span>
+              </div>
+            )}
+            {invoiceReference && (
+              <div className="text-sm text-slate-600">
+                <span className="font-semibold text-slate-800">Invoice</span> {invoiceReference}
+              </div>
+            )}
+            {customerEmail && (
+              <div className="text-sm text-slate-600">
+                <span className="font-semibold text-slate-800">Receipt sent to</span> {customerEmail}
+              </div>
+            )}
+            {description && (
+              <div className="text-sm text-slate-600">
+                <span className="font-semibold text-slate-800">Description</span> {description}
+              </div>
+            )}
+          </div>
+          <div className="mt-10 flex items-center justify-center gap-2 text-xs uppercase tracking-wide text-emerald-600">
+            <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+            Redirecting you in&nbsp;<span className="font-semibold">3 seconds</span>
+          </div>
         </div>
       </div>
     </div>
@@ -977,193 +1015,196 @@ const PaymentApp: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-white to-emerald-50">
-      <div className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-8 lg:px-12">
-        <div className="grid gap-8 rounded-[32px] border border-slate-200 bg-white p-8 shadow-xl shadow-emerald-100 lg:grid-cols-[1.15fr,0.85fr] xl:p-12">
-          <section className="space-y-6">
-            <div className="overflow-hidden rounded-[28px] border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 p-6 shadow-inner">
-              <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-6">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-emerald-500 shadow-lg shadow-emerald-100">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    className="h-7 w-7"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 6.75h18A2.25 2.25 0 0 1 23.25 9v6A2.25 2.25 0 0 1 21 17.25H3A2.25 2.25 0 0 1 .75 15V9A2.25 2.25 0 0 1 3 6.75z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M.75 10.5h22.5M6.75 15H9" />
-                  </svg>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <StatusBadge status={statusToDisplay} />
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-gradient-to-br from-emerald-50 via-white to-sky-50">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 right-[-120px] h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl" />
+        <div className="absolute bottom-[-140px] left-[-80px] h-64 w-64 rounded-full bg-teal-200/35 blur-3xl" />
+      </div>
+      <div className="relative flex h-full flex-col">
+        <BrandHeader />
+        <div className="relative flex flex-1 flex-col px-0 pb-0 pt-4">
+          <div className="relative flex h-full w-full flex-col overflow-hidden rounded-none border-t border-emerald-100/60 bg-white/85 px-4 pb-5 pt-3.5 shadow-[0_30px_60px_-24px_rgba(15,118,110,0.45)] backdrop-blur-xl sm:px-6 lg:px-9">
+            <div className="relative grid flex-1 min-h-0 w-full gap-5 overflow-hidden lg:grid-cols-[minmax(0,1.1fr),minmax(0,0.9fr)]">
+              <section className="flex h-full min-w-0 flex-col overflow-hidden">
+                <div className="flex-1 overflow-y-auto pr-1">
+                  <div className="space-y-4">
+                    <div className="rounded-[24px] border border-slate-200/70 bg-white/94 px-4 py-3 shadow-sm shadow-slate-200/40">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[0.625rem] font-semibold uppercase tracking-[0.32em] text-emerald-500/80">Checkout</p>
+                          <h2 className="mt-1 text-lg font-semibold text-slate-900">Payment method</h2>
+                          <p className="mt-1 text-xs text-slate-600">
+                            Enter your card information below to finalize this payment securely.
+                          </p>
+                        </div>
+                        {amountDueLabel && (
+                          <span className="hidden rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600 shadow-sm shadow-emerald-100 sm:inline">
+                            Due {amountDueLabel}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="rounded-[28px] border border-slate-200/80 bg-white/92 shadow-lg shadow-slate-200/60">
+                      <div className="overflow-hidden p-4">
+                        <Elements stripe={stripePromise} options={elementsOptions}>
+                          <CheckoutForm
+                            clientSecret={clientSecret}
+                            amountLabel={formattedAmount ?? undefined}
+                            onStatusChange={setIntentStatus}
+                          />
+                        </Elements>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h1 className="text-3xl font-semibold text-slate-900 sm:text-[2rem]">Complete your payment</h1>
-                    <p className="mt-2 text-sm text-slate-600">
-                      Securely enter your details below. You&apos;ll receive a receipt as soon as the payment goes
-                      through.
-                    </p>
-                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="rounded-[28px] border border-slate-200 bg-white/90 p-6 shadow-lg shadow-slate-200/60">
-              <Elements stripe={stripePromise} options={elementsOptions}>
-                <CheckoutForm
-                  clientSecret={clientSecret}
-                  amountLabel={formattedAmount ?? undefined}
-                  onStatusChange={setIntentStatus}
-                />
-              </Elements>
-            </div>
-          </section>
+              </section>
 
-          <aside className="space-y-6">
-            <div className="rounded-[28px] border border-emerald-100 bg-emerald-50/70 p-8 shadow-inner shadow-emerald-100">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-500 shadow-md shadow-emerald-100">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    className="h-6 w-6"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-3-3v6m-7.5 7.5h15A2.25 2.25 0 0 0 21.75 19.5v-15A2.25 2.25 0 0 0 19.5 2.25h-15A2.25 2.25 0 0 0 2.25 4.5v15A2.25 2.25 0 0 0 4.5 21.75z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.32em] text-emerald-500/80">Invoice overview</p>
-                  <h2 className="text-xl font-semibold text-slate-900">Summary</h2>
-                </div>
-              </div>
-              <div className="mt-8 space-y-5">
-                <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
-                  <p className="text-xs uppercase tracking-wide text-emerald-500/80">Amount due</p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">
-                    {amountDueLabel ?? 'Pending'}
-                  </p>
-                  {shouldShowAmountBreakdown && (
-                    <div className="mt-4 space-y-2 border-t border-emerald-100 pt-4 text-sm text-slate-600">
-                      {baseAmountLabel && (
-                        <div className="flex items-center justify-between">
-                          <span>Base amount</span>
-                          <span className="font-medium text-slate-900">{baseAmountLabel}</span>
+              <aside className="flex h-full min-w-0 flex-col overflow-hidden rounded-[32px] border border-emerald-100/80 bg-emerald-50/80 p-4 shadow-inner shadow-emerald-100">
+                <div className="flex-1 overflow-y-auto pr-1">
+                  <div className="space-y-4">
+                    <div className="overflow-hidden rounded-[28px] border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 p-4 shadow-inner">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <StatusBadge status={statusToDisplay} />
+                          {description && (
+                            <span className="inline-flex items-center rounded-full bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-500/80 shadow-sm shadow-emerald-100">
+                              Preview
+                            </span>
+                          )}
                         </div>
-                      )}
-                      {discountAmountLabel && (
-                        <div className="flex items-center justify-between text-emerald-600">
-                          <span>
-                            Discount{discountSummary?.code ? ` (${discountSummary.code})` : ''}
-                          </span>
-                          <span className="font-medium">-{discountAmountLabel}</span>
+                        <div>
+                          <h2 className="text-xl font-semibold text-slate-900">Complete your payment</h2>
+                          <p className="mt-1 text-sm text-slate-600">
+                            Securely enter your details below. You&apos;ll receive a receipt as soon as the payment goes through.
+                          </p>
                         </div>
-                      )}
+                        {(invoiceReference || customerEmail) && (
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {invoiceReference && (
+                              <div className="rounded-xl border border-emerald-100/80 bg-white/90 px-3 py-2 text-sm shadow-sm shadow-emerald-100/40">
+                                <p className="text-[0.625rem] font-semibold uppercase tracking-[0.28em] text-emerald-500/80">Invoice</p>
+                                <p className="mt-1 truncate font-medium text-slate-900" title={invoiceReference}>
+                                  {invoiceReference}
+                                </p>
+                              </div>
+                            )}
+                            {customerEmail && (
+                              <div className="rounded-xl border border-emerald-100/80 bg-white/90 px-3 py-2 text-sm shadow-sm shadow-emerald-100/40">
+                                <p className="text-[0.625rem] font-semibold uppercase tracking-[0.28em] text-emerald-500/80">
+                                  Receipt email
+                                </p>
+                                <p className="mt-1 truncate font-medium text-slate-900" title={customerEmail}>
+                                  {customerEmail}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
+                    <div className="rounded-[28px] border border-emerald-100 bg-white/92 p-5 shadow-sm shadow-emerald-100/60">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500 shadow-sm shadow-emerald-100">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            className="h-6 w-6"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-3-3v6m-7.5 7.5h15A2.25 2.25 0 0 0 21.75 19.5v-15A2.25 2.25 0 0 0 19.5 2.25h-15A2.25 2.25 0 0 0 2.25 4.5v15A2.25 2.25 0 0 0 4.5 21.75z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.32em] text-emerald-500/80">Invoice overview</p>
+                          <h3 className="text-lg font-semibold text-slate-900">Summary</h3>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-xs leading-relaxed text-emerald-600/90">
+                        Review your invoice details before submitting. Everything updates in real time as your payment proceeds.
+                      </p>
+                      <div className="mt-4 space-y-4">
+                        <div className="rounded-2xl border border-emerald-100 bg-white/95 p-4 shadow-sm shadow-emerald-100/60">
+                          <p className="text-xs uppercase tracking-wide text-emerald-500/80">Amount due</p>
+                          <p className="mt-1.5 text-2xl font-semibold text-slate-900">
+                            {amountDueLabel ?? 'Pending'}
+                          </p>
+                          {shouldShowAmountBreakdown && (
+                            <div className="mt-3 space-y-2 border-t border-emerald-100 pt-3 text-sm text-slate-600">
+                              {baseAmountLabel && (
+                                <div className="flex items-center justify-between">
+                                  <span>Base amount</span>
+                                  <span className="font-medium text-slate-900">{baseAmountLabel}</span>
+                                </div>
+                              )}
+                              {discountAmountLabel && (
+                                <div className="flex items-center justify-between text-emerald-600">
+                                  <span>
+                                    Discount{discountSummary?.code ? ` (${discountSummary.code})` : ''}
+                                  </span>
+                                  <span className="font-medium">-{discountAmountLabel}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {shouldShowPackageCard && (
+                          <div className="rounded-2xl border border-emerald-100 bg-white/95 p-4 shadow-sm shadow-emerald-100/60">
+                            <p className="text-xs uppercase tracking-wide text-emerald-500/80">Package details</p>
+                            <div className="mt-2.5 space-y-2 text-sm text-slate-600">
+                              {packagePlanLabel && (
+                                <div className="flex items-center justify-between text-slate-900">
+                                  <span>Plan</span>
+                                  <span className="font-medium">{packagePlanLabel}</span>
+                                </div>
+                              )}
+                              {serviceLabel && (
+                                <div className="flex items-center justify-between">
+                                  <span>Service</span>
+                                  <span className="font-medium text-slate-900">{serviceLabel}</span>
+                                </div>
+                              )}
+                              {medicationLabel && (
+                                <div className="flex items-center justify-between">
+                                  <span>Medication</span>
+                                  <span className="font-medium text-slate-900">{medicationLabel}</span>
+                                </div>
+                              )}
+                              {pharmacyLabel && (
+                                <div className="flex items-center justify-between">
+                                  <span>Pharmacy</span>
+                                  <span className="font-medium text-slate-900">{pharmacyLabel}</span>
+                                </div>
+                              )}
+                              {starterPackLabel && (
+                                <div className="flex items-center justify-between">
+                                  <span>Starter pack</span>
+                                  <span className="font-medium text-slate-900">{starterPackLabel}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                {shouldShowPackageCard && (
-                  <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
-                    <p className="text-xs uppercase tracking-wide text-emerald-500/80">Package details</p>
-                    <div className="mt-3 space-y-2 text-sm text-slate-600">
-                      {packagePlanLabel && (
-                        <div className="flex items-center justify-between text-slate-900">
-                          <span>Plan</span>
-                          <span className="font-medium">{packagePlanLabel}</span>
-                        </div>
-                      )}
-                      {serviceLabel && (
-                        <div className="flex items-center justify-between">
-                          <span>Service</span>
-                          <span className="font-medium text-slate-900">{serviceLabel}</span>
-                        </div>
-                      )}
-                      {medicationLabel && (
-                        <div className="flex items-center justify-between">
-                          <span>Medication</span>
-                          <span className="font-medium text-slate-900">{medicationLabel}</span>
-                        </div>
-                      )}
-                      {pharmacyLabel && (
-                        <div className="flex items-center justify-between">
-                          <span>Pharmacy</span>
-                          <span className="font-medium text-slate-900">{pharmacyLabel}</span>
-                        </div>
-                      )}
-                      {starterPackLabel && (
-                        <div className="flex items-center justify-between">
-                          <span>Starter pack</span>
-                          <span className="font-medium text-slate-900">{starterPackLabel}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {invoiceReference && (
-                  <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
-                    <p className="text-xs uppercase tracking-wide text-emerald-500/80">Invoice</p>
-                    <p className="mt-2 text-base font-medium text-slate-900">{invoiceReference}</p>
-                  </div>
-                )}
-                {shouldShowDiscountCard && (
-                  <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
-                    <p className="text-xs uppercase tracking-wide text-emerald-500/80">Discount</p>
-                    <div className="mt-3 space-y-2 text-sm text-slate-600">
-                      {discountSummary?.code && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-500/80">
-                            Code
-                          </span>
-                          <span className="text-sm font-semibold text-emerald-600">{discountSummary.code}</span>
-                        </div>
-                      )}
-                      {discountAmountLabel && (
-                        <div className="flex items-center justify-between text-emerald-600">
-                          <span>Amount</span>
-                          <span className="font-medium">-{discountAmountLabel}</span>
-                        </div>
-                      )}
-                      {discountPercentageLabel && (
-                        <div className="flex items-center justify-between">
-                          <span>Percentage</span>
-                          <span className="font-medium text-slate-900">{discountPercentageLabel}</span>
-                        </div>
-                      )}
-                    </div>
-                    {discountSummary?.description && (
-                      <p className="mt-3 text-xs leading-relaxed text-slate-500">{discountSummary.description}</p>
-                    )}
-                  </div>
-                )}
-                {customerEmail && (
-                  <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
-                    <p className="text-xs uppercase tracking-wide text-emerald-500/80">Receipt email</p>
-                    <p className="mt-2 text-base font-medium text-slate-900">{customerEmail}</p>
-                  </div>
-                )}
-                {dueDateLabel && (
-                  <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
-                    <p className="text-xs uppercase tracking-wide text-emerald-500/80">Due date</p>
-                    <p className="mt-2 text-base font-medium text-slate-900">{dueDateLabel}</p>
-                  </div>
-                )}
-                {description && (
-                  <div className="rounded-2xl border border-emerald-100 bg-white/90 p-5 shadow-sm shadow-emerald-100/60">
-                    <p className="text-xs uppercase tracking-wide text-emerald-500/80">Description</p>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-600">{description}</p>
-                  </div>
-                )}
-              </div>
-              <div className="mt-8 rounded-2xl border border-emerald-100 bg-white/90 p-5 text-xs text-slate-600 shadow-sm shadow-emerald-100/60">
-                Need a hand? Email <span className="font-medium text-slate-900">support@zappyhealth.com</span> and include
-                your invoice number for faster help.
-              </div>
+              </aside>
             </div>
-          </aside>
+            <footer className="mt-4 flex items-center justify-center rounded-[24px] border border-emerald-100/70 bg-emerald-50/70 px-4 py-2.5 text-xs font-medium text-emerald-600 shadow-inner shadow-emerald-100">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-emerald-500 shadow-sm shadow-emerald-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
+                  </svg>
+                </span>
+                <p className="leading-tight">
+                  You&apos;re all set—there&apos;s no additional information below this point.
+                </p>
+              </div>
+            </footer>
+          </div>
         </div>
       </div>
     </div>

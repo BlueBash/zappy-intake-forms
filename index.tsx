@@ -9,6 +9,23 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
+const BrandHeader: React.FC = () => (
+  <header className="mb-10 flex justify-center sm:justify-start">
+    <a href="https://zappyhealth.com" className="inline-flex items-center" aria-label="ZappyHealth home">
+      <img
+        src="https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2.webp"
+        srcSet="https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2.webp 352w, https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2-300x109.webp 300w"
+        sizes="(max-width: 352px) 100vw, 352px"
+        width={352}
+        height={128}
+        alt="ZappyHealth"
+        loading="lazy"
+        className="h-12 w-auto sm:h-16"
+      />
+    </a>
+  </header>
+);
+
 const FormRouter: React.FC = () => {
   const [path, setPath] = useState<string>(() => window.location.pathname);
 
@@ -39,7 +56,10 @@ const FormRouter: React.FC = () => {
   if (!route && normalizedPath === '/') {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white via-emerald-50 to-white">
-        <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-6 py-16 lg:px-10 xl:px-12">
+        <div className="w-full px-6 pt-16 lg:px-10 xl:px-12">
+          <BrandHeader />
+        </div>
+        <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-6 pb-16 lg:px-10 xl:px-12">
           <header className="text-center">
             <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">
               Choose Your Program
@@ -111,8 +131,11 @@ const FormRouter: React.FC = () => {
       ));
 
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6 py-16 text-center">
-        <div className="max-w-md space-y-6">
+      <div className="min-h-screen bg-background px-6 py-16">
+        <div className="w-full">
+          <BrandHeader />
+        </div>
+        <div className="mx-auto mt-10 flex max-w-md flex-col items-center text-center space-y-6">
           <h1 className="text-2xl font-semibold text-slate-900">Form not found</h1>
           <p className="text-sm text-slate-600">
             We couldn&apos;t find a form for <code>{path}</code>. Choose one of the available programs below.

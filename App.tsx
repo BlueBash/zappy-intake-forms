@@ -22,6 +22,68 @@ import PlanSelectionScreen from './components/screens/PlanSelectionScreen';
 import MedicationOptionsScreen from './components/screens/MedicationOptionsScreen';
 import DiscountCodeScreen from './components/screens/DiscountCodeScreen';
 
+type ProgramTheme = {
+  headerBg: string;
+  headerBorder: string;
+  badgeBg: string;
+  badgeText: string;
+  badgeShadow: string;
+};
+
+const getProgramTheme = (condition: string): ProgramTheme => {
+  const normalized = condition.toLowerCase();
+  if (normalized.includes('strength')) {
+    return {
+      headerBg: 'bg-sky-50/90',
+      headerBorder: 'border-sky-100',
+      badgeBg: 'bg-gradient-to-r from-sky-500 to-emerald-500',
+      badgeText: 'text-white',
+      badgeShadow: 'shadow-sky-200/60',
+    };
+  }
+  if (normalized.includes('anti')) {
+    return {
+      headerBg: 'bg-fuchsia-50/90',
+      headerBorder: 'border-fuchsia-100',
+      badgeBg: 'bg-gradient-to-r from-fuchsia-500 to-rose-500',
+      badgeText: 'text-white',
+      badgeShadow: 'shadow-fuchsia-200/60',
+    };
+  }
+  return {
+    headerBg: 'bg-orange-50/90',
+    headerBorder: 'border-orange-100',
+    badgeBg: 'bg-gradient-to-r from-orange-500 to-amber-500',
+    badgeText: 'text-white',
+    badgeShadow: 'shadow-orange-200/60',
+  };
+};
+
+const ProgramHeader: React.FC<{ condition: string; theme: ProgramTheme }> = ({ condition, theme }) => (
+  <header
+    className={`mb-8 w-full rounded-3xl border ${theme.headerBorder} ${theme.headerBg} px-6 py-5 shadow-sm shadow-slate-200/40 backdrop-blur-sm`}
+  >
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <a href="https://zappyhealth.com" className="inline-flex items-center" aria-label="ZappyHealth home">
+        <img
+          src="https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2.webp"
+          srcSet="https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2.webp 352w, https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2-300x109.webp 300w"
+          sizes="(max-width: 220px) 100vw, 220px"
+          width={220}
+          height={80}
+          alt="ZappyHealth"
+          loading="lazy"
+          className="h-10 w-auto sm:h-12"
+        />
+      </a>
+      <div className={`inline-flex flex-col items-center rounded-2xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] ${theme.badgeBg} ${theme.badgeText} shadow-lg ${theme.badgeShadow}`}>
+        <span>Program</span>
+        <span className="mt-1 text-sm font-semibold tracking-normal uppercase">{condition}</span>
+      </div>
+    </div>
+  </header>
+);
+
 interface AppProps {
   formConfig?: FormConfig;
   defaultCondition?: string;
@@ -30,25 +92,7 @@ interface AppProps {
 const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondition }) => {
   const activeFormConfig = providedFormConfig ?? defaultFormConfig;
   const resolvedCondition = defaultCondition ?? activeFormConfig.default_condition ?? 'Weight Loss';
-  const badgeTheme = useMemo(() => {
-    const normalized = resolvedCondition.toLowerCase();
-    if (normalized.includes('strength')) {
-      return {
-        background: 'bg-gradient-to-r from-indigo-500 via-sky-500 to-emerald-400 text-white',
-        accent: 'text-white/80',
-      };
-    }
-    if (normalized.includes('anti')) {
-      return {
-        background: 'bg-gradient-to-r from-purple-500 via-fuchsia-500 to-rose-500 text-white',
-        accent: 'text-white/80',
-      };
-    }
-    return {
-      background: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white',
-      accent: 'text-white/80',
-    };
-  }, [resolvedCondition]);
+  const programTheme = useMemo(() => getProgramTheme(resolvedCondition), [resolvedCondition]);
   const { 
     currentScreen, 
     answers,
@@ -248,22 +292,13 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     }
   };
   
-  const isFirstScreen = currentScreen.id === activeFormConfig.screens[0].id;
-
   return (
     <div className="bg-background min-h-screen text-slate-800 flex flex-col items-center justify-start p-4 sm:p-6 md:p-8 font-sans transition-colors duration-300">
+      <div className="w-full">
+        <ProgramHeader condition={resolvedCondition} theme={programTheme} />
+      </div>
       <div className="relative w-full max-w-2xl mx-auto flex flex-col flex-grow">
-        {isFirstScreen && (
-          <div className="pointer-events-none absolute -top-2 right-0 z-10">
-            <div
-              className={`pointer-events-auto rounded-2xl px-5 py-4 text-right shadow-lg shadow-primary/20 backdrop-blur-sm ${badgeTheme.background}`}
-            >
-              <p className={`text-[10px] font-semibold uppercase tracking-[0.44em] ${badgeTheme.accent}`}>Program</p>
-              <p className="mt-2 text-base font-semibold drop-shadow-sm">{resolvedCondition}</p>
-            </div>
-          </div>
-        )}
-        <div className={`flex flex-col flex-grow ${isFirstScreen ? 'pt-20 sm:pt-24' : ''}`}>
+        <div className="flex flex-col flex-grow">
           {activeFormConfig.settings.progress_bar && <ProgressBar progress={progress} />}
           
           <main className="flex-grow w-full relative mt-8 flex flex-col">
