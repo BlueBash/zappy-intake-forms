@@ -10,4 +10,5 @@ export interface ScreenProps {
   onBack: () => void;
   headerSize?: string;
   calculations?: Record<string, any>;
+  defaultCondition?: string;
 }

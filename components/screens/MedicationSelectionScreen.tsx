@@ -13,12 +13,16 @@ const MedicationSelectionScreen: React.FC<ScreenProps> = ({
   onSubmit,
   showBack,
   onBack,
+  defaultCondition,
 }) => {
   const title = 'headline' in screen ? screen.headline : (screen as any).title;
   const helpText = 'body' in screen ? screen.body : (screen as any).help_text;
 
-  const stateCode = answers['shipping_state'] || answers['demographics.state'] || '';
-  const serviceType = DEFAULT_SERVICE_TYPE;
+  const stateCode = answers['demographics.state'] || answers['shipping_state'] || answers['state'] || '';
+  const serviceType =
+    (screen as any)?.service_type && typeof (screen as any).service_type === 'string'
+      ? (screen as any).service_type
+      : defaultCondition || DEFAULT_SERVICE_TYPE;
   const selectedMedication = answers['selected_medication'] || '';
 
   return (

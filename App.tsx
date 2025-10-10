@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { useFormLogic } from './hooks/useFormLogic';
-import formConfig from './data';
-import { Screen } from './types';
+import type { Screen, FormConfig } from './types';
+import defaultFormConfig from './forms/weight-loss/data';
 import { apiClient } from './utils/api';
 
 import ProgressBar from './components/ui/ProgressBar';
@@ -22,7 +22,33 @@ import PlanSelectionScreen from './components/screens/PlanSelectionScreen';
 import MedicationOptionsScreen from './components/screens/MedicationOptionsScreen';
 import DiscountCodeScreen from './components/screens/DiscountCodeScreen';
 
-const App: React.FC = () => {
+interface AppProps {
+  formConfig?: FormConfig;
+  defaultCondition?: string;
+}
+
+const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondition }) => {
+  const activeFormConfig = providedFormConfig ?? defaultFormConfig;
+  const resolvedCondition = defaultCondition ?? activeFormConfig.default_condition ?? 'Weight Loss';
+  const badgeTheme = useMemo(() => {
+    const normalized = resolvedCondition.toLowerCase();
+    if (normalized.includes('strength')) {
+      return {
+        background: 'bg-gradient-to-r from-indigo-500 via-sky-500 to-emerald-400 text-white',
+        accent: 'text-white/80',
+      };
+    }
+    if (normalized.includes('anti')) {
+      return {
+        background: 'bg-gradient-to-r from-purple-500 via-fuchsia-500 to-rose-500 text-white',
+        accent: 'text-white/80',
+      };
+    }
+    return {
+      background: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white',
+      accent: 'text-white/80',
+    };
+  }, [resolvedCondition]);
   const { 
     currentScreen, 
     answers,
@@ -34,17 +60,18 @@ const App: React.FC = () => {
     updateAnswer,
     goToScreen,
     direction,
-  } = useFormLogic(formConfig);
+  } = useFormLogic(activeFormConfig);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--primary-color', formConfig.settings.theme.primary_hex);
-    document.documentElement.style.setProperty('--accent-color', formConfig.settings.theme.accent_hex);
-    document.documentElement.style.setProperty('--secondary-color', formConfig.settings.theme.secondary_hex);
-    document.documentElement.style.setProperty('--background-color', formConfig.settings.theme.background_hex);
-  }, []);
+    const { theme } = activeFormConfig.settings;
+    document.documentElement.style.setProperty('--primary-color', theme.primary_hex);
+    document.documentElement.style.setProperty('--accent-color', theme.accent_hex);
+    document.documentElement.style.setProperty('--secondary-color', theme.secondary_hex);
+    document.documentElement.style.setProperty('--background-color', theme.background_hex);
+  }, [activeFormConfig]);
 
   // Scroll to top whenever screen changes
   useEffect(() => {
@@ -121,10 +148,14 @@ const App: React.FC = () => {
       responses.medication_preferences = responses.medication_preferences || answers['medication_preferences'] || [];
       responses.medication_pharmacy_preferences = responses.medication_pharmacy_preferences || answers['medication_pharmacy_preferences'] || {};
 
+      if (!responses.condition) {
+        responses.condition = resolvedCondition;
+      }
+
       const payload = {
-        condition: responses.condition || 'Weight Loss',
+        condition: responses.condition,
         responses,
-        intake_form: formConfig,
+        intake_form: activeFormConfig,
         timestamp: new Date().toISOString(),
       };
 
@@ -164,6 +195,7 @@ const App: React.FC = () => {
       onSubmit: goToNext,
       showBack: history.length > 0,
       onBack: goToPrev,
+      defaultCondition: resolvedCondition,
     };
 
     if (screen.id === 'treatment.medication_preference') {
@@ -196,17 +228,19 @@ const App: React.FC = () => {
       case 'consent':
         return <ConsentScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'review':
-        return <ReviewScreen 
-                  key={screen.id}
-                  {...commonProps} 
-                  screen={screen}
-                  onSubmit={handleReviewSubmit}
-                  allScreens={formConfig.screens} 
-                  providerFields={formConfig.provider_packet.include_fields} 
-                  goToScreen={goToScreen} 
-                  isSubmitting={isSubmitting}
-                  submissionError={submitError}
-               />;
+        return (
+          <ReviewScreen
+            key={screen.id}
+            {...commonProps}
+            screen={screen}
+            onSubmit={handleReviewSubmit}
+            allScreens={activeFormConfig.screens}
+            providerFields={activeFormConfig.provider_packet.include_fields}
+            goToScreen={goToScreen}
+            isSubmitting={isSubmitting}
+            submissionError={submitError}
+          />
+        );
       case 'terminal':
         return <TerminalScreen key={screen.id} {...commonProps} screen={screen} />;
       default:
@@ -214,32 +248,46 @@ const App: React.FC = () => {
     }
   };
   
+  const isFirstScreen = currentScreen.id === activeFormConfig.screens[0].id;
+
   return (
     <div className="bg-background min-h-screen text-slate-800 flex flex-col items-center justify-start p-4 sm:p-6 md:p-8 font-sans transition-colors duration-300">
-      <div className="w-full max-w-2xl mx-auto flex flex-col flex-grow">
-        {formConfig.settings.progress_bar && <ProgressBar progress={progress} />}
-        
-        <main className="flex-grow w-full relative mt-8 flex flex-col">
-            <AnimatePresence mode="wait" custom={direction}>
-                <motion.div
-                    key={currentScreen.id}
-                    custom={direction}
-                    variants={variants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{
-                        x: { type: "spring", stiffness: 300, damping: 30 },
-                        opacity: { duration: 0.2 }
-                    }}
-                    className="w-full flex-grow flex"
-                >
-                    {renderScreen(currentScreen)}
-                </motion.div>
-            </AnimatePresence>
-        </main>
-        
-        {!currentScreen.type.match(/terminal|content/) && <div className="h-20"></div>}
+      <div className="relative w-full max-w-2xl mx-auto flex flex-col flex-grow">
+        {isFirstScreen && (
+          <div className="pointer-events-none absolute -top-2 right-0 z-10">
+            <div
+              className={`pointer-events-auto rounded-2xl px-5 py-4 text-right shadow-lg shadow-primary/20 backdrop-blur-sm ${badgeTheme.background}`}
+            >
+              <p className={`text-[10px] font-semibold uppercase tracking-[0.44em] ${badgeTheme.accent}`}>Program</p>
+              <p className="mt-2 text-base font-semibold drop-shadow-sm">{resolvedCondition}</p>
+            </div>
+          </div>
+        )}
+        <div className={`flex flex-col flex-grow ${isFirstScreen ? 'pt-20 sm:pt-24' : ''}`}>
+          {activeFormConfig.settings.progress_bar && <ProgressBar progress={progress} />}
+          
+          <main className="flex-grow w-full relative mt-8 flex flex-col">
+              <AnimatePresence mode="wait" custom={direction}>
+                  <motion.div
+                      key={currentScreen.id}
+                      custom={direction}
+                      variants={variants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{
+                          x: { type: "spring", stiffness: 300, damping: 30 },
+                          opacity: { duration: 0.2 }
+                      }}
+                      className="w-full flex-grow flex"
+                  >
+                      {renderScreen(currentScreen)}
+                  </motion.div>
+              </AnimatePresence>
+          </main>
+          
+          {!currentScreen.type.match(/terminal|content/) && <div className="h-20"></div>}
+        </div>
       </div>
     </div>
   );

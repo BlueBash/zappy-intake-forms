@@ -73,12 +73,16 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
   onSubmit,
   showBack,
   onBack,
+  defaultCondition,
 }) => {
   const title = 'headline' in screen ? screen.headline : (screen as any).title;
   const helpText = 'body' in screen ? screen.body : (screen as any).help_text;
 
-  const stateCode = answers['shipping_state'] || answers['demographics.state'] || '';
-  const serviceType = DEFAULT_SERVICE_TYPE;
+  const stateCode = answers['shipping_state'] || answers['demographics.state'] || answers['state'] || '';
+  const serviceType =
+    (screen as any)?.service_type && typeof (screen as any).service_type === 'string'
+      ? (screen as any).service_type
+      : defaultCondition || DEFAULT_SERVICE_TYPE;
   const selectedMedication = answers['selected_medication'] || '';
   const selectedPlanId = answers['selected_plan_id'] || '';
   const pharmacyPreferences = (answers['medication_pharmacy_preferences'] as Record<string, string[]>) || {};

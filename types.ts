@@ -338,4 +338,5 @@ export interface FormConfig {
   screens: Screen[];
   eligibility_rules: EligibilityRule[];
   provider_packet: ProviderPacket;
+  default_condition?: string;
 }

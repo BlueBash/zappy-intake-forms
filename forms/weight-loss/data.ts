@@ -1,6 +1,7 @@
-import { FormConfig } from './types';
+import { FormConfig } from '../../types';
 
 const formConfig: FormConfig = {
+  "default_condition": "Weight Loss",
   "meta": {
     "product": "Physician-Guided Weight Management",
     "form_name": "Health Assessment & Eligibility",
@@ -36,8 +37,8 @@ const formConfig: FormConfig = {
       "id": "welcome",
       "type": "content",
       "phase": "qualify",
-      "headline": "Welcome! Let's find your perfect plan.",
-      "body": "We'll ask about your goals and health to make sure our program works for you. Takes about 10 minutes.",
+      "headline": "Welcome! Let's find your perfect weight loss plan.",
+      "body": "We'll ask about your goals, health, and preferences so we can tailor your weight loss program. Takes about 10 minutes.",
       "cta_primary": {
         "label": "Let's Begin"
       },

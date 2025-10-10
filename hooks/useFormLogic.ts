@@ -13,6 +13,17 @@ export const useFormLogic = (config: FormConfig) => {
   const [direction, setDirection] = useState(1);
   const [returnTo, setReturnTo] = useState<string | null>(null);
   const [flags, setFlags] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setCurrentScreenId(config.screens[0].id);
+    setAnswers({});
+    answersRef.current = {};
+    setCalculations({});
+    setHistory([]);
+    setDirection(1);
+    setReturnTo(null);
+    setFlags(new Set());
+  }, [config]);
   
   const screenMap = useMemo(() => {
     const map = new Map<string, Screen>();
