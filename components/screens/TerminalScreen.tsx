@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ScreenProps } from './common';
 import { FriendlyCheckmark, PhoneIcon, MessageIcon, ReviewIcon, PlanIcon, JourneyIcon } from '../ui/Illustrations';
 import { TerminalScreen as TerminalScreenType } from '../../types';
@@ -25,11 +25,23 @@ const customIconMap: Record<string, React.FC<{ className?: string }>> = {
 };
 
 const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = ({ screen, calculations = {}, showBack, onBack }) => {
-  const { title, body, status, resources, next_steps } = screen;
+  const { title, body, status, resources, next_steps, cta_primary } = screen;
   const icon = status ? statusIconMap[status] : null;
 
   const interpolatedTitle = interpolateText(title, calculations);
   const interpolatedBody = interpolateText(body, calculations);
+
+  const handlePrimaryClick = useCallback(() => {
+    if (!cta_primary?.url) {
+      return;
+    }
+
+    if (cta_primary.open_in_new_tab) {
+      window.open(cta_primary.url, '_blank', 'noopener,noreferrer');
+    } else {
+      window.location.href = cta_primary.url;
+    }
+  }, [cta_primary]);
 
   return (
     <div className="text-center w-full flex flex-col items-center py-16">
@@ -79,6 +91,16 @@ const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = (
             );
           })}
         </div>
+      )}
+
+      {cta_primary?.url && (
+        <Button
+          size="lg"
+          onClick={handlePrimaryClick}
+          className="mt-6"
+        >
+          {cta_primary.label}
+        </Button>
       )}
 
       {showBack && (!next_steps || next_steps.length === 0) && (

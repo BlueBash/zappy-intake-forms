@@ -60,6 +60,8 @@ export interface ConsentItem {
 
 export interface Cta {
   label: string;
+  url?: string;
+  open_in_new_tab?: boolean;
 }
 
 export interface Calculation {

@@ -715,8 +715,12 @@ const formConfig: FormConfig = {
       "required": true,
       "next_logic": [
         {
-          "if": "answer in ['pregnant','trying','nursing']",
-          "go_to": "assess.pregnancy_info"
+          "if": "answer == 'pregnant'",
+          "go_to": "assess.pregnancy_stop_pregnant"
+        },
+        {
+          "if": "answer == 'nursing'",
+          "go_to": "assess.pregnancy_stop_nursing"
         },
         {
           "else": "assess.medical_conditions"
@@ -724,14 +728,27 @@ const formConfig: FormConfig = {
       ]
     },
     {
-      "id": "assess.pregnancy_info",
+      "id": "assess.pregnancy_stop_pregnant",
       "type": "terminal",
       "phase": "assess_safety",
       "status": "warning",
       "title": "We'd love to help you after pregnancy",
-      "body": "GLP-1s aren't safe during pregnancy, when trying to conceive, or while breastfeeding.\n\nOnce you've finished breastfeeding, we'd be happy to work with you. Your OB-GYN can help you explore safe options for now.",
+      "body": "GLP-1s aren't safe during pregnancy, when trying to conceive, or while breastfeeding.\n\nWhen you are no longer pregnant, we'd be happy to work with you. In the meantime, your OB-GYN can help you explore safe options.",
       "cta_primary": {
-        "label": "Learn More"
+        "label": "Return to Zappy Health",
+        "url": "https://zappyhealth.com"
+      }
+    },
+    {
+      "id": "assess.pregnancy_stop_nursing",
+      "type": "terminal",
+      "phase": "assess_safety",
+      "status": "warning",
+      "title": "Pause while you're breastfeeding",
+      "body": "GLP-1s aren't recommended while breastfeeding.\n\nWhen you are no longer breastfeeding, we'd be happy to work with you. Your care team can help you plan the right timing.",
+      "cta_primary": {
+        "label": "Return to Zappy Health",
+        "url": "https://zappyhealth.com"
       }
     },
     {
@@ -784,7 +801,11 @@ const formConfig: FormConfig = {
       "other_text_id": "medical_conditions_other",
       "next_logic": [
         {
-          "if": "answer contains 'thyroid_cancer' OR answer contains 'men2'",
+          "if": "answer contains 'thyroid_cancer'",
+          "go_to": "assess.thyroid_exclusion"
+        },
+        {
+          "if": "answer contains 'men2'",
           "go_to": "assess.thyroid_exclusion"
         },
         {
@@ -806,9 +827,10 @@ const formConfig: FormConfig = {
       "phase": "assess_safety",
       "status": "warning",
       "title": "This is a safety contraindication",
-      "body": "With this history, GLP-1s carry significant cancer risk according to FDA data.\n\nWe can't safely prescribe these medications. Your endocrinologist can help you explore alternatives that work for you.",
+      "body": "With this history, GLP-1s carry significant cancer risk according to FDA data.\n\nWe can't safely prescribe these medications. Use the button below to return to Zappy Health and explore alternative care options with your endocrinologist.",
       "cta_primary": {
-        "label": "Learn More"
+        "label": "Return to Zappy Health",
+        "url": "https://zappyhealth.com"
       }
     },
     {
@@ -991,9 +1013,10 @@ const formConfig: FormConfig = {
       "phase": "assess_safety",
       "status": "warning",
       "title": "We need to coordinate with your diabetes team",
-      "body": "Combining insulin with GLP-1s needs careful coordination to prevent dangerous blood sugar drops.\n\nThis isn't a no—we just need to work with your endocrinologist. Our provider will review and may reach out.\n\n**Don't change your medications.** Your diabetes management is working—we'll coordinate any changes safely.",
+      "body": "Combining insulin with GLP-1s needs careful coordination to prevent dangerous blood sugar drops.\n\nBecause you're currently using insulin, we aren't able to offer GLP-1 weight loss treatment right now. Please continue partnering with your diabetes team for your care.\n\nDon't change your medications. Your diabetes management is working—we'll coordinate any changes safely if the situation changes.",
       "cta_primary": {
-        "label": "I Understand"
+        "label": "Return to Zappy Health",
+        "url": "https://zappyhealth.com"
       }
     },
     {
