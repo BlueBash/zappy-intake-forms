@@ -25,7 +25,7 @@ const customIconMap: Record<string, React.FC<{ className?: string }>> = {
 };
 
 const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = ({ screen, calculations = {}, showBack, onBack }) => {
-  const { title, body, status, resources, next_steps, cta_primary } = screen;
+  const { title, body, status, resources, next_steps, cta_primary, links } = screen;
   const icon = status ? statusIconMap[status] : null;
 
   const interpolatedTitle = interpolateText(title, calculations);
@@ -101,6 +101,25 @@ const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = (
         >
           {cta_primary.label}
         </Button>
+      )}
+
+      {links && links.length > 0 && (
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          {links.map((link, index) => {
+            const isExternal = /^https?:/i.test(link.url);
+            return (
+              <a
+                key={`${link.label}-${index}`}
+                href={link.url}
+                target={isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
+                className="text-primary font-semibold hover:underline"
+              >
+                {link.label}
+              </a>
+            );
+          })}
+        </div>
       )}
 
       {showBack && (!next_steps || next_steps.length === 0) && (

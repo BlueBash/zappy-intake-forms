@@ -719,6 +719,10 @@ const formConfig: FormConfig = {
           "go_to": "assess.pregnancy_stop_pregnant"
         },
         {
+          "if": "answer == 'trying'",
+          "go_to": "assess.pregnancy_stop_trying"
+        },
+        {
           "if": "answer == 'nursing'",
           "go_to": "assess.pregnancy_stop_nursing"
         },
@@ -734,6 +738,18 @@ const formConfig: FormConfig = {
       "status": "warning",
       "title": "We'd love to help you after pregnancy",
       "body": "GLP-1s aren't safe during pregnancy, when trying to conceive, or while breastfeeding.\n\nWhen you are no longer pregnant, we'd be happy to work with you. In the meantime, your OB-GYN can help you explore safe options.",
+      "cta_primary": {
+        "label": "Return to Zappy Health",
+        "url": "https://zappyhealth.com"
+      }
+    },
+    {
+      "id": "assess.pregnancy_stop_trying",
+      "type": "terminal",
+      "phase": "assess_safety",
+      "status": "warning",
+      "title": "Pause while you're trying to conceive",
+      "body": "GLP-1s aren't safe when you're actively trying to get pregnant.\n\nOnce you're no longer trying to conceive or have delivered, we'd be happy to work with you. Your OB-GYN can help you plan the right timing.",
       "cta_primary": {
         "label": "Return to Zappy Health",
         "url": "https://zappyhealth.com"
@@ -1012,8 +1028,8 @@ const formConfig: FormConfig = {
       "type": "terminal",
       "phase": "assess_safety",
       "status": "warning",
-      "title": "We need to coordinate with your diabetes team",
-      "body": "Combining insulin with GLP-1s needs careful coordination to prevent dangerous blood sugar drops.\n\nBecause you're currently using insulin, we aren't able to offer GLP-1 weight loss treatment right now. Please continue partnering with your diabetes team for your care.\n\nDon't change your medications. Your diabetes management is working—we'll coordinate any changes safely if the situation changes.",
+      "title": "Coordinate with your diabetes team",
+      "body": "Combining insulin with GLP-1s needs careful coordination to prevent dangerous blood sugar drops.\n\nBecause you're currently using insulin, we aren't able to offer GLP-1 weight loss treatment right now. Please continue partnering with your diabetes team for your care.\n\nDon't change your medications.",
       "cta_primary": {
         "label": "Return to Zappy Health",
         "url": "https://zappyhealth.com"
@@ -1194,7 +1210,7 @@ const formConfig: FormConfig = {
         {
           "id": "wegovy_dose",
           "type": "single_select",
-          "label": "  ↳ What dose?",
+          "label": "  ↳ What doses?",
           "required": true,
           "options": [
             { "value": "0.25mg", "label": "0.25 mg weekly" },
@@ -2061,7 +2077,11 @@ const formConfig: FormConfig = {
       ],
       "cta_primary": {
         "label": "View Your Dashboard"
-      }
+      },
+      "links": [
+        { "label": "Return to Zappy Health", "url": "https://zappyhealth.com" },
+        { "label": "Back to Home", "url": "/" }
+      ]
     }
   ],
 

@@ -3,7 +3,6 @@ import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
 import { ScreenProps } from './common';
 import { apiClient, type MedicationOption } from '../../utils/api';
-import Checkbox from '../ui/Checkbox';
 
 const DEFAULT_SERVICE_TYPE = 'Weight Loss';
 
@@ -34,11 +33,11 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
       ((answers['medication_preferences'] as string[] | undefined)?.[0]) ||
       ''
   );
-  const [pharmacySelections, setPharmacySelections] = useState<Record<string, Set<string>>>(() => {
+  const [pharmacySelections, setPharmacySelections] = useState<Record<string, string>>(() => {
     const stored = (answers['medication_pharmacy_preferences'] as Record<string, string[]>) || {};
-    const map: Record<string, Set<string>> = {};
+    const map: Record<string, string> = {};
     Object.entries(stored).forEach(([med, list]) => {
-      map[med] = new Set(list);
+      map[med] = list?.[0] ?? '';
     });
     return map;
   });
@@ -79,51 +78,30 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
     if (!medDetails) return;
     const pharmacies = medDetails.pharmacies || [];
     if (pharmacies.length !== 1) return;
-    setPharmacySelections((prev) => {
-      const next: Record<string, Set<string>> = {};
-      Object.entries(prev).forEach(([key, value]) => {
-        next[key] = new Set(value);
-      });
-      const set = new Set<string>();
-      set.add(pharmacies[0]);
-      next[selectedMedication] = set;
-      return next;
-    });
+    setPharmacySelections((prev) => ({
+      ...prev,
+      [selectedMedication]: pharmacies[0] ?? '',
+    }));
   }, [medications, selectedMedication]);
 
   const handleMedicationSelect = (medication: string) => {
     setSelectedMedication(medication);
     setPharmacySelections((prev) => {
-      const next: Record<string, Set<string>> = {};
-      Object.entries(prev).forEach(([key, value]) => {
-        next[key] = new Set(value);
-      });
-      const existing = next[medication] ? new Set(next[medication]) : new Set<string>();
       const medDetails = medications.find((item) => item.medication === medication);
-      if (medDetails && (medDetails.pharmacies || []).length === 1) {
-        existing.clear();
-        existing.add(medDetails.pharmacies[0]);
-      }
-      next[medication] = existing;
-      return next;
+      const pharmacies = medDetails?.pharmacies || [];
+      const defaultPharmacy = pharmacies.length === 1 ? pharmacies[0] : prev[medication] || '';
+      return {
+        ...prev,
+        [medication]: defaultPharmacy,
+      };
     });
   };
 
-  const handlePharmacyToggle = (medication: string, pharmacy: string) => {
-    setPharmacySelections((prev) => {
-      const next: Record<string, Set<string>> = {};
-      Object.entries(prev).forEach(([key, value]) => {
-        next[key] = new Set(value);
-      });
-      const set = next[medication] ?? new Set<string>();
-      if (set.has(pharmacy)) {
-        set.delete(pharmacy);
-      } else {
-        set.add(pharmacy);
-      }
-      next[medication] = set;
-      return next;
-    });
+  const handlePharmacySelect = (medication: string, pharmacy: string) => {
+    setPharmacySelections((prev) => ({
+      ...prev,
+      [medication]: pharmacy,
+    }));
   };
 
   const selectedMedicationData = useMemo(
@@ -136,8 +114,8 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
     if (!selectedMedicationData) return false;
     const pharmacies = selectedMedicationData.pharmacies || [];
     if (pharmacies.length <= 1) return true;
-    const selectedSet = pharmacySelections[selectedMedication];
-    return !!selectedSet && selectedSet.size > 0;
+    const selectedPharmacy = pharmacySelections[selectedMedication] || '';
+    return selectedPharmacy.length > 0;
   }, [selectedMedication, selectedMedicationData, pharmacySelections]);
 
   useEffect(() => {
@@ -150,13 +128,13 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
       updateAnswer('dose_strategy', 'maintenance');
     }
 
-    const selectedSet = pharmacySelections[selectedMedication];
+    const selectedPharmacy = pharmacySelections[selectedMedication] || '';
     const serialized: Record<string, string[]> = {};
-    if (selectedMedication && selectedSet) {
-      if (selectedSet.size === 0 && selectedMedicationData && (selectedMedicationData.pharmacies || []).length === 1) {
+    if (selectedMedication) {
+      if (selectedPharmacy) {
+        serialized[selectedMedication] = [selectedPharmacy];
+      } else if (selectedMedicationData && (selectedMedicationData.pharmacies || []).length === 1) {
         serialized[selectedMedication] = [selectedMedicationData.pharmacies[0]];
-      } else if (selectedSet.size > 0) {
-        serialized[selectedMedication] = Array.from(selectedSet);
       }
     }
     updateAnswer('medication_pharmacy_preferences', serialized);
@@ -219,14 +197,33 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
           const isSelected = item.medication === selectedMedication;
           const pharmacies = item.pharmacies || [];
           const hasChoices = pharmacies.length > 1;
-          const selectedPharmaciesSet = pharmacySelections[item.medication] || new Set<string>();
+          const selectedPharmacy = pharmacySelections[item.medication] || '';
+
+          const handleCardClick = (event: React.MouseEvent<HTMLDivElement>) => {
+            const target = event.target as HTMLElement | null;
+            if (target && target.closest('input, button, label, a, select, textarea')) {
+              return;
+            }
+            if (!isSelected) {
+              handleMedicationSelect(item.medication);
+            }
+          };
 
           return (
             <div
               key={item.medication}
               className={`border-2 rounded-2xl p-5 shadow-sm transition ${
                 isSelected ? 'border-primary bg-primary/5' : 'border-stone-200 bg-white'
-              }`}
+              } cursor-pointer`}
+              onClick={handleCardClick}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if ((event.key === 'Enter' || event.key === ' ') && !isSelected) {
+                  event.preventDefault();
+                  handleMedicationSelect(item.medication);
+                }
+              }}
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -251,13 +248,26 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
                   <p className="text-sm font-medium text-stone-700">Where would you like to receive it?</p>
                   <div className="space-y-2">
                     {pharmacies.map((pharmacy) => (
-                      <Checkbox
+                      <label
                         key={`${item.medication}-${pharmacy}`}
-                        id={`${item.medication}-${pharmacy}`}
-                        checked={selectedPharmaciesSet.has(pharmacy)}
-                        onChange={() => handlePharmacyToggle(item.medication, pharmacy)}
-                        label={pharmacy}
-                      />
+                        className={`flex items-center gap-2 cursor-pointer rounded-xl border px-4 py-2 transition ${
+                          selectedPharmacy === pharmacy
+                            ? 'border-primary bg-primary/10'
+                            : 'border-stone-200 hover:border-primary/50'
+                        }`}
+                        htmlFor={`${item.medication}-${pharmacy}`}
+                      >
+                        <input
+                          id={`${item.medication}-${pharmacy}`}
+                          type="radio"
+                          name={`${item.medication}-pharmacy`}
+                          value={pharmacy}
+                          checked={selectedPharmacy === pharmacy}
+                          onChange={() => handlePharmacySelect(item.medication, pharmacy)}
+                          className="w-4 h-4 text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm text-stone-700">{pharmacy}</span>
+                      </label>
                     ))}
                   </div>
                 </div>

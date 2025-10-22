@@ -275,6 +275,7 @@ export interface TerminalScreen extends BaseScreen {
   resources?: TerminalResource[];
   next_steps?: TerminalNextStep[];
   cta_primary?: Cta;
+  links?: Link[];
 }
 
 export type Screen = 

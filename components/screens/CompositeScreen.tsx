@@ -440,9 +440,59 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           )
       }
       case 'medication_details_group': {
+        console.log("asdasdadasdas")
         const groupField = field as MedicationDetailsGroupField;
+        const findFirstCheckbox = (items: FieldOrFieldGroup[]): CheckboxField | undefined => {
+          for (const item of items) {
+            if (Array.isArray(item)) {
+              const nested = findFirstCheckbox(item);
+              if (nested) return nested;
+            } else if (item.type === 'checkbox') {
+              return item as CheckboxField;
+            }
+          }
+          return undefined;
+        };
+
+        const primaryCheckbox = findFirstCheckbox(groupField.fields);
+        const handleGroupClick = (event: React.MouseEvent<HTMLDivElement>) => {
+          if (!primaryCheckbox) return;
+
+          const target = event.target as HTMLElement | null;
+          console.log('[CompositeScreen] medication group click', {
+            targetTag: target?.tagName,
+            targetId: target?.id,
+            primaryCheckboxId: primaryCheckbox.id,
+            currentValue: answers[primaryCheckbox.id],
+          });
+          if (!target) return;
+
+          const interactive = target.closest('input, select, textarea, button, a');
+          if (interactive) {
+            console.log('[CompositeScreen] click ignored because interactive element present');
+            return;
+          }
+
+          const labelEl = target.closest('label');
+          if (labelEl) {
+            const checkboxInLabel = labelEl.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
+            console.log('[CompositeScreen] click inside label', {
+              hasCheckbox: Boolean(checkboxInLabel),
+              checkboxId: checkboxInLabel?.id,
+            });
+            return;
+          }
+
+          const currentValue = !!answers[primaryCheckbox.id];
+          console.log('[CompositeScreen] toggling primary checkbox to', !currentValue);
+          updateAnswer(primaryCheckbox.id, !currentValue);
+        };
+
         return (
-          <div className="p-6 border-2 border-stone-100 rounded-2xl space-y-6 bg-stone-50/75 my-4">
+          <div
+            className="p-6 border-2 border-stone-100 rounded-2xl space-y-6 bg-stone-50/75 my-4 cursor-pointer"
+            onClick={handleGroupClick}
+          >
             <h3 className="font-bold text-lg text-stone-800 tracking-tight">{groupField.label}</h3>
             {groupField.fields.map((subFieldOrGroup, index) => {
               if (Array.isArray(subFieldOrGroup)) {
@@ -481,13 +531,30 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         return (
           <div 
             className="p-5 bg-white border-2 border-stone-200 rounded-2xl shadow-sm cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => updateAnswer(checkboxField.id, !value)}
+            onClick={(event) => {
+              const target = event.target as HTMLElement | null;
+              if (target && (target.closest('label') || target.closest('input'))) {
+                return;
+              }
+              event.stopPropagation();
+              console.log('[CompositeScreen] checkbox tile click', {
+                fieldId: checkboxField.id,
+                previousValue: !!value,
+              });
+              updateAnswer(checkboxField.id, !value);
+            }}
           >
             <Checkbox
               id={checkboxField.id}
               label={checkboxField.label || ''}
               checked={!!value}
-              onChange={(e) => updateAnswer(checkboxField.id, e.target.checked)}
+              onChange={(e) => {
+                console.log('[CompositeScreen] checkbox input change', {
+                  fieldId: checkboxField.id,
+                  newValue: e.target.checked,
+                });
+                updateAnswer(checkboxField.id, e.target.checked);
+              }}
             />
             {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
           </div>
