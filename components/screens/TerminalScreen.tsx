@@ -104,7 +104,7 @@ const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = (
       )}
 
       {links && links.length > 0 && (
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           {links.map((link, index) => {
             const isExternal = /^https?:/i.test(link.url);
             return (
@@ -113,8 +113,12 @@ const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = (
                 href={link.url}
                 target={isExternal ? '_blank' : undefined}
                 rel={isExternal ? 'noopener noreferrer' : undefined}
-                className="text-primary font-semibold hover:underline"
+                className="relative inline-flex items-center gap-2 rounded-full border-2 border-primary/40 bg-white px-5 py-2 text-sm font-semibold text-primary shadow-sm transition transform hover:-translate-y-0.5 hover:border-primary hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
               >
+                <span
+                  aria-hidden="true"
+                  className="inline-flex h-1.5 w-1.5 rounded-full bg-primary"
+                />
                 {link.label}
               </a>
             );

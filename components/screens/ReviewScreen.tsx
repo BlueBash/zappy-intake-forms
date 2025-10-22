@@ -3,6 +3,7 @@ import ScreenLayout from '../common/ScreenLayout';
 // FIX: Import the specific ReviewScreen type and alias it.
 import { Screen, Option, Field, ReviewScreen as ReviewScreenType } from '../../types';
 import NavigationButtons from '../common/NavigationButtons';
+import { buildMedicationHistorySummary } from '../../utils/medicationHistory';
 
 const CUSTOM_LABELS: Record<string, string> = {
   selected_medication: 'Preferred medication',
@@ -132,6 +133,21 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({
   const { title, help_text } = screen;
   const [addressWarning, setAddressWarning] = useState<string | null>(null);
 
+  const displayAnswers = useMemo(() => {
+    const next = { ...answers };
+    const { selectedMedications, currentlyTaking } = buildMedicationHistorySummary(answers);
+
+    if (selectedMedications.length > 0) {
+      next.medications_used = selectedMedications;
+    } else {
+      next.medications_used = 'None';
+    }
+
+    next.currently_taking = currentlyTaking.length > 0 ? currentlyTaking : 'None';
+
+    return next;
+  }, [answers]);
+
   const fullAddressMissing = useMemo(() => {
     const address = answers.address || {};
     const street =
@@ -199,12 +215,12 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({
     const items: { id: string; label: string; answer: string; screenId: string; }[] = [];
     
     for (const id of providerFields) {
-        if (answers[id] === undefined) continue;
+        if (displayAnswers[id] === undefined) continue;
 
         const details = getLabelForId(id, allScreens);
         if (!details) continue;
 
-        const answer = formatAnswer(answers[id], id, allScreens, answers);
+        const answer = formatAnswer(displayAnswers[id], id, allScreens, displayAnswers);
         if (answer === '') continue;
         
         items.push({
@@ -225,7 +241,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({
     }
 
     return grouped;
-  }, [providerFields, allScreens, answers]);
+  }, [providerFields, allScreens, displayAnswers]);
 
 
   return (

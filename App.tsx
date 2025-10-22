@@ -21,6 +21,7 @@ import MedicationSelectionScreen from './components/screens/MedicationSelectionS
 import PlanSelectionScreen from './components/screens/PlanSelectionScreen';
 import MedicationOptionsScreen from './components/screens/MedicationOptionsScreen';
 import DiscountCodeScreen from './components/screens/DiscountCodeScreen';
+import { buildMedicationHistorySummary } from './utils/medicationHistory';
 
 type ProgramTheme = {
   headerBg: string;
@@ -191,6 +192,14 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       responses.selected_plan_details = responses.selected_plan_details || answers['selected_plan_details'] || null;
       responses.medication_preferences = responses.medication_preferences || answers['medication_preferences'] || [];
       responses.medication_pharmacy_preferences = responses.medication_pharmacy_preferences || answers['medication_pharmacy_preferences'] || {};
+
+      const medicationHistorySummary = buildMedicationHistorySummary(responses);
+      responses.medications_used = medicationHistorySummary.selectedMedications.length > 0
+        ? medicationHistorySummary.selectedMedications.join(', ')
+        : 'None';
+      responses.currently_taking = medicationHistorySummary.currentlyTaking.length > 0
+        ? medicationHistorySummary.currentlyTaking.join(', ')
+        : 'None';
 
       if (!responses.condition) {
         responses.condition = resolvedCondition;
