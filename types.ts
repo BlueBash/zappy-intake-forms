@@ -229,6 +229,10 @@ export interface CompositeScreenValidation {
     fields: string[];
     error: string;
   };
+  require_any?: {
+    fields: string[];
+    error: string;
+  };
 }
 
 export interface CompositeScreen extends BaseScreen {
