@@ -262,6 +262,13 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
   };
 
   const renderScreen = (screen: Screen) => {
+    // Show login link on screens before email capture
+    const showLoginLink = screen.id !== 'capture.email' && 
+                          !answers['email'] && 
+                          screen.type !== 'terminal' && 
+                          screen.type !== 'interstitial' &&
+                          screen.type !== 'content';
+    
     const commonProps = {
       answers,
       calculations,
@@ -270,6 +277,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       showBack: history.length > 0,
       onBack: goToPrev,
       defaultCondition: resolvedCondition,
+      showLoginLink,
     };
 
     if (screen.id === 'treatment.medication_preference') {

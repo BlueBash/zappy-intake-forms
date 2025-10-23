@@ -4,9 +4,11 @@ interface ScreenLayoutProps {
   title?: string;
   helpText?: string;
   children: React.ReactNode;
+  showLoginLink?: boolean;
+  headerSize?: 'small' | 'default';
 }
 
-const ScreenLayout: React.FC<ScreenLayoutProps> = ({ title, helpText, children }) => {
+const ScreenLayout: React.FC<ScreenLayoutProps> = ({ title, helpText, children, showLoginLink = false, headerSize = 'default' }) => {
   return (
     <div className="text-center w-full flex flex-col items-center">
       {title && (
@@ -25,6 +27,19 @@ const ScreenLayout: React.FC<ScreenLayoutProps> = ({ title, helpText, children }
       <div className="w-full max-w-[672px] px-6 md:px-8">
         {children}
       </div>
+      {showLoginLink && (
+        <div className="mt-8 text-center">
+          <p className="text-sm text-stone-500">
+            Already have an account?{' '}
+            <a 
+              href="/login" 
+              className="text-primary hover:text-primary-600 font-medium hover:underline transition-colors"
+            >
+              Log in
+            </a>
+          </p>
+        </div>
+      )}
     </div>
   );
 };

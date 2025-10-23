@@ -55,7 +55,7 @@ const applyPhoneMask = (value: string): string => {
     return `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6, 10)}`;
 };
 
-const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, headerSize, calculations = {} }) => {
+const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, headerSize, calculations = {}, showLoginLink }) => {
   const { title, help_text, fields, footer_note, validation, post_screen_note } = screen;
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
 
@@ -572,7 +572,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
   const showBmiGauge = screen.id === 'assess.body_measurements' && calculations && 'bmi' in calculations && calculations.bmi && isComplete;
 
   return (
-    <ScreenLayout title={title} helpText={help_text} headerSize={headerSize}>
+    <ScreenLayout title={title} helpText={help_text} headerSize={headerSize} showLoginLink={showLoginLink}>
       {screen.promo_banner && (
         <div className="mb-6 p-4 bg-teal-50 border-2 border-teal-200 rounded-xl flex items-center gap-3">
           <div className="flex-shrink-0 w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">

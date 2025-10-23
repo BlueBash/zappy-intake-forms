@@ -11,4 +11,5 @@ export interface ScreenProps {
   headerSize?: string;
   calculations?: Record<string, any>;
   defaultCondition?: string;
+  showLoginLink?: boolean;
 }

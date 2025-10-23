@@ -10,7 +10,7 @@ import { SingleSelectScreen as SingleSelectScreenType } from '../../types';
 
 const DROPDOWN_THRESHOLD = 15;
 
-const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack }) => {
+const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, showLoginLink }) => {
   const { id, title, help_text, options = [], required, auto_advance = true, field_id } = screen;
   // Use field_id if provided, otherwise use id
   const answerId = field_id || id;
@@ -61,7 +61,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
     };
 
     return (
-      <ScreenLayout title={title} helpText={help_text}>
+      <ScreenLayout title={title} helpText={help_text} showLoginLink={showLoginLink}>
         <div className="space-y-4">
           <RegionDropdown
             value={stateValue}
@@ -109,7 +109,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   const showBackOnly = auto_advance && !renderAsDropdown && showBack;
 
   return (
-    <ScreenLayout title={title} helpText={help_text}>
+    <ScreenLayout title={title} helpText={help_text} showLoginLink={showLoginLink}>
       {renderAsDropdown ? (
         <Select
           id={answerId}

@@ -6,7 +6,7 @@ import Input from '../ui/Input';
 import NavigationButtons from '../common/NavigationButtons';
 import { MultiSelectScreen as MultiSelectScreenType } from '../../types';
 
-const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack }) => {
+const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, showLoginLink }) => {
   const { id, title, help_text, options = [], required, other_text_id } = screen;
   const selectedValues: string[] = answers[id] || [];
   const autoAdvanceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -39,7 +39,7 @@ const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType 
   const isComplete = !required || selectedValues.length > 0;
 
   return (
-    <ScreenLayout title={title} helpText={help_text}>
+    <ScreenLayout title={title} helpText={help_text} showLoginLink={showLoginLink}>
       <div className="text-left mb-8">
         <CheckboxGroup
           id={id}
