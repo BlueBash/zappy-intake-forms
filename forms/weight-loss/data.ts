@@ -998,7 +998,7 @@ const formConfig: FormConfig = {
       "id": "assess.current_medications",
       "type": "multi_select",
       "phase": "assess_medical",
-      "title": "What medications are you taking?",
+      "title": "Are you taking any of these medications?",
       "options": [
         { "value": "insulin", "label": "Insulin" },
         { "value": "metformin", "label": "Metformin or other diabetes meds" },
