@@ -18,7 +18,7 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, id, disabled, className = ''
         id={id}
         type="checkbox"
         aria-required={props.required}
-        className={`h-5 w-5 rounded border-2 border-stone-200 text-primary accent-primary transition-colors mt-0.5 focus:ring-2 focus:ring-primary/10 focus:ring-offset-2 ${
+        className={`h-5 w-5 rounded border-0 text-primary accent-primary transition-colors mt-0.5 focus:ring-2 focus:ring-primary/10 focus:ring-offset-2 ${
           disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
         }`}
         style={{
