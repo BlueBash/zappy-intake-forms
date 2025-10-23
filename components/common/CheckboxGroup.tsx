@@ -12,6 +12,8 @@ interface CheckboxGroupProps {
   onChange: (newValues: string[]) => void;
   exclusiveValue?: string;
   exclusiveMessage?: string;
+  exclusiveLabel?: string;
+  onExclusiveSelect?: () => void;
 }
 
 const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
@@ -23,6 +25,8 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
   onChange,
   exclusiveValue,
   exclusiveMessage,
+  exclusiveLabel,
+  onExclusiveSelect,
 }) => {
   const [clearedMessage, setClearedMessage] = useState<string | null>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -66,6 +70,10 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
           );
         } else {
           setClearedMessage(null);
+        }
+        // Trigger auto-advance callback if provided
+        if (onExclusiveSelect) {
+          setTimeout(() => onExclusiveSelect(), 800);
         }
       }
       return;
@@ -127,7 +135,7 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
               transitionTimingFunction: 'var(--easing-elegant)'
             }}
           >
-            <span className="text-left flex-1">{exclusiveOption.label}</span>
+            <span className="text-left flex-1">{exclusiveLabel || exclusiveOption.label}</span>
             <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
               selectedValues.includes(exclusiveOption.value)
                 ? 'bg-gradient-to-r from-primary to-primary-light shadow-md'

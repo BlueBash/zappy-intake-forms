@@ -59,8 +59,11 @@ const formConfig: FormConfig = {
         { "value": "lose_weight", "label": "Lose weight and keep it off" },
         { "value": "boost_energy", "label": "Boost energy and feel better" },
         { "value": "improve_health", "label": "Improve overall health" },
-        { "value": "regain_confidence", "label": "Regain confidence" }
+        { "value": "regain_confidence", "label": "Regain confidence" },
+        { "value": "none", "label": "None of these" },
+        { "value": "other", "label": "Other" }
       ],
+      "other_text_id": "goal_motivations_other",
       "required": true,
       "next": "goal.challenges"
     },
@@ -75,8 +78,11 @@ const formConfig: FormConfig = {
         { "value": "time", "label": "Finding time to exercise" },
         { "value": "motivation", "label": "Staying motivated" },
         { "value": "plateaus", "label": "Breaking through plateaus" },
-        { "value": "consistency", "label": "Being consistent" }
+        { "value": "consistency", "label": "Being consistent" },
+        { "value": "none", "label": "None of these" },
+        { "value": "other", "label": "Other" }
       ],
+      "other_text_id": "goal_challenges_other",
       "required": true,
       "next": "demographics.state"
     },

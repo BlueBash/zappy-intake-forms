@@ -16,16 +16,36 @@ const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType 
     if (other_text_id && !newValues.includes('other')) {
       updateAnswer(other_text_id, '');
     }
+  };
 
-    // Auto-advance if "none" option is selected (exclusive option)
-    if (newValues.length === 1 && newValues.includes('none')) {
-      if (autoAdvanceTimeoutRef.current) {
-        clearTimeout(autoAdvanceTimeoutRef.current);
-      }
-      autoAdvanceTimeoutRef.current = setTimeout(() => {
-        onSubmit();
-      }, 800);
+  const handleExclusiveSelect = () => {
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
     }
+    autoAdvanceTimeoutRef.current = setTimeout(() => {
+      onSubmit();
+    }, 800);
+  };
+
+  // Determine contextual "none" label based on screen
+  const getExclusiveLabel = () => {
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('medication') || titleLower.includes('taking')) {
+      return "I don't take any of these medications";
+    }
+    if (titleLower.includes('condition') || titleLower.includes('medical') || titleLower.includes('diagnosed')) {
+      return "I don't have any of these conditions";
+    }
+    if (titleLower.includes('goal') || titleLower.includes('important')) {
+      return "None of these apply to me";
+    }
+    if (titleLower.includes('challenge') || titleLower.includes('obstacle')) {
+      return "I don't face these challenges";
+    }
+    if (titleLower.includes('substance') || titleLower.includes('used')) {
+      return "I haven't used any of these";
+    }
+    return "None of these apply to me";
   };
 
   useEffect(() => {
@@ -48,7 +68,9 @@ const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType 
           selectedValues={selectedValues}
           onChange={handleChange}
           exclusiveValue="none"
+          exclusiveLabel={getExclusiveLabel()}
           exclusiveMessage="We cleared your other selections so we can record 'None of these.'"
+          onExclusiveSelect={handleExclusiveSelect}
         />
         {other_text_id && selectedValues.includes('other') && (
           <div className="mt-3">
