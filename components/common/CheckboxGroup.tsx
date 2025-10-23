@@ -84,6 +84,14 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
     setClearedMessage(null);
   };
 
+  // Separate exclusive option from regular options
+  const exclusiveOption = exclusiveOptionValue 
+    ? options.find(opt => opt.value === exclusiveOptionValue)
+    : null;
+  const regularOptions = exclusiveOptionValue
+    ? options.filter(opt => opt.value !== exclusiveOptionValue)
+    : options;
+
   return (
     <div className="w-full">
       <label className="block font-semibold mb-3 text-stone-900 text-[0.9375rem]">
@@ -95,7 +103,67 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
         </p>
       )}
       <div className="space-y-4">
-        {options.map((option, index) => {
+        {/* Show exclusive option first with distinct styling */}
+        {exclusiveOption && (
+          <motion.button
+            key={exclusiveOption.value}
+            initial={hasAnimated ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.45,
+              ease: [0.25, 0.1, 0.25, 1]
+            }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={() => handleToggle(exclusiveOption.value)}
+            className={`w-full flex items-center justify-between py-[18px] px-5 border-2 rounded-xl text-base transition-colors transform focus-within:ring-2 focus-within:ring-primary/40 focus-within:ring-offset-2 focus:outline-none text-left ${
+              selectedValues.includes(exclusiveOption.value)
+                ? 'border-primary bg-gradient-to-r from-primary/5 via-accent-warm/5 to-primary-light/5 shadow-md text-primary'
+                : 'bg-stone-50 border-stone-300 hover:border-stone-400 hover:shadow-md text-stone-700 font-medium'
+            }`}
+            style={{
+              transitionDuration: 'var(--timing-slow)',
+              transitionTimingFunction: 'var(--easing-elegant)'
+            }}
+          >
+            <span className="text-left flex-1">{exclusiveOption.label}</span>
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+              selectedValues.includes(exclusiveOption.value)
+                ? 'bg-gradient-to-r from-primary to-primary-light shadow-md'
+                : 'border-2 border-stone-400'
+            }`}
+            style={{
+              transitionDuration: 'var(--timing-normal)',
+              transitionTimingFunction: 'var(--easing-elegant)'
+            }}>
+              {selectedValues.includes(exclusiveOption.value) && (
+                <motion.svg
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{
+                    pathLength: { type: 'spring', stiffness: 180, damping: 25 },
+                    opacity: { duration: 0.3 }
+                  }}
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  strokeWidth="3"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <motion.path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </motion.svg>
+              )}
+            </div>
+          </motion.button>
+        )}
+        
+        {/* Show regular options */}
+        {regularOptions.map((option, index) => {
           const isDisabled = exclusiveSelected && option.value !== exclusiveOptionValue;
           const isChecked = selectedValues.includes(option.value);
           const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

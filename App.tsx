@@ -280,7 +280,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       showLoginLink,
     };
 
-    if (screen.id === 'treatment.medication_preference') {
+    if (screen.id === 'treatment.medication_preference' || screen.id === 'treatment.medication_preference_initial') {
       return <MedicationOptionsScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 

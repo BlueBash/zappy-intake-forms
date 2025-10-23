@@ -1838,6 +1838,27 @@ const formConfig: FormConfig = {
       "next": "treatment.medication_preference"
     },
     {
+      "id": "treatment.medication_preference_initial",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Do you have a medication in mind?",
+      "auto_advance": true,
+      "required": true,
+      "options": [
+        { "value": "yes", "label": "Yes" },
+        { "value": "no", "label": "No, I am open to recommendations" }
+      ],
+      "next_logic": [
+        {
+          "if": "answer == 'yes'",
+          "go_to": "treatment.medication_preference"
+        },
+        {
+          "else": "treatment.plan_selection.generic"
+        }
+      ]
+    },
+    {
       "id": "treatment.medication_preference",
       "type": "multi_select",
       "phase": "treatment",
