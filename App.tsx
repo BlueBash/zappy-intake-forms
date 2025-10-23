@@ -21,6 +21,7 @@ import MedicationSelectionScreen from './components/screens/MedicationSelectionS
 import PlanSelectionScreen from './components/screens/PlanSelectionScreen';
 import MedicationOptionsScreen from './components/screens/MedicationOptionsScreen';
 import DiscountCodeScreen from './components/screens/DiscountCodeScreen';
+import InterstitialScreen from './components/screens/InterstitialScreen';
 import { buildMedicationHistorySummary } from './utils/medicationHistory';
 
 type ProgramTheme = {
@@ -109,6 +110,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [screenAnnouncement, setScreenAnnouncement] = useState<string>('');
 
   useEffect(() => {
     const { theme } = activeFormConfig.settings;
@@ -118,9 +120,19 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     document.documentElement.style.setProperty('--background-color', theme.background_hex);
   }, [activeFormConfig]);
 
-  // Scroll to top whenever screen changes
+  // Scroll to top and announce screen change for screen readers
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Announce screen title for screen readers
+    const announcement = ('title' in currentScreen ? currentScreen.title : null) || 
+                        (currentScreen.type === 'content' ? (currentScreen as any).headline : null) ||
+                        'New screen';
+    setScreenAnnouncement(announcement);
+    
+    // Clear announcement after it's been read
+    const timeout = setTimeout(() => setScreenAnnouncement(''), 1000);
+    return () => clearTimeout(timeout);
   }, [currentScreen.id]);
 
   useEffect(() => {
@@ -223,9 +235,15 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     }
   };
 
+  // Check for reduced motion preference
+  const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? '100%' : '-100%',
+    enter: (direction: number) => (reducedMotion ? {
+      opacity: 1,
+      x: 0,
+    } : {
+      x: direction > 0 ? 20 : -20,
       opacity: 0,
     }),
     center: {
@@ -233,9 +251,12 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       x: 0,
       opacity: 1,
     },
-    exit: (direction: number) => ({
+    exit: (direction: number) => (reducedMotion ? {
+      opacity: 1,
+      x: 0,
+    } : {
       zIndex: 0,
-      x: direction < 0 ? '100%' : '-100%',
+      x: direction < 0 ? 20 : -20,
       opacity: 0,
     }),
   };
@@ -296,22 +317,31 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         );
       case 'terminal':
         return <TerminalScreen key={screen.id} {...commonProps} screen={screen} />;
+      case 'interstitial':
+        return <InterstitialScreen key={screen.id} screen={screen} onSubmit={goToNext} />;
       default:
         return <div>Unknown screen type: {(screen as any).type}</div>;
     }
   };
   
   return (
-    <div className="bg-background min-h-screen text-slate-800 flex flex-col items-center justify-start p-4 sm:p-6 md:p-8 font-sans transition-colors duration-300">
-      <div className="w-full">
-        <ProgramHeader condition={resolvedCondition} theme={programTheme} />
+    <div className="min-h-screen text-neutral-700 flex flex-col items-center justify-start p-4 sm:p-6 md:p-8 font-sans">
+      {/* Screen reader announcements for dynamic content */}
+      <div 
+        role="status" 
+        aria-live="polite" 
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {screenAnnouncement}
       </div>
+      
       <div className="relative w-full max-w-2xl mx-auto flex flex-col flex-grow">
         <div className="flex flex-col flex-grow">
           {activeFormConfig.settings.progress_bar && <ProgressBar progress={progress} />}
           
-          <main className="flex-grow w-full relative mt-8 flex flex-col">
-              <AnimatePresence mode="wait" custom={direction}>
+          <main className="flex-grow w-full relative flex flex-col min-h-0">
+              <AnimatePresence mode="wait" initial={false} custom={direction}>
                   <motion.div
                       key={currentScreen.id}
                       custom={direction}
@@ -319,11 +349,14 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
                       initial="enter"
                       animate="center"
                       exit="exit"
-                      transition={{
-                          x: { type: "spring", stiffness: 300, damping: 30 },
-                          opacity: { duration: 0.2 }
+                      transition={reducedMotion ? {
+                          duration: 0.01
+                      } : {
+                          duration: 0.5,
+                          ease: [0.25, 0.1, 0.25, 1]
                       }}
                       className="w-full flex-grow flex"
+                      style={{ position: 'relative' }}
                   >
                       {renderScreen(currentScreen)}
                   </motion.div>

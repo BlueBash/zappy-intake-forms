@@ -569,6 +569,16 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
 
   return (
     <ScreenLayout title={title} helpText={help_text} headerSize={headerSize}>
+      {screen.promo_banner && (
+        <div className="mb-6 p-4 bg-teal-50 border-2 border-teal-200 rounded-xl flex items-center gap-3">
+          <div className="flex-shrink-0 w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" strokeWidth="2.5" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <span className="text-teal-800 font-medium">{screen.promo_banner.text}</span>
+        </div>
+      )}
       <div className="space-y-6 text-left">
         {fields.map((fieldOrGroup, index) => {
           if (Array.isArray(fieldOrGroup)) {

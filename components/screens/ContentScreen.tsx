@@ -1,10 +1,35 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { ScreenProps } from './common';
 import { ContentScreen as ContentScreenType, ConsentItem } from '../../types';
 import NavigationButtons from '../common/NavigationButtons';
 import Checkbox from '../ui/Checkbox';
 import { WelcomeIllustration } from '../ui/Illustrations';
 import { interpolateText } from '../../utils/stringInterpolator';
+
+const SmoothText: React.FC<{ text: string; className?: string; key?: string }> = ({ text, className = '', key }) => {
+  const [hasAnimated, setHasAnimated] = React.useState(false);
+  const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  React.useEffect(() => {
+    setHasAnimated(true);
+  }, []);
+
+  return (
+    <motion.p
+      key={key}
+      initial={hasAnimated || reducedMotion ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={reducedMotion ? { duration: 0.01 } : {
+        duration: hasAnimated ? 0 : 0.4,
+        ease: [0.16, 1, 0.3, 1]
+      }}
+      className={className}
+    >
+      {text}
+    </motion.p>
+  );
+};
 
 const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ screen, onSubmit, showBack, onBack, updateAnswer, answers, calculations = {}, headerSize = 'text-4xl sm:text-5xl' }) => {
   const { headline, body, cta_primary, status, consent_items, image } = screen;
@@ -65,19 +90,28 @@ const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ 
 
   return (
     <div className={`w-full text-center flex-grow flex flex-col justify-center items-center ${statusBorderClass} ${isInspirePhase ? 'inspire-phase-content' : ''}`}>
-        {image === 'welcome_illustration' && <WelcomeIllustration className="w-48 h-48 mb-8 text-primary" />}
+        {image === 'welcome_illustration' && (
+          <>
+            <div className="w-20 h-1.5 mb-8 bg-gradient-decorative rounded-full"></div>
+            <WelcomeIllustration className="w-48 h-48 mb-8 text-primary" />
+          </>
+        )}
 
-        <h2 className={`${headerSize} font-semibold mb-4 text-stone-900 leading-tight -tracking-wider`}>
+        <h2 className="text-4xl md:text-5xl font-semibold mb-8 text-neutral-700 leading-tight">
             {interpolatedHeadline}
         </h2>
-        {interpolatedBody && <p className="text-lg sm:text-xl mb-12 max-w-xl text-stone-600 leading-relaxed whitespace-pre-line">{interpolatedBody}</p>}
+        {interpolatedBody && <SmoothText text={interpolatedBody} className="text-lg mb-12 max-w-xl text-neutral-600 leading-relaxed whitespace-pre-line" />}
         
         {consent_items && (
-          <div className="w-full max-w-[580px] space-y-4 mb-8 text-left">
+          <div className="w-full max-w-[672px] space-y-3 mb-8 text-left">
             {consent_items.map(item => (
               <div
                 key={item.id}
-                className="p-5 bg-white border border-stone-200 rounded-2xl shadow-sm cursor-pointer hover:bg-accent hover:border-secondary transition-colors"
+                className="p-5 bg-white border-2 border-gray-200 rounded-xl shadow-sm cursor-pointer hover:border-primary/40 transition-colors gpu-accelerated"
+                style={{
+                  transitionDuration: 'var(--timing-normal)',
+                  transitionTimingFunction: 'var(--easing-elegant)'
+                }}
                 onClick={() => setConsents(prev => ({...prev, [item.id]: !prev[item.id]}))}
               >
                   <Checkbox

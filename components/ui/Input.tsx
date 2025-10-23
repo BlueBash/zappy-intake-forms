@@ -39,13 +39,20 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-invalid={!!error}
             aria-describedby={error ? errorId : undefined}
             className={`
-              block w-full rounded-lg transition-all duration-200
+              block w-full rounded-lg transition-all
               py-[18px] px-5 text-[1.0625rem] text-stone-900
-              border-2 border-stone-200 shadow-none
-              focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none
+              border-2
+              focus:outline-none
               ${hasTrailingAdornment ? 'pr-14' : ''}
-              ${error ? 'border-red-500' : ''}
+              ${error
+                ? 'border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50 shadow-sm shadow-red-100/50'
+                : 'border-stone-200 shadow-none focus:border-primary focus:ring-4 focus:ring-primary/8 focus:shadow-sm focus:shadow-primary/10'
+              }
             `}
+            style={{
+              transitionDuration: 'var(--timing-fast)',
+              transitionTimingFunction: 'var(--easing-elegant)'
+            }}
             {...props}
           />
           {suffix && !isPasswordField && (
@@ -56,7 +63,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {isPasswordField && (
             <button
               type="button"
-              className="absolute inset-y-0 right-0 flex items-center px-4 text-sm font-semibold text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="absolute inset-y-0 right-0 flex items-center px-4 text-sm font-semibold text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
+              style={{
+                transitionDuration: 'var(--timing-fast)',
+                transitionTimingFunction: 'var(--easing-elegant)'
+              }}
               onClick={() => setShowPassword(prev => !prev)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >

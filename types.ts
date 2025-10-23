@@ -9,7 +9,8 @@ export type ScreenType =
   | 'date'
   | 'consent' 
   | 'review' 
-  | 'terminal';
+  | 'terminal'
+  | 'interstitial';
 
 export type FieldType = 
   | 'text' 
@@ -234,6 +235,10 @@ export interface CompositeScreen extends BaseScreen {
   type: 'composite';
   title: string;
   help_text?: string;
+  promo_banner?: {
+    text: string;
+    icon?: string;
+  };
   fields: FieldOrFieldGroup[];
   footer_note?: string;
   post_screen_note?: string;
@@ -278,6 +283,39 @@ export interface TerminalScreen extends BaseScreen {
   links?: Link[];
 }
 
+export interface InterstitialScreen extends BaseScreen {
+  type: 'interstitial';
+  variant?: 'stat' | 'motivation' | 'testimonial' | 'trust' | 'process' | 'stat_success' | 'stat_science' | 'stat_personalized';
+  stat_number?: string;
+  stat_text?: string;
+  stat_highlight?: string;
+  background_image?: string;
+  stat_subtitle?: string;
+  title?: string;
+  message?: string;
+  testimonial_title?: string;
+  testimonial_subtitle?: string;
+  testimonials?: Array<{
+    name: string;
+    age: number;
+    result: string;
+    timeframe: string;
+    before_image?: string;
+    after_image?: string;
+  }>;
+  trust_items?: Array<{
+    icon: string;
+    title: string;
+    description: string;
+  }>;
+  process_title?: string;
+  process_steps?: Array<{
+    step: number;
+    title: string;
+    description: string;
+  }>;
+}
+
 export type Screen = 
   | ContentScreen 
   | SingleSelectScreen 
@@ -288,7 +326,8 @@ export type Screen =
   | CompositeScreen 
   | ConsentScreen 
   | ReviewScreen 
-  | TerminalScreen;
+  | TerminalScreen
+  | InterstitialScreen;
 
 // Form configuration
 export interface Theme {

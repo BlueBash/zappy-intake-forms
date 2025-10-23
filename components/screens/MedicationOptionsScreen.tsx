@@ -165,7 +165,15 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
   if (error) {
     return (
       <ScreenLayout title={title} helpText={helpText}>
-        <p className="text-center text-red-500">{error}</p>
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
+            <p><strong>Debug Info:</strong></p>
+            <p>State: {stateCode || 'Not selected'}</p>
+            <p>Service Type: {serviceType}</p>
+            <p>Trying to connect to medications API...</p>
+          </div>
+        </div>
         <NavigationButtons
           showBack={showBack}
           onBack={onBack}

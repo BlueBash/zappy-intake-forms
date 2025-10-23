@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { ScreenProps } from './common';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
@@ -15,7 +16,12 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   const answerId = field_id || id;
   const selectedValue = answers[answerId];
   const [isStateRestricted, setIsStateRestricted] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
   const redirectTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setHasAnimated(true);
+  }, []);
 
   useEffect(() => {
     const shouldRestrict = screen.id === 'demographics.state' && selectedValue === 'AL';
@@ -85,8 +91,8 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   const handleButtonSelect = (value: string) => {
     syncAnswer(value);
     if (auto_advance) {
-        // Auto-submit on selection for a faster flow
-        setTimeout(onSubmit, 200);
+        // Auto-submit with reasonable delay to allow user confirmation
+        setTimeout(onSubmit, 600);
     }
   };
 
@@ -113,20 +119,77 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
           required={required}
         />
       ) : (
-        <div className="space-y-4">
-          {options.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => handleButtonSelect(option.value)}
-              className={`w-full text-left p-5 border-2 rounded-2xl text-lg transition-all duration-200 ease-in-out transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/30
-                ${selectedValue === option.value
-                  ? 'bg-primary border-primary text-white shadow-lg -translate-y-0.5'
-                  : 'bg-white border-stone-200 shadow hover:border-primary hover:-translate-y-0.5 hover:shadow-lg'
+        <div className="space-y-3 mb-14">
+          {options.map((option, index) => {
+            const isSelected = selectedValue === option.value;
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            
+            return (
+                <motion.button
+                key={option.value}
+                onClick={() => handleButtonSelect(option.value)}
+                initial={hasAnimated || reducedMotion ? false : { opacity: 0, x: 20 }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                  scale: isSelected ? 0.98 : 1,
+                }}
+                whileHover={reducedMotion ? {} : {
+                  scale: isSelected ? 0.98 : 1.01
+                }}
+                whileTap={reducedMotion ? {} : {
+                  scale: 0.97
+                }}
+                transition={reducedMotion ? { duration: 0.01 } : {
+                  duration: 0.45,
+                  ease: [0.25, 0.1, 0.25, 1],
+                  delay: hasAnimated ? 0 : index * 0.1
+                }}
+                className={`w-full flex items-center justify-between p-5 border-2 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/20 transition-colors duration-200 ${
+                  isSelected
+                    ? 'border-primary bg-gradient-to-r from-primary/5 via-accent-warm/5 to-primary-light/5 text-primary'
+                    : 'bg-white border-gray-200 hover:border-primary/30 hover:bg-gray-50 text-neutral-600'
                 }`}
-            >
-              {option.label}
-            </button>
-          ))}
+                style={{
+                  transitionDuration: 'var(--timing-normal)',
+                  transitionTimingFunction: 'var(--easing-elegant)'
+                }}
+              >
+                <span className="text-left flex-1">{option.label}</span>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                  isSelected
+                    ? 'bg-gradient-to-r from-primary to-primary-light shadow-md'
+                    : 'border-2 border-gray-300'
+                }`}
+                style={{
+                  transitionDuration: 'var(--timing-normal)',
+                  transitionTimingFunction: 'var(--easing-elegant)'
+                }}>
+                  {isSelected && (
+                    <motion.svg
+                      initial={reducedMotion ? { opacity: 1 } : { pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={reducedMotion ? { duration: 0.01 } : {
+                        pathLength: { type: 'spring', stiffness: 180, damping: 25 },
+                        opacity: { duration: 0.25 }
+                      }}
+                      className="w-4 h-4 text-white"
+                      fill="none"
+                      strokeWidth="3"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <motion.path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </motion.svg>
+                  )}
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
       )}
       
@@ -142,7 +205,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
       {!showNavButtons && showBackOnly && (
         <div className="w-full flex justify-start mt-10">
           <Button
-            variant="secondary"
+            variant="ghost"
             onClick={onBack}
             aria-label="Go back to the previous question"
           >

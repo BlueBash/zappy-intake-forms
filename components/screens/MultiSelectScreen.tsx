@@ -25,7 +25,6 @@ const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType 
         <CheckboxGroup
           id={id}
           label={screen.label ?? ''}
-          help_text={help_text}
           options={options}
           selectedValues={selectedValues}
           onChange={handleChange}

@@ -14,7 +14,7 @@ const formConfig: FormConfig = {
       "accent_hex": "#34d399",
       "secondary_hex": "#78716c",
       "font_stack": "\"Nunito Sans\", sans-serif",
-      "background_hex": "#fafaf8",
+      "background_hex": "#ffffff",
       "selection_states": {
         "hover_hex": "#d1fae5",
         "active_hex": "#10b981",
@@ -34,17 +34,6 @@ const formConfig: FormConfig = {
     // PHASE 1: QUICK QUALIFY
     // ═══════════════════════════════════════════════════════════
     {
-      "id": "welcome",
-      "type": "content",
-      "phase": "qualify",
-      "headline": "Welcome! Let's find your perfect weight loss plan.",
-      "body": "We'll ask about your goals, health, and preferences so we can tailor your weight loss program. Takes about 10 minutes.",
-      "cta_primary": {
-        "label": "Let's Begin"
-      },
-      "next": "goal.range"
-    },
-    {
       "id": "goal.range",
       "type": "single_select",
       "phase": "qualify",
@@ -58,6 +47,37 @@ const formConfig: FormConfig = {
         { "value": "not_sure", "label": "Still figuring it out" }
       ],
       "required": true,
+      "next": "goal.motivations"
+    },
+    {
+      "id": "goal.motivations",
+      "type": "multi_select",
+      "phase": "qualify",
+      "title": "Which of these goals are important to you?",
+      "help_text": "This helps us personalize your experience",
+      "options": [
+        { "value": "lose_weight", "label": "Lose weight and keep it off" },
+        { "value": "boost_energy", "label": "Boost energy and feel better" },
+        { "value": "improve_health", "label": "Improve overall health" },
+        { "value": "regain_confidence", "label": "Regain confidence" }
+      ],
+      "required": true,
+      "next": "goal.challenges"
+    },
+    {
+      "id": "goal.challenges",
+      "type": "multi_select",
+      "phase": "qualify",
+      "title": "What are your biggest challenges?",
+      "help_text": "Understanding your obstacles helps us support you better",
+      "options": [
+        { "value": "cravings", "label": "Controlling cravings and hunger" },
+        { "value": "time", "label": "Finding time to exercise" },
+        { "value": "motivation", "label": "Staying motivated" },
+        { "value": "plateaus", "label": "Breaking through plateaus" },
+        { "value": "consistency", "label": "Being consistent" }
+      ],
+      "required": true,
       "next": "demographics.state"
     },
     {
@@ -65,6 +85,7 @@ const formConfig: FormConfig = {
       "type": "single_select",
       "phase": "qualify",
       "title": "Which state do you live in?",
+      "help_text": "This helps us determine medication availability in your area.",
       "auto_advance": false,
       "options": [],
       "required": true,
@@ -74,7 +95,8 @@ const formConfig: FormConfig = {
       "id": "demographics.dob",
       "type": "text",
       "phase": "qualify",
-      "title": "What's your date of birth?",
+      "title": "When were you born?",
+      "help_text": "We need this to determine if you're eligible for treatment",
       "placeholder": "MM/DD/YYYY",
       "mask": "##/##/####",
       "required": true,
@@ -184,7 +206,6 @@ const formConfig: FormConfig = {
             "min": 3,
             "max": 8,
             "width": "half",
-            "help_text": "Your best estimate is fine",
             "validation": {
               "min": 3,
               "max": 8,
@@ -199,7 +220,6 @@ const formConfig: FormConfig = {
             "min": 0,
             "max": 11,
             "width": "half",
-            "help_text": "Your best estimate is fine",
             "validation": {
               "min": 0,
               "max": 11,
@@ -227,8 +247,8 @@ const formConfig: FormConfig = {
         {
           "id": "highest_weight",
           "type": "number",
-          "label": "Highest adult weight (lb)",
-          "help_text": "Helps us find the best approach for you",
+          "label": "What was your highest weight?",
+          "help_text": "This helps us understand your journey",
           "min": 70,
           "max": 700,
           "required": true,
@@ -306,17 +326,14 @@ const formConfig: FormConfig = {
           "error": "Goal weight must be less than your current weight"
         }
       },
-      "next": "transition.youre_in_good_hands"
+      "next": "interstitial.success"
     },
+
     {
-      "id": "transition.youre_in_good_hands",
-      "type": "content",
-      "phase": "inspire",
-      "headline": "We're here to help you reach your goal",
-      "body": "Our physicians will review your health and create a plan designed just for you—because your journey is unique.\n\nLet's keep going!",
-      "cta_primary": {
-        "label": "Let's Do This"
-      },
+      "id": "interstitial.success",
+      "type": "interstitial",
+      "phase": "qualify",
+      "variant": "stat_success",
       "next": "capture.email"
     },
 
@@ -327,14 +344,14 @@ const formConfig: FormConfig = {
       "id": "capture.email",
       "type": "composite",
       "phase": "qualify",
-      "title": "Great! How can we reach you?",
+      "title": "Let's find which treatments work for you",
       "fields": [
         {
           "id": "email",
           "type": "email",
           "label": "Email address",
           "placeholder": "john.doe@zappyhealth.com",
-          "help_text": "We'll send your personalized plan and stay in touch throughout your journey.",
+          "help_text": "We'll send your personalized plan here—no spam, just what matters",
           "required": true,
           "validation": {
             "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
@@ -342,23 +359,24 @@ const formConfig: FormConfig = {
           }
         }
       ],
-      "next": "transition.health_intro"
+      "next": "transition.health_questions"
+    },
+
+    {
+      "id": "transition.health_questions",
+      "type": "content",
+      "phase": "qualify",
+      "headline": "Great progress! Let's build your health profile",
+      "body": "Next up: a quick health assessment to make sure we find the safest, most effective treatment for you.\n\nThink of this as your personal roadmap—every answer helps us personalize your care.",
+      "cta_primary": {
+        "label": "Continue"
+      },
+      "next": "assess.sex_birth"
     },
 
     // ═══════════════════════════════════════════════════════════
     // PHASE 3: ASSESS HEALTH
     // ═══════════════════════════════════════════════════════════
-    {
-      "id": "transition.health_intro",
-      "type": "content",
-      "phase": "assess_medical",
-      "headline": "You're doing great—halfway there!",
-      "body": "Next, we'll ask about your health to make sure treatment is safe and right for you.\n\nMost questions are quick—just check what applies. Takes about 5 minutes.",
-      "cta_primary": {
-        "label": "Let's Go"
-      },
-      "next": "assess.sex_birth"
-    },
     {
       "id": "assess.sex_birth",
       "type": "single_select",
