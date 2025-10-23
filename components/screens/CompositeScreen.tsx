@@ -513,7 +513,9 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         const consentField = field as ConsentItemField;
         return (
           <div 
-            className="p-5 bg-white border-2 border-stone-200 rounded-2xl shadow-sm cursor-pointer hover:border-primary/50 transition-colors"
+            className={`p-5 bg-white border-2 rounded-2xl shadow-sm cursor-pointer transition-colors ${
+              value ? 'border-primary' : 'border-stone-200 hover:border-primary/50'
+            }`}
             onClick={() => updateAnswer(consentField.id, !value)}
           >
             <Checkbox
@@ -530,7 +532,9 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         const checkboxField = field as CheckboxField;
         return (
           <div 
-            className="p-5 bg-white border-2 border-stone-200 rounded-2xl shadow-sm cursor-pointer hover:border-primary/50 transition-colors"
+            className={`p-5 bg-white border-2 rounded-2xl shadow-sm cursor-pointer transition-colors ${
+              value ? 'border-primary' : 'border-stone-200 hover:border-primary/50'
+            }`}
             onClick={(event) => {
               const target = event.target as HTMLElement | null;
               if (target && (target.closest('label') || target.closest('input'))) {

@@ -1104,7 +1104,7 @@ const formConfig: FormConfig = {
           "go_to": "assess.allergies_detail"
         },
         {
-          "else": "assess.previous_attempts"
+          "else": "assess.activity_level"
         }
       ]
     },
@@ -1117,38 +1117,34 @@ const formConfig: FormConfig = {
       "multiline": true,
       "rows": 4,
       "required": true,
-      "next": "assess.previous_attempts"
+      "next": "assess.activity_level"
     },
     {
-      "id": "assess.previous_attempts",
-      "type": "composite",
+      "id": "assess.activity_level",
+      "type": "single_select",
       "phase": "assess_medical",
-      "title": "Tell us a bit about your journey",
-      "fields": [
-        {
-          "id": "activity_level",
-          "type": "single_select",
-          "label": "How active are you right now?",
-          "required": true,
-          "options": [
-            { "value": "sedentary", "label": "Mostly sedentary (desk work, little movement)" },
-            { "value": "light", "label": "Lightly active (some walking daily)" },
-            { "value": "moderate", "label": "Moderately active (regular walks or exercise)" },
-            { "value": "active", "label": "Active (consistent exercise routine)" },
-            { "value": "very_active", "label": "Very active (intensive daily training)" }
-          ]
-        },
-        {
-          "id": "journey_notes",
-          "type": "text",
-          "label": "Anything else we should know? (optional)",
-          "help_text": "Share whatever feels important—we're listening and here to help.",
-          "placeholder": "Feel free to share what's on your mind...",
-          "multiline": true,
-          "rows": 6,
-          "required": false
-        }
+      "title": "How active are you right now?",
+      "auto_advance": true,
+      "required": true,
+      "options": [
+        { "value": "sedentary", "label": "Mostly sedentary (desk work, little movement)" },
+        { "value": "light", "label": "Lightly active (some walking daily)" },
+        { "value": "moderate", "label": "Moderately active (regular walks or exercise)" },
+        { "value": "active", "label": "Active (consistent exercise routine)" },
+        { "value": "very_active", "label": "Very active (intensive daily training)" }
       ],
+      "next": "assess.journey_notes"
+    },
+    {
+      "id": "assess.journey_notes",
+      "type": "text",
+      "phase": "assess_medical",
+      "title": "Anything else we should know?",
+      "help_text": "Share whatever feels important—we're listening and here to help.",
+      "placeholder": "Feel free to share what's on your mind...",
+      "multiline": true,
+      "rows": 6,
+      "required": false,
       "next": "treatment.side_effect_plan_interest"
     },
     {

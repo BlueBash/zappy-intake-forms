@@ -85,12 +85,21 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
 
   const normalizedTerm = searchTerm.trim().toLowerCase();
 
-  const filteredRegions = US_STATES.filter((state) => {
-    if (!normalizedTerm) return true;
-    const name = state.name.toLowerCase();
-    const code = state.code.toLowerCase();
-    return name.startsWith(normalizedTerm) || code.startsWith(normalizedTerm);
-  });
+  // Always show all states, but sort matching ones to the top when searching
+  const filteredRegions = normalizedTerm
+    ? [
+        ...US_STATES.filter((state) => {
+          const name = state.name.toLowerCase();
+          const code = state.code.toLowerCase();
+          return name.startsWith(normalizedTerm) || code.startsWith(normalizedTerm);
+        }),
+        ...US_STATES.filter((state) => {
+          const name = state.name.toLowerCase();
+          const code = state.code.toLowerCase();
+          return !(name.startsWith(normalizedTerm) || code.startsWith(normalizedTerm));
+        }),
+      ]
+    : US_STATES;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

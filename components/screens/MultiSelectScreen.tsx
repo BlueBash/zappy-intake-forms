@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ScreenProps } from './common';
 import ScreenLayout from '../common/ScreenLayout';
 import CheckboxGroup from '../common/CheckboxGroup';
@@ -9,13 +9,32 @@ import { MultiSelectScreen as MultiSelectScreenType } from '../../types';
 const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack }) => {
   const { id, title, help_text, options = [], required, other_text_id } = screen;
   const selectedValues: string[] = answers[id] || [];
+  const autoAdvanceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleChange = (newValues: string[]) => {
     updateAnswer(id, newValues);
     if (other_text_id && !newValues.includes('other')) {
       updateAnswer(other_text_id, '');
     }
+
+    // Auto-advance if "none" option is selected (exclusive option)
+    if (newValues.length === 1 && newValues.includes('none')) {
+      if (autoAdvanceTimeoutRef.current) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+      }
+      autoAdvanceTimeoutRef.current = setTimeout(() => {
+        onSubmit();
+      }, 800);
+    }
   };
+
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimeoutRef.current) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const isComplete = !required || selectedValues.length > 0;
 
