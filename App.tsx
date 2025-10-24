@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { useFormLogic } from './hooks/useFormLogic';
@@ -87,6 +87,38 @@ const ProgramHeader: React.FC<{ condition: string; theme: ProgramTheme }> = ({ c
   </header>
 );
 
+const LEAD_SESSION_STORAGE_KEY = 'consultation_lead_id';
+
+const toServiceSlug = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'general';
+
+const isValidEmail = (value: unknown): value is string =>
+  typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
+type LeadSyncReason = 'email_capture' | 'screen_transition' | 'form_submission';
+
+interface LeadSyncContext {
+  reason: LeadSyncReason;
+  previousScreenId?: string | null;
+  formRequestId?: string;
+}
+
+const extractFormRequestId = (response: unknown): string | undefined => {
+  if (!response || typeof response !== 'object') {
+    return undefined;
+  }
+
+  const candidate = response as Record<string, any>;
+  const id = candidate.form_request_id;
+  return typeof id === 'string' && id ? id : undefined;
+};
+
 interface AppProps {
   formConfig?: FormConfig;
   defaultCondition?: string;
@@ -108,6 +140,26 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     goToScreen,
     direction,
   } = useFormLogic(activeFormConfig);
+
+  const serviceSlug = useMemo(() => toServiceSlug(resolvedCondition), [resolvedCondition]);
+  const [leadId, setLeadId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    try {
+      return window.sessionStorage.getItem(LEAD_SESSION_STORAGE_KEY);
+    } catch (error) {
+      console.warn('[Consultation] Unable to read lead id from session storage', error);
+      return null;
+    }
+  });
+  const lastEmailSyncedRef = useRef<string | null>(null);
+  const previousScreenIdRef = useRef<string | null>(null);
+  const formSubmittedRef = useRef(false);
+
+  if (previousScreenIdRef.current === null) {
+    previousScreenIdRef.current = currentScreen.id;
+  }
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -142,6 +194,109 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       setIsSubmitting(false);
     }
   }, [currentScreen.id, submitError]);
+
+  const syncLead = useCallback(async (context: LeadSyncContext) => {
+    if (formSubmittedRef.current) {
+      return;
+    }
+
+    if (!isValidEmail(answers.email)) {
+      return;
+    }
+
+    const email = (answers.email as string).trim();
+    const status = context.reason === 'form_submission' ? 'submitted' : 'new';
+
+    let answersSnapshot: Record<string, unknown> = {};
+    try {
+      answersSnapshot = JSON.parse(JSON.stringify(answers ?? {}));
+    } catch (error) {
+      console.warn('[Consultation] Failed to serialize answers for lead payload', error);
+    }
+
+    const metaData: Record<string, unknown> = {
+      answers: answersSnapshot,
+      condition: resolvedCondition,
+      current_screen_id: currentScreen.id,
+      previous_screen_id: context.previousScreenId ?? previousScreenIdRef.current ?? null,
+      form_name: activeFormConfig.meta?.form_name ?? null,
+      form_version: activeFormConfig.meta?.version ?? null,
+      submission_status: status,
+    };
+
+    if (context.formRequestId) {
+      metaData.form_request_id = context.formRequestId;
+    }
+
+    try {
+      const response = await apiClient.createOrUpdateLead({
+        email,
+        service: serviceSlug,
+        status,
+        meta_data: metaData,
+        ...(leadId ? { id: leadId } : {}),
+        ...(context.formRequestId ? { form_request_id: context.formRequestId } : {}),
+      });
+
+      if (response?.lead?.id) {
+        setLeadId(prev => {
+          if (prev === response.lead.id) {
+            return prev;
+          }
+          if (typeof window !== 'undefined') {
+            try {
+              window.sessionStorage.setItem(LEAD_SESSION_STORAGE_KEY, response.lead.id);
+            } catch (storageError) {
+              console.warn('[Consultation] Unable to persist lead id in session storage', storageError);
+            }
+          }
+          return response.lead.id;
+        });
+      }
+    } catch (error) {
+      console.error('[Consultation] Failed to sync lead', error);
+    }
+  }, [answers, resolvedCondition, currentScreen.id, activeFormConfig.meta?.form_name, activeFormConfig.meta?.version, serviceSlug, leadId]);
+
+  useEffect(() => {
+    if (formSubmittedRef.current) {
+      return;
+    }
+
+    if (!isValidEmail(answers.email)) {
+      return;
+    }
+
+    const normalizedEmail = (answers.email as string).trim().toLowerCase();
+    if (lastEmailSyncedRef.current === normalizedEmail && leadId) {
+      return;
+    }
+
+    lastEmailSyncedRef.current = normalizedEmail;
+    void syncLead({
+      reason: 'email_capture',
+      previousScreenId: previousScreenIdRef.current,
+    });
+  }, [answers.email, leadId, syncLead]);
+
+  useEffect(() => {
+    if (formSubmittedRef.current) {
+      previousScreenIdRef.current = currentScreen.id;
+      return;
+    }
+
+    const previousScreenId = previousScreenIdRef.current;
+    const advancedToNewScreen = previousScreenId && previousScreenId !== currentScreen.id;
+
+    if (advancedToNewScreen && direction >= 0 && isValidEmail(answers.email)) {
+      void syncLead({
+        reason: 'screen_transition',
+        previousScreenId,
+      });
+    }
+
+    previousScreenIdRef.current = currentScreen.id;
+  }, [currentScreen.id, direction, answers.email, syncLead]);
 
   const handleReviewSubmit = async () => {
     if (isSubmitting) return;
@@ -226,7 +381,31 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       };
 
       console.warn('[Consultation] Submitting payload', payload);
-      await apiClient.submitConsultation(payload);
+      const submissionResponse = await apiClient.submitConsultation(payload);
+      const formRequestId = extractFormRequestId(submissionResponse);
+
+      try {
+        await syncLead({
+          reason: 'form_submission',
+          previousScreenId: previousScreenIdRef.current,
+          formRequestId,
+        });
+      } catch (leadSyncError) {
+        console.error('[Consultation] Failed to update lead after submission', leadSyncError);
+      } finally {
+        formSubmittedRef.current = true;
+        lastEmailSyncedRef.current = null;
+        previousScreenIdRef.current = currentScreen.id;
+        try {
+          if (typeof window !== 'undefined') {
+            window.sessionStorage.removeItem(LEAD_SESSION_STORAGE_KEY);
+          }
+        } catch (storageError) {
+          console.warn('[Consultation] Unable to clear lead id from session storage', storageError);
+        }
+        setLeadId(null);
+      }
+
       goToNext();
     } catch (error) {
       console.error(error);
