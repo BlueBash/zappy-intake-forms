@@ -100,7 +100,7 @@ const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ 
         <h2 className="text-4xl md:text-5xl font-semibold mb-8 text-neutral-700 leading-tight">
             {interpolatedHeadline}
         </h2>
-        {interpolatedBody && <SmoothText text={interpolatedBody} className="text-lg mb-12 max-w-xl text-neutral-600 leading-relaxed whitespace-pre-line" />}
+        {interpolatedBody && <SmoothText text={interpolatedBody} className="text-xl mb-12 max-w-2xl text-neutral-600 leading-relaxed whitespace-pre-line" />}
         
         {consent_items && (
           <div className="w-full max-w-[672px] space-y-3 mb-8 text-left">

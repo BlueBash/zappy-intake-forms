@@ -73,7 +73,7 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
         }
         // Trigger auto-advance callback if provided
         if (onExclusiveSelect) {
-          setTimeout(() => onExclusiveSelect(), 800);
+          setTimeout(() => onExclusiveSelect(), 600);
         }
       }
       return;
@@ -125,10 +125,10 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
             whileTap={{ scale: 0.98 }}
             type="button"
             onClick={() => handleToggle(exclusiveOption.value)}
-            className={`w-full flex items-center justify-between py-[18px] px-5 border-2 rounded-xl text-base transition-colors transform focus-within:ring-2 focus-within:ring-primary/40 focus-within:ring-offset-2 focus:outline-none text-left ${
+            className={`w-full flex items-center justify-between py-[18px] px-5 border-2 rounded-xl text-base transition-colors transform focus:outline-none text-left ${
               selectedValues.includes(exclusiveOption.value)
-                ? 'border-primary bg-gradient-to-r from-primary/5 via-accent-warm/5 to-primary-light/5 shadow-md text-primary'
-                : 'bg-stone-50 border-stone-300 hover:border-stone-400 hover:shadow-md text-stone-700 font-medium'
+                ? 'border-primary bg-primary/5 text-primary'
+                : 'bg-stone-50 border-stone-300 hover:border-stone-400 text-stone-700 font-medium'
             }`}
             style={{
               transitionDuration: 'var(--timing-slow)',
@@ -138,7 +138,7 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
             <span className="text-left flex-1">{exclusiveLabel || exclusiveOption.label}</span>
             <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
               selectedValues.includes(exclusiveOption.value)
-                ? 'bg-gradient-to-r from-primary to-primary-light shadow-md'
+                ? 'bg-primary'
                 : 'border-2 border-stone-400'
             }`}
             style={{
@@ -194,9 +194,9 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
                 handleToggle(option.value);
               }}
               disabled={isDisabled}
-              className={`w-full flex items-center justify-between py-[18px] px-5 border-2 rounded-xl text-base transition-colors transform focus-within:ring-2 focus-within:ring-primary/40 focus-within:ring-offset-2 focus:outline-none text-left ${
+              className={`w-full flex items-center justify-between py-[18px] px-5 border-2 rounded-xl text-base transition-colors transform focus:outline-none text-left ${
                 isChecked
-                  ? 'border-primary bg-gradient-to-r from-primary/5 via-accent-warm/5 to-primary-light/5 shadow-md text-primary'
+                  ? 'border-primary bg-primary/5 text-primary'
                   : isDisabled
                     ? 'border-gray-200 opacity-60 cursor-not-allowed bg-white text-neutral-400'
                     : 'bg-white border-gray-200 hover:border-accent-warm/30 hover:shadow-md text-neutral-600'
@@ -209,7 +209,7 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
               <span className="text-left flex-1">{option.label}</span>
               <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                 isChecked
-                  ? 'bg-gradient-to-r from-primary to-primary-light shadow-md'
+                  ? 'bg-primary'
                   : 'border-2 border-gray-300'
               }`}
               style={{

@@ -145,9 +145,9 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
                   ease: [0.25, 0.1, 0.25, 1],
                   delay: hasAnimated ? 0 : index * 0.1
                 }}
-                className={`w-full flex items-center justify-between p-5 border-2 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/20 transition-colors duration-200 ${
+                className={`w-full flex items-center justify-between p-5 border-2 rounded-xl text-base focus:outline-none transition-colors duration-200 ${
                   isSelected
-                    ? 'border-primary bg-gradient-to-r from-primary/5 via-accent-warm/5 to-primary-light/5 text-primary'
+                    ? 'border-primary bg-primary/5 text-primary'
                     : 'bg-white border-gray-200 hover:border-primary/30 hover:bg-gray-50 text-neutral-600'
                 }`}
                 style={{
@@ -158,7 +158,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
                 <span className="text-left flex-1">{option.label}</span>
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                   isSelected
-                    ? 'bg-gradient-to-r from-primary to-primary-light shadow-md'
+                    ? 'bg-primary'
                     : 'border-2 border-gray-300'
                 }`}
                 style={{

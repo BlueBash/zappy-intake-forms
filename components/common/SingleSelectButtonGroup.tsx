@@ -40,10 +40,10 @@ const SingleSelectButtonGroup: React.FC<SingleSelectButtonGroupProps> = ({
             whileHover={reducedMotion ? {} : (isSelected ? {} : { scale: 1.01 })}
             onClick={() => onSelect(option.value)}
             type="button"
-            className={`w-full text-left py-[18px] px-5 border-2 rounded-2xl text-lg transition-colors transform focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 leading-relaxed
+            className={`w-full text-left py-[18px] px-5 border-2 rounded-2xl text-lg transition-colors transform focus:outline-none leading-relaxed
               ${isSelected
-                ? 'bg-gradient-to-r from-primary/5 via-accent-warm/5 to-primary-light/5 border-primary text-neutral-900 font-medium shadow-md'
-                : 'bg-white border-stone-200 shadow hover:border-accent-warm/30 hover:bg-gray-50 hover:shadow-md'
+                ? 'bg-primary/5 border-primary text-neutral-900 font-medium'
+                : 'bg-white border-stone-200 hover:border-primary/30 hover:bg-gray-50'
               }`}
             style={{
               transitionDuration: 'var(--timing-normal)',
@@ -54,7 +54,7 @@ const SingleSelectButtonGroup: React.FC<SingleSelectButtonGroupProps> = ({
               <span>{option.label}</span>
               <div className="flex-shrink-0">
                 {isSelected ? (
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-primary-light flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>

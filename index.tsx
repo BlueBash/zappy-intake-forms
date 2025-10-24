@@ -109,7 +109,7 @@ const FormRouter: React.FC = () => {
                   opacity: { duration: 0.3, ease: [0.16, 1, 0.3, 1] },
                   x: { duration: 0.3, ease: [0.16, 1, 0.3, 1], delay: index * 0.08 }
                 }}
-                className="w-full flex items-center justify-between p-5 border-2 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/20 block"
+                className="w-full flex items-center justify-between p-5 border-2 rounded-xl text-base focus:outline-none block"
               >
                 <span className="text-left flex-1 font-medium">{program.label}</span>
                 <div className="w-7 h-7 rounded-full flex items-center justify-center border-2 border-gray-300">

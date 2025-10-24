@@ -24,7 +24,7 @@ const formConfig: FormConfig = {
       "lavender_accent": "#E8E7F3",
       "lavender_primary": "#8B7FC5"
     },
-    "progress_bar": true,
+    "progress_bar": false,
     "show_back_button": true,
     "autosave_ms": 800,
     "show_phase_indicator": true
@@ -661,8 +661,7 @@ const formConfig: FormConfig = {
       "type": "text",
       "phase": "treatment",
       "title": "Have a discount code?",
-      "help_text": "Enter it below to apply it to your plan (optional)",
-      "placeholder": "LONGEVITY20",
+      "placeholder": "Enter code",
       "required": false,
       "next": "transition.final_section"
     },

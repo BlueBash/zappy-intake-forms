@@ -58,6 +58,7 @@ const applyPhoneMask = (value: string): string => {
 const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, headerSize, calculations = {}, showLoginLink }) => {
   const { title, help_text, fields, footer_note, validation, post_screen_note } = screen;
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const autoAdvanceTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const initialState = answers['demographics.state'];
@@ -65,6 +66,14 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
       updateAnswer('state', initialState);
     }
   }, [answers, updateAnswer]);
+
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimeoutRef.current) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const allFields = useMemo(() => {
     const flattened: Field[] = [];
@@ -423,6 +432,17 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
               updateAnswer('mental_health_other', '');
             }
             updateAnswer(field.id, newValues);
+            
+            // Handle auto-advance for screens with auto_advance_on property
+            if ('auto_advance_on' in screen && screen.auto_advance_on && newValues.includes(screen.auto_advance_on)) {
+              if (autoAdvanceTimeoutRef.current) {
+                clearTimeout(autoAdvanceTimeoutRef.current);
+              }
+              const delay = ('auto_advance_delay' in screen && screen.auto_advance_delay) ? screen.auto_advance_delay : 600;
+              autoAdvanceTimeoutRef.current = setTimeout(() => {
+                onSubmit();
+              }, delay);
+            }
           };
           return (
             <div>

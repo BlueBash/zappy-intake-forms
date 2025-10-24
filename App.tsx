@@ -23,6 +23,7 @@ import MedicationOptionsScreen from './components/screens/MedicationOptionsScree
 import DiscountCodeScreen from './components/screens/DiscountCodeScreen';
 import InterstitialScreen from './components/screens/InterstitialScreen';
 import GLP1HistoryScreen from './components/screens/GLP1HistoryScreen';
+import MedicationPreferenceInitialScreen from './components/screens/MedicationPreferenceInitialScreen';
 import { buildMedicationHistorySummary } from './utils/medicationHistory';
 
 type ProgramTheme = {
@@ -285,7 +286,11 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       return <GLP1HistoryScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 
-    if (screen.id === 'treatment.medication_preference' || screen.id === 'treatment.medication_preference_initial') {
+    if (screen.id === 'treatment.medication_preference_initial') {
+      return <MedicationPreferenceInitialScreen key={screen.id} {...commonProps} screen={screen} />;
+    }
+
+    if (screen.id === 'treatment.medication_preference') {
       return <MedicationOptionsScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 

@@ -42,11 +42,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               block w-full rounded-lg transition-all
               py-[18px] px-5 text-[1.0625rem] text-stone-900
               border-2
-              focus:outline-none
+              focus:outline-none focus:ring-0 focus:shadow-none
               ${hasTrailingAdornment ? 'pr-14' : ''}
               ${error
-                ? 'border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50 shadow-sm shadow-red-100/50'
-                : 'border-stone-200 shadow-none focus:border-primary focus:ring-4 focus:ring-primary/8 focus:shadow-sm focus:shadow-primary/10'
+                ? 'border-red-300 focus:border-red-400'
+                : 'border-stone-200 focus:border-primary'
               }
             `}
             style={{

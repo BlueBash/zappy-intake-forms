@@ -192,7 +192,7 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
         onClick={handleInputClick}
         onKeyDown={handleKeyDown}
         disabled={disabled}
-        className="w-full px-4 py-3 border-2 border-stone-200 rounded-lg focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all disabled:bg-stone-100"
+        className="w-full py-[18px] px-5 text-[1.0625rem] border-2 border-stone-200 rounded-lg focus:outline-none focus:ring-0 focus:border-primary transition-all disabled:bg-stone-100 focus:shadow-none"
         autoComplete="off"
       />
 

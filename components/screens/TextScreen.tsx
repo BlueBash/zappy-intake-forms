@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { Check } from 'lucide-react';
 import { ScreenProps } from './common';
 import ScreenLayout from '../common/ScreenLayout';
 import Input from '../ui/Input';
@@ -151,9 +153,48 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
   };
 
   const isComplete = !required || (value && value.length > 0);
+  const isEmailField = id === 'email';
 
   return (
-    <ScreenLayout title={title} helpText={help_text} headerSize={headerSize}>
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <ScreenLayout title={title} helpText={help_text} headerSize={headerSize}>
+        
+        {/* 🎁 PROMOTIONAL BANNER - Only show on email screen */}
+        {isEmailField && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="mb-8"
+          >
+            <div className="bg-gradient-to-r from-[#0D9488]/8 via-[#FF7A59]/8 to-[#0D9488]/8 border-2 border-[#FF7A59]/20 rounded-2xl px-6 py-4 flex items-center gap-3 shadow-sm">
+              
+              {/* ✅ ANIMATED CHECKMARK */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.4, type: 'spring', stiffness: 200, damping: 15 }}
+                className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FF7A59] to-[#0D9488] flex items-center justify-center flex-shrink-0 shadow-md"
+              >
+                <Check className="w-4 h-4 text-white" strokeWidth={3} />
+              </motion.div>
+              
+              {/* 📝 PROMOTIONAL TEXT */}
+              <p className="text-neutral-700">
+                <span className="bg-gradient-to-r from-[#0D9488] to-[#FF7A59] bg-clip-text text-transparent">
+                  Promo Applied:
+                </span> Free Online Consultation
+              </p>
+              
+            </div>
+          </motion.div>
+        )}
+        
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="w-full space-y-8">
             {multiline ? (
               <textarea
@@ -186,7 +227,8 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
               nextButtonType="submit"
             />
         </form>
-    </ScreenLayout>
+      </ScreenLayout>
+    </motion.div>
   );
 };
 

@@ -24,7 +24,7 @@ const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType 
     }
     autoAdvanceTimeoutRef.current = setTimeout(() => {
       onSubmit();
-    }, 800);
+    }, 600);
   };
 
   // Determine contextual "none" label based on screen

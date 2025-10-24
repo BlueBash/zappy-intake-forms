@@ -137,22 +137,19 @@
   outline: none;
 }
 
-*:focus-visible {
+/* Remove all browser default focus effects on inputs and selects */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: inherit;
+}
+
+/* Only apply focus-visible outline to interactive elements that don't have custom focus styles */
+button:focus-visible:not([class*="border"]),
+a:focus-visible {
   outline: 2px solid #0D9488 !important;
   outline-offset: 2px;
   border-radius: 0.375rem;
-}
-
-input:focus,
-input:focus-visible,
-input[type="number"]:focus,
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-select:focus,
-textarea:focus,
-button:focus-visible {
-  outline: 2px solid #0D9488 !important;
-  outline-offset: 2px !important;
-  border-color: #0D9488 !important;
 }

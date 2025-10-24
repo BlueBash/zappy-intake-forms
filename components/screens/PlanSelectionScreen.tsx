@@ -84,6 +84,7 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
       ? (screen as any).service_type
       : defaultCondition || DEFAULT_SERVICE_TYPE;
   const selectedMedication = answers['selected_medication'] || '';
+  const preferredMedication = answers['preferred_medication'] || '';
   const selectedPlanId = answers['selected_plan_id'] || '';
   const pharmacyPreferences = (answers['medication_pharmacy_preferences'] as Record<string, string[]>) || {};
   const selectedPharmacy = pharmacyPreferences[selectedMedication]?.[0];
@@ -128,6 +129,7 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
         state={stateCode}
         medication={selectedMedication}
         pharmacyName={selectedPharmacy}
+        preferredMedication={preferredMedication}
         selectedPlanId={selectedPlanId}
         onSelect={handlePlanSelect}
         requiresDoseStrategy={requiresDoseStrategy}

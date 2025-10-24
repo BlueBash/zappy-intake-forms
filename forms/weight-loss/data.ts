@@ -24,7 +24,7 @@ const formConfig: FormConfig = {
       "lavender_accent": "#E8E7F3",
       "lavender_primary": "#8B7FC5"
     },
-    "progress_bar": true,
+    "progress_bar": false,
     "show_back_button": true,
     "autosave_ms": 800,
     "show_phase_indicator": true
@@ -60,7 +60,6 @@ const formConfig: FormConfig = {
         { "value": "boost_energy", "label": "Boost energy and feel better" },
         { "value": "improve_health", "label": "Improve overall health" },
         { "value": "regain_confidence", "label": "Regain confidence" },
-        { "value": "none", "label": "None of these" },
         { "value": "other", "label": "Other" }
       ],
       "other_text_id": "goal_motivations_other",
@@ -79,7 +78,6 @@ const formConfig: FormConfig = {
         { "value": "motivation", "label": "Staying motivated" },
         { "value": "plateaus", "label": "Breaking through plateaus" },
         { "value": "consistency", "label": "Being consistent" },
-        { "value": "none", "label": "None of these" },
         { "value": "other", "label": "Other" }
       ],
       "other_text_id": "goal_challenges_other",
@@ -372,7 +370,7 @@ const formConfig: FormConfig = {
       "id": "transition.health_questions",
       "type": "content",
       "phase": "qualify",
-      "headline": "Great progress! Let's build your health profile",
+      "headline": "Thank you! Now, let's build your health profile",
       "body": "Next up: a quick health assessment to make sure we find the safest, most effective treatment for you.\n\nThink of this as your personal roadmap—every answer helps us personalize your care.",
       "cta_primary": {
         "label": "Continue"
@@ -431,20 +429,22 @@ const formConfig: FormConfig = {
       "help_text": "Some medications can affect mood, so we ask for safety",
       "safety_critical": true,
       "post_screen_note": "We appreciate your honesty. This helps us provide the safest care.",
+      "auto_advance_on": "none",
+      "auto_advance_delay": 600,
       "fields": [
         {
           "id": "mental_health_diagnosis",
           "type": "multi_select",
           "label": "Mental health conditions",
           "options": [
+            { "value": "none", "label": "None of these" },
             { "value": "depression", "label": "Depression" },
             { "value": "anxiety", "label": "Anxiety disorder" },
             { "value": "bipolar", "label": "Bipolar disorder" },
             { "value": "panic", "label": "Panic disorder" },
             { "value": "ptsd", "label": "PTSD" },
             { "value": "ocd", "label": "OCD" },
-            { "value": "other", "label": "Other" },
-            { "value": "none", "label": "None of these" }
+            { "value": "other", "label": "Other" }
           ]
         },
         {
@@ -596,7 +596,7 @@ const formConfig: FormConfig = {
       "headline": "A few quick lifestyle questions",
       "body": "These help us understand your overall health and any factors that might affect treatment.",
       "cta_primary": {
-        "label": "Let's Go"
+        "label": "Continue"
       },
       "next": "assess.substance_use_alcohol"
     },
@@ -1004,8 +1004,9 @@ const formConfig: FormConfig = {
       "id": "assess.current_medications",
       "type": "multi_select",
       "phase": "assess_medical",
-      "title": "Are you taking any of these medications?",
+      "title": "Do you take any medication?",
       "options": [
+        { "value": "none", "label": "I don't take any medication" },
         { "value": "insulin", "label": "Insulin" },
         { "value": "metformin", "label": "Metformin or other diabetes meds" },
         { "value": "blood_pressure", "label": "Blood pressure meds" },
@@ -1019,7 +1020,6 @@ const formConfig: FormConfig = {
         { "value": "steroids", "label": "Corticosteroids (prednisone, etc.)" },
         { "value": "immunosuppressants", "label": "Immunosuppressants" },
         { "value": "pain_chronic", "label": "Chronic pain medications" },
-        { "value": "none", "label": "No prescription medications" },
         { "value": "other", "label": "Other medications" }
       ],
       "next_logic": [
@@ -1197,7 +1197,7 @@ const formConfig: FormConfig = {
       "next_logic": [
         {
           "if": "answer == 'never'",
-          "go_to": "treatment.medication_preference"
+          "go_to": "treatment.medication_preference_initial"
         },
         {
           "else": "treatment.glp1_history"
@@ -1841,13 +1841,13 @@ const formConfig: FormConfig = {
           "error": "You can only be currently taking one GLP-1 medication"
         }
       },
-      "next": "treatment.medication_preference"
+      "next": "treatment.medication_preference_initial"
     },
     {
       "id": "treatment.medication_preference_initial",
       "type": "single_select",
       "phase": "treatment",
-      "title": "Do you have a medication in mind?",
+      "title": "Do you have a GLP-1 medication in mind?",
       "auto_advance": true,
       "required": true,
       "options": [
@@ -1917,7 +1917,7 @@ const formConfig: FormConfig = {
       "type": "single_select",
       "phase": "treatment",
       "title": "Choose Your Plan",
-      "help_text": "Your provider will recommend the best medication for you. Prices shown are for compounded options.",
+      "help_text": "A licensed healthcare provider will review your information and may recommend appropriate treatment. This is not a guarantee for a prescription.",
       "auto_advance": true,
       "required": true,
       "next": "logistics.discount_code"
@@ -1927,8 +1927,7 @@ const formConfig: FormConfig = {
       "type": "text",
       "phase": "treatment",
       "title": "Have a discount code?",
-      "help_text": "Enter it below to apply it to your plan (optional)",
-      "placeholder": "DISCOUNT20",
+      "placeholder": "Enter code",
       "required": false,
       "next": "transition.final_section"
     },
@@ -2094,14 +2093,6 @@ const formConfig: FormConfig = {
           "required": false
         }
       ],
-      "next": "review.summary"
-    },
-    {
-      "id": "review.summary",
-      "type": "review",
-      "phase": "treatment",
-      "title": "Does everything look right?",
-      "help_text": "Review your answers before you submit so we can get started right away.",
       "next": "complete.success"
     },
     {

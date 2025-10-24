@@ -1,63 +1,67 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Button from '../ui/Button';
 
 interface NavigationButtonsProps {
-  showBack: boolean;
-  onBack: () => void;
-  nextLabel?: string;
+  showBack?: boolean;
+  onBack?: () => void;
   onNext: () => void;
   isNextDisabled?: boolean;
-  nextButtonType?: 'button' | 'submit' | 'reset';
   isNextLoading?: boolean;
+  nextLabel?: string;
+  nextButtonType?: 'button' | 'submit';
+  style?: React.CSSProperties;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   showBack,
   onBack,
-  nextLabel = 'Continue',
   onNext,
-  isNextDisabled = false,
+  isNextDisabled,
+  isNextLoading,
+  nextLabel = 'Continue',
   nextButtonType = 'button',
-  isNextLoading = false,
+  style,
 }) => {
-  const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
   return (
     <motion.div
-      initial={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+      // 🎬 FADE-IN + SLIDE-UP ANIMATION
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={reducedMotion ? { duration: 0.01 } : {
-        delay: 0.25,
-        duration: 0.5,
-        ease: [0.25, 0.1, 0.25, 1]
-      }}
-      className="w-full flex flex-col-reverse sm:flex-row sm:justify-between items-center mt-12 gap-3 sm:gap-5"
+      transition={{ delay: 0.3, duration: 0.4 }}
+      className="flex justify-between items-center mt-12"
+      style={style}
     >
-      {/* Back Button */}
-      {showBack ? (
+      {/* BACK BUTTON */}
+      {showBack && onBack ? (
         <Button
-          variant="ghost"
           onClick={onBack}
+          variant="ghost"
           type="button"
-          className="w-full sm:w-auto"
+          className="group"
         >
+          {/* Arrow slides left on hover */}
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Back
         </Button>
       ) : (
-        // Placeholder to keep the Continue button on the right
-        <div className="hidden sm:block sm:w-auto"><div className="py-3 px-5 invisible">Back</div></div>
+        <div />
       )}
 
-      {/* Next/Submit Button */}
+      {/* CONTINUE BUTTON */}
       <Button
-        onClick={onNext}
-        disabled={isNextDisabled || isNextLoading}
+        onClick={nextButtonType === 'button' ? onNext : undefined}
         type={nextButtonType}
+        variant="primary"
         size="lg"
-        className="w-full sm:w-auto sm:max-w-[240px]"
+        disabled={isNextDisabled}
+        isLoading={isNextLoading}
+        className="group"
       >
-        {isNextLoading ? 'Submitting…' : nextLabel}
+        {nextLabel}
+        {/* Arrow slides right on hover */}
+        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
       </Button>
     </motion.div>
   );
