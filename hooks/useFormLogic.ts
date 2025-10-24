@@ -136,16 +136,21 @@ export const useFormLogic = (config: FormConfig) => {
   }, [history, returnTo]);
 
   const progress = useMemo(() => {
+    // Filter out terminal and review screens for total count
     const relevantScreens = config.screens.filter(s => s.type !== 'terminal' && s.type !== 'review');
-    const totalSteps = relevantScreens.length;
-    const currentStepIndex = relevantScreens.findIndex(s => s.id === currentScreenId);
-
-    if (currentStepIndex === -1) {
-      return 100;
-    }
-
-    return ((currentStepIndex + 1) / totalSteps) * 100;
-  }, [currentScreenId, config.screens]);
+    const totalCount = relevantScreens.length;
+    
+    // Use history length + 1 (for current screen) as progress indicator
+    // This ensures progress only moves forward as user progresses through the form
+    const currentStep = history.length + 1;
+    
+    // Calculate progress as percentage
+    // Cap at reasonable estimate since user may skip screens via conditional logic
+    const rawProgress = (currentStep / totalCount) * 100;
+    
+    // Ensure progress is between 5% and 95% (never 0 or 100 until completion)
+    return Math.min(95, Math.max(5, rawProgress));
+  }, [history.length, config.screens]);
 
 
   return {

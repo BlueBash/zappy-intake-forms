@@ -24,7 +24,7 @@ const formConfig: FormConfig = {
       "lavender_accent": "#E8E7F3",
       "lavender_primary": "#8B7FC5"
     },
-    "progress_bar": false,
+    "progress_bar": true,
     "show_back_button": true,
     "autosave_ms": 800,
     "show_phase_indicator": true
@@ -348,7 +348,7 @@ const formConfig: FormConfig = {
       "id": "capture.email",
       "type": "composite",
       "phase": "qualify",
-      "title": "Let's find which treatments work for you",
+      "title": "Let's save your progress and find your treatment plan",
       "fields": [
         {
           "id": "email",
@@ -425,10 +425,10 @@ const formConfig: FormConfig = {
       "id": "assess.mental_health",
       "type": "composite",
       "phase": "assess_safety",
-      "title": "Have you been diagnosed with any of these?",
-      "help_text": "Some medications can affect mood, so we ask for safety",
+      "title": "🔒 Your mental health matters to us",
+      "help_text": "These medications can affect mood and appetite. We ask these questions to ensure your safety and find the best treatment for you. Your information is protected by HIPAA.",
       "safety_critical": true,
-      "post_screen_note": "We appreciate your honesty. This helps us provide the safest care.",
+      "post_screen_note": "Thank you for sharing this sensitive information. Your honesty helps us provide the safest, most personalized care possible.",
       "auto_advance_on": "none",
       "auto_advance_delay": 600,
       "fields": [
@@ -465,8 +465,8 @@ const formConfig: FormConfig = {
       "type": "single_select",
       "phase": "assess_safety",
       "field_id": "current_thoughts",
-      "title": "Are you having thoughts of harming yourself or others right now?",
-      "help_text": "This is a critical safety question.",
+      "title": "We need to ask an important safety question",
+      "help_text": "Are you currently having thoughts of harming yourself or others? GLP-1 medications can affect mood in some people, so this question helps us ensure your safety throughout treatment.",
       "safety_critical": true,
       "auto_advance": true,
       "options": [
@@ -1851,8 +1851,9 @@ const formConfig: FormConfig = {
       "auto_advance": true,
       "required": true,
       "options": [
-        { "value": "yes", "label": "Yes" },
-        { "value": "no", "label": "No, I am open to recommendations" }
+        { "value": "yes", "label": "Yes, I have a specific medication in mind" },
+        { "value": "no", "label": "No, I'm open to recommendations" },
+        { "value": "no_preference", "label": "No preference - I'll follow medical advice" }
       ],
       "next_logic": [
         {
