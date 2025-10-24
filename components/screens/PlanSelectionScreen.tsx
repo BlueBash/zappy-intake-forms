@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
 import PlanSelection from '../common/PlanSelection';
@@ -122,6 +123,12 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
     updateAnswer('dose_strategy', value);
   };
 
+  const discountCode = answers['discount_code'] || '';
+
+  const handleDiscountCodeChange = (value: string) => {
+    updateAnswer('discount_code', value);
+  };
+
   return (
     <ScreenLayout title={title} helpText={helpText}>
       <PlanSelection
@@ -136,6 +143,27 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
         doseStrategy={doseStrategy}
         onDoseStrategyChange={handleDoseStrategyChange}
       />
+
+      {/* Inline Discount Code Input - Shows after plan selection */}
+      {selectedPlanId && (!requiresDoseStrategy || doseStrategy) && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-6 p-6 rounded-xl bg-gradient-to-r from-gray-50 to-white border border-gray-200"
+        >
+          <label className="block text-sm font-medium text-neutral-900 mb-2">
+            Have a discount code?
+          </label>
+          <input
+            type="text"
+            value={discountCode}
+            onChange={(e) => handleDiscountCodeChange(e.target.value)}
+            placeholder="Enter code (optional)"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+          />
+        </motion.div>
+      )}
 
       <NavigationButtons
         showBack={showBack}

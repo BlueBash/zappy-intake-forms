@@ -470,7 +470,6 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                           <div className={`font-medium ${isSelected ? 'text-primary' : 'text-neutral-900'}`}>
                             {med.name}
                           </div>
-                          <div className="text-sm text-neutral-600 truncate">{med.subtitle}</div>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -578,22 +577,28 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                                     Highest dose taken? <span className="text-red-500">*</span>
                                   </label>
                                   <p className="text-xs text-neutral-500 mb-3">
-                                    A copy of the script will be required to continue doses higher than 0.5 mg
+                                    **A copy of the script will be required to continue doses higher than 0.5 mg**
                                   </p>
                                   <div className="grid grid-cols-3 gap-2">
-                                    {med.doseOptions.map((option) => (
-                                      <button
-                                        key={option.value}
-                                        onClick={() => updateMedicationDetail(med.id, 'highestDose', option.value)}
-                                        className={`py-2.5 px-3 rounded-lg border-2 transition-all duration-200 text-sm ${
-                                          details?.highestDose === option.value
-                                            ? 'border-primary bg-primary text-white'
-                                            : 'border-gray-200 bg-white text-neutral-700 hover:border-primary/30'
-                                        }`}
-                                      >
-                                        {option.label}
-                                      </button>
-                                    ))}
+                                    {med.doseOptions.map((option) => {
+                                      const doseValue = parseFloat(option.value);
+                                      const needsScript = doseValue > 0.5;
+                                      const displayLabel = needsScript ? `${option.label} **` : option.label;
+                                      
+                                      return (
+                                        <button
+                                          key={option.value}
+                                          onClick={() => updateMedicationDetail(med.id, 'highestDose', option.value)}
+                                          className={`py-2.5 px-3 rounded-lg border-2 transition-all duration-200 text-sm ${
+                                            details?.highestDose === option.value
+                                              ? 'border-primary bg-primary text-white'
+                                              : 'border-gray-200 bg-white text-neutral-700 hover:border-primary/30'
+                                          }`}
+                                        >
+                                          {displayLabel}
+                                        </button>
+                                      );
+                                    })}
                                   </div>
                                 </div>
 
@@ -606,7 +611,7 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                                     onChange={(e) => updateMedicationDetail(med.id, 'sideEffects', e.target.value)}
                                     placeholder="e.g., Nausea, constipation, fatigue"
                                     rows={3}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-all duration-200 resize-none"
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-all duration-200 resize-none"
                                   />
                                 </div>
                               </>
@@ -769,7 +774,7 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                           onChange={(e) => updateOtherMedicationField('sideEffects', e.target.value)}
                           placeholder="e.g., Nausea, constipation, fatigue"
                           rows={3}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-all duration-200 resize-none"
+                          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-all duration-200 resize-none"
                         />
                       </div>
 

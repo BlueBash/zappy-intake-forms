@@ -170,7 +170,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-4">
         {plans.map((plan, index) => {
           const price = plan.invoice_amount ?? plan.invoiceAmount;
           const isSelected = selectedPlanId === plan.id;
@@ -180,53 +180,61 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
           return (
             <motion.div
               key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.08, duration: 0.4 }}
               layout
               className={`relative rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
                 isSelected
-                  ? 'border-[#0D9488] bg-gradient-to-br from-[#0D9488]/5 via-white to-[#14B8A6]/5 shadow-xl'
+                  ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 via-white to-[#14B8A6]/5 shadow-xl'
                   : 'border-gray-200 bg-white hover:border-[#0D9488]/30 hover:shadow-lg'
               }`}
             >
               {/* Popular badge */}
               {plan.popular && (
-                <div className="absolute top-0 right-0 bg-gradient-to-r from-[#FF7A59] to-[#FF6B4A] text-white px-4 py-1.5 rounded-bl-xl rounded-tr-xl text-xs font-semibold flex items-center gap-1">
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-[#FF7A59] to-[#FF6B4A] text-white px-4 py-1.5 rounded-bl-xl rounded-tr-xl text-xs font-semibold flex items-center gap-1 z-10">
                   <Sparkles className="w-3 h-3" />
                   Most Popular
                 </div>
               )}
 
-              {/* Collapsed Header */}
+              {/* Horizontal Card Layout */}
               <button
                 onClick={() => handlePlanClick(plan.id)}
                 className="w-full p-6 text-left focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40 focus:ring-offset-2 rounded-2xl transition-all"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-6">
+                  {/* Left: Plan Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className={`text-lg mb-2 transition-colors ${
-                      isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
-                    }`}>
-                      {plan.name || plan.plan || 'Plan'}
-                    </h3>
-                    <div className="flex items-baseline gap-2 mb-3">
-                      <span className={`text-3xl transition-colors ${
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className={`text-lg transition-colors ${
                         isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
                       }`}>
-                        {formatCurrency(price)}
-                      </span>
+                        {plan.name || plan.plan || 'Plan'}
+                      </h3>
                       {plan.plan && (
                         <span className="text-sm text-neutral-500">/ {plan.plan}</span>
                       )}
                     </div>
-                    {!isExpanded && plan.medication && (
-                      <p className="text-sm text-neutral-600 truncate">{plan.medication}</p>
+                    {plan.medication && (
+                      <p className="text-sm text-neutral-600 mb-1">{plan.medication}</p>
+                    )}
+                    {plan.pharmacy && (
+                      <p className="text-xs text-neutral-500">{plan.pharmacy}</p>
                     )}
                   </div>
 
-                  {/* Status indicators */}
-                  <div className="flex flex-col items-end gap-2">
+                  {/* Center: Price */}
+                  <div className="flex-shrink-0 text-center px-6">
+                    <span className={`text-4xl block transition-colors ${
+                      isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
+                    }`}>
+                      {formatCurrency(price)}
+                    </span>
+                  </div>
+
+                  {/* Right: Status & Expand */}
+                  <div className="flex-shrink-0 flex items-center gap-3">
                     {isSelected && (
                       <motion.div
                         initial={{ scale: 0, rotate: -180 }}

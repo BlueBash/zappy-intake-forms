@@ -41,7 +41,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className={`
               block w-full rounded-lg transition-all
               py-[18px] px-5 text-[1.0625rem] text-stone-900
-              border-2
+              border
               focus:outline-none focus:ring-0 focus:shadow-none
               ${hasTrailingAdornment ? 'pr-14' : ''}
               ${error

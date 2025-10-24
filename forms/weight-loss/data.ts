@@ -67,33 +67,49 @@ const formConfig: FormConfig = {
       "next": "goal.challenges"
     },
     {
-      "id": "goal.challenges",
-      "type": "multi_select",
-      "phase": "qualify",
-      "title": "What are your biggest challenges?",
-      "help_text": "Understanding your obstacles helps us support you better",
-      "options": [
-        { "value": "cravings", "label": "Controlling cravings and hunger" },
-        { "value": "time", "label": "Finding time to exercise" },
-        { "value": "motivation", "label": "Staying motivated" },
-        { "value": "plateaus", "label": "Breaking through plateaus" },
-        { "value": "consistency", "label": "Being consistent" },
-        { "value": "other", "label": "Other" }
-      ],
-      "other_text_id": "goal_challenges_other",
-      "required": true,
-      "next": "demographics.state"
-    },
-    {
-      "id": "demographics.state",
+      "id": "treatment.medication_preference_initial",
       "type": "single_select",
-      "phase": "qualify",
-      "title": "Which state do you live in?",
-      "help_text": "This helps us determine medication availability in your area.",
-      "auto_advance": false,
-      "options": [],
+      "phase": "treatment",
+      "title": "Do you have a GLP-1 medication in mind?",
+      "auto_advance": true,
       "required": true,
-      "next": "demographics.dob"
+      "options": [
+        { "value": "yes", "label": "Yes" },
+        { "value": "no", "label": "No, I am open to recommendations" }
+      ],
+      "next_logic": [
+        {
+          "if": "preferred_medication == 'wegovy'",
+          "go_to": "treatment.plan_selection.wegovy"
+        },
+        {
+          "if": "preferred_medication == 'semaglutide_compound'",
+          "go_to": "treatment.plan_selection.semaglutide_compound"
+        },
+        {
+          "if": "preferred_medication == 'zepbound'",
+          "go_to": "treatment.plan_selection.zepbound"
+        },
+        {
+          "if": "preferred_medication == 'tirzepatide_compound'",
+          "go_to": "treatment.plan_selection.tirzepatide_compound"
+        },
+        {
+          "if": "preferred_medication == 'saxenda'",
+          "go_to": "treatment.plan_selection.saxenda"
+        },
+        {
+          "if": "preferred_medication == 'victoza'",
+          "go_to": "treatment.plan_selection.victoza"
+        },
+        {
+          "if": "preferred_medication == 'liraglutide_compound'",
+          "go_to": "treatment.plan_selection.liraglutide_compound"
+        },
+        {
+          "else": "treatment.plan_selection.generic"
+        }
+      ]
     },
     {
       "id": "demographics.dob",
@@ -1854,33 +1870,17 @@ const formConfig: FormConfig = {
         { "value": "yes", "label": "Yes" },
         { "value": "no", "label": "No, I am open to recommendations" }
       ],
-      "next_logic": [
-        {
-          "if": "answer == 'yes'",
-          "go_to": "treatment.medication_preference"
-        },
-        {
-          "else": "treatment.plan_selection.generic"
-        }
-      ]
-    },
-    {
-      "id": "treatment.medication_preference",
-      "type": "multi_select",
-      "phase": "treatment",
-      "title": "Which medications interest you?",
-      "required": true,
       "next": "treatment.plan_selection.generic"
     },
     {
-      "id": "treatment.plan_selection.semaglutide_brand",
+      "id": "treatment.plan_selection.wegovy",
       "type": "single_select",
       "phase": "treatment",
-      "title": "Choose Your Brand Semaglutide Plan",
+      "title": "Choose Your Wegovy Plan",
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
+      "next": "transition.final_section"
     },
     {
       "id": "treatment.plan_selection.semaglutide_compound",
@@ -1890,17 +1890,17 @@ const formConfig: FormConfig = {
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
+      "next": "transition.final_section"
     },
     {
-      "id": "treatment.plan_selection.tirzepatide_brand",
+      "id": "treatment.plan_selection.zepbound",
       "type": "single_select",
       "phase": "treatment",
-      "title": "Choose Your Brand Tirzepatide Plan",
+      "title": "Choose Your Zepbound Plan",
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
+      "next": "transition.final_section"
     },
     {
       "id": "treatment.plan_selection.tirzepatide_compound",
@@ -1910,7 +1910,37 @@ const formConfig: FormConfig = {
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
+      "next": "transition.final_section"
+    },
+    {
+      "id": "treatment.plan_selection.saxenda",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Choose Your Saxenda Plan",
+      "help_text": "Includes medication, provider consultations, and support.",
+      "auto_advance": true,
+      "required": true,
+      "next": "transition.final_section"
+    },
+    {
+      "id": "treatment.plan_selection.victoza",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Choose Your Victoza Plan",
+      "help_text": "Includes medication, provider consultations, and support.",
+      "auto_advance": true,
+      "required": true,
+      "next": "transition.final_section"
+    },
+    {
+      "id": "treatment.plan_selection.liraglutide_compound",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Choose Your Compounded Liraglutide Plan",
+      "help_text": "Includes medication, provider consultations, and support.",
+      "auto_advance": true,
+      "required": true,
+      "next": "transition.final_section"
     },
     {
       "id": "treatment.plan_selection.generic",
@@ -1920,15 +1950,6 @@ const formConfig: FormConfig = {
       "help_text": "A licensed healthcare provider will review your information and may recommend appropriate treatment. This is not a guarantee for a prescription.",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
-    },
-    {
-      "id": "logistics.discount_code",
-      "type": "text",
-      "phase": "treatment",
-      "title": "Have a discount code?",
-      "placeholder": "Enter code",
-      "required": false,
       "next": "transition.final_section"
     },
     {
@@ -2051,6 +2072,7 @@ const formConfig: FormConfig = {
       "type": "composite",
       "phase": "treatment",
       "title": "Create your account",
+      "help_text": "By creating an account, you agree to our Terms of Service, Privacy Policy, Telehealth Consent, and HIPAA Authorization. You understand prescriptions are at provider discretion.",
       "fields": [
         {
           "id": "password",
@@ -2073,24 +2095,6 @@ const formConfig: FormConfig = {
             "matches": "password",
             "error": "Passwords don't match"
           }
-        },
-        {
-          "id": "all_consents",
-          "type": "consent_item",
-          "label": "By creating an account, I agree to the Terms of Service, Privacy Policy, Telehealth Consent, and HIPAA Authorization. I understand prescriptions are at provider discretion.",
-          "links": [
-            { "label": "Terms of Service", "url": "https://hybrid.com/terms" },
-            { "label": "Privacy Policy", "url": "https://hybrid.com/privacy" },
-            { "label": "Telehealth Consent", "url": "https://hybrid.com/telehealth" },
-            { "label": "HIPAA Authorization", "url": "https://hybrid.com/hipaa" }
-          ],
-          "required": true
-        },
-        {
-          "id": "notification_consent",
-          "type": "consent_item",
-          "label": "Send me helpful tips and updates",
-          "required": false
         }
       ],
       "next": "complete.success"
@@ -2311,32 +2315,9 @@ const formConfig: FormConfig = {
       "victoza_dose",
       "victoza_currently_taking",
       "victoza_why_stopped",
-      "victoza_side_effects",
-      "other_name",
-      "other_duration",
-      "other_dose",
-      "other_currently_taking",
-      "other_why_stopped",
-      "other_side_effects",
-      "treatment.medication_preference",
-      "treatment.side_effect_history",
-      "side_effect_history_other",
-      "treatment.side_effect_plan_interest",
-      "address_line1",
-      "address_line2",
-      "city",
-      "state",
-      "zip_code",
-      "medication_preferences",
-      "medication_pharmacy_preferences"
+      "victoza_side_effects"
     ],
-    "summary_template": "PATIENT: {first_name} {last_name} | DOB: {demographics.dob} (Age {calc.age}) | {sex_birth} | {demographics.state}\n\nGOALS: Current {weight}lb → Goal {goal_weight}lb ({goal.range}) | BMI: {calc.bmi:.1f} | Activity: {activity_level}\n\nRED FLAGS: {flags}\n\nED HISTORY: {assess.eating_relationship} | Type: {assess.eating_disorder_type}\nMENTAL HEALTH: {mental_health_diagnosis} | Suicidal ideation: {current_thoughts} | Recent psych hospitalization: {recent_hospitalization}\nSUBSTANCE: Alcohol: {assess.substance_use_alcohol} | Tobacco: {assess.substance_use_tobacco} | Other: {assess.substance_use_recreational}\n\nMEDICAL: Diabetes: {assess.diabetes_type} | Pregnancy: {assess.pregnancy} | Conditions: {assess.medical_conditions}\nMEDICATIONS: {assess.current_medications}, {medications_detail}\nALLERGIES: {allergies_detail}\n\nGLP-1 EXPERIENCE: {glp1_status} | Medications used: {medications_used} | Currently taking: {currently_taking}\nExperience notes: {glp1_experience_notes}\nMEDICATION INTEREST: {treatment.medication_preference}\nSUPPORT NEEDS: {treatment.side_effect_management}\n\nADDITIONAL NOTES: {journey_notes}",
-    "risk_stratification": {
-      "critical": ["age_out_of_range", "underweight_no_meds", "anorexia_bulimia_exclusion", "thyroid_cancer_exclusion", "men2_exclusion", "pregnancy_exclusion", "glp1_allergy_exclusion", "insulin_requires_coordination", "type1_requires_specialist_clearance", "active_suicidal_ideation"],
-      "high": ["eating_disorder_flag", "pancreatitis_review", "active_gallbladder_review", "hard_drug_use", "recent_psych_hospitalization"],
-      "medium": ["low_bmi_review", "heavy_alcohol_use"],
-      "review_required": ["pediatric_consent_required"]
-    }
+    "summary_template": "Patient Health Summary"
   }
 };
 

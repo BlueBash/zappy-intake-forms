@@ -350,6 +350,22 @@ const MedicationPreferenceInitialScreen: React.FC<ScreenProps & { screen: any }>
                                       </button>
                                     ))}
                                   </div>
+                                  
+                                  <div className="mt-3 pt-3 border-t border-primary/20">
+                                    <button
+                                      onClick={() => handleDoseSelect('no_preference')}
+                                      className={`w-full py-3 px-4 rounded-lg border-2 transition-all duration-200 text-sm ${
+                                        selectedDose === 'no_preference'
+                                          ? 'border-primary bg-primary text-white'
+                                          : 'border-gray-200 bg-white text-neutral-700 hover:border-primary/30'
+                                      }`}
+                                    >
+                                      <div className="font-medium">I have no preference</div>
+                                      <div className={`text-xs mt-1 ${selectedDose === 'no_preference' ? 'text-white/80' : 'text-neutral-500'}`}>
+                                        I'll follow medical advice
+                                      </div>
+                                    </button>
+                                  </div>
 
                                   {/* Done Button - Right aligned */}
                                   {showDoneButton && (
