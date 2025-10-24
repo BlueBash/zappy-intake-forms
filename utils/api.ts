@@ -74,6 +74,37 @@ export interface InvoicePaymentIntentResponse {
   paymentIntent?: PaymentIntentResponse;
 }
 
+export interface LeadPayload {
+  email?: string;
+  service?: string;
+  status?: string;
+  meta_data?: Record<string, unknown>;
+  form_request_id?: string;
+  id?: string;
+}
+
+export interface Lead {
+  id: string;
+  form_request_id?: string | null;
+  email?: string | null;
+  service?: string | null;
+  status?: string | null;
+  meta_data?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string;
+  [key: string]: unknown;
+}
+
+export interface LeadResponse {
+  lead: Lead;
+}
+
+export interface SubmitConsultationResponse {
+  message?: string;
+  form_request_id?: string;
+  [key: string]: unknown;
+}
+
 export interface CreatePaymentIntentPayload {
   amount?: number;
   currency?: string;
@@ -90,7 +121,7 @@ const API_KEY = import.meta.env.VITE_BACKEND_API_KEY || '';
 
 const defaultHeaders: HeadersInit = {
   'Content-Type': 'application/json',
-  ...(API_KEY ? { 'X-API-KEY': API_KEY } : {}),
+  ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
 };
 
 const get = async <T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> => {
@@ -159,7 +190,10 @@ export const apiClient = {
     }),
 
   submitConsultation: (payload: Record<string, unknown>) =>
-    post<{ message?: string }>('/consultations', payload),
+    post<SubmitConsultationResponse>('/consultations', payload),
+
+  createOrUpdateLead: (payload: LeadPayload) =>
+    post<LeadResponse>('/consultations/leads', payload),
 
   createPaymentIntent: (payload: CreatePaymentIntentPayload) =>
     post<PaymentIntentResponse>('/payments/payment-intent', payload),
