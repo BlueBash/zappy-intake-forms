@@ -2093,6 +2093,14 @@ const formConfig: FormConfig = {
           "required": false
         }
       ],
+      "next": "review.summary"
+    },
+    {
+      "id": "review.summary",
+      "type": "review",
+      "phase": "treatment",
+      "title": "Does everything look right?",
+      "help_text": "Review your answers before you submit so we can get started right away.",
       "next": "complete.success"
     },
     {
