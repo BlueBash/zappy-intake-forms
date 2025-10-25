@@ -37,7 +37,7 @@ const formConfig: FormConfig = {
       "id": "goal.range",
       "type": "single_select",
       "phase": "qualify",
-      "title": "How much weight would you like to lose?",
+      "title": "Let's start with your goals—how much weight are you looking to lose?",
       "auto_advance": true,
       "options": [
         { "value": "1-15", "label": "1–15 lb" },
@@ -53,8 +53,8 @@ const formConfig: FormConfig = {
       "id": "goal.motivations",
       "type": "multi_select",
       "phase": "qualify",
-      "title": "Which of these goals are important to you?",
-      "help_text": "This helps us personalize your experience",
+      "title": "What matters most to you on this journey?",
+      "help_text": "We'll tailor everything to your specific goals",
       "options": [
         { "value": "lose_weight", "label": "Lose weight and keep it off" },
         { "value": "boost_energy", "label": "Boost energy and feel better" },
@@ -70,8 +70,8 @@ const formConfig: FormConfig = {
       "id": "goal.challenges",
       "type": "multi_select",
       "phase": "qualify",
-      "title": "What are your biggest challenges?",
-      "help_text": "Understanding your obstacles helps us support you better",
+      "title": "What's been making weight loss tough for you?",
+      "help_text": "No judgment—we all have obstacles. Understanding yours helps us support you better",
       "options": [
         { "value": "cravings", "label": "Controlling cravings and hunger" },
         { "value": "time", "label": "Finding time to exercise" },
@@ -99,8 +99,8 @@ const formConfig: FormConfig = {
       "id": "demographics.dob",
       "type": "text",
       "phase": "qualify",
-      "title": "When were you born?",
-      "help_text": "We need this to determine if you're eligible for treatment",
+      "title": "What's your date of birth?",
+      "help_text": "This helps us make sure our program is safe and right for your age group",
       "placeholder": "MM/DD/YYYY",
       "mask": "##/##/####",
       "required": true,
@@ -198,8 +198,8 @@ const formConfig: FormConfig = {
       "id": "assess.body_measurements",
       "type": "composite",
       "phase": "qualify",
-      "title": "What's your height and weight?",
-      "post_screen_note": "Thanks for sharing. This helps us understand your starting point.",
+      "title": "Let's get your starting measurements",
+      "post_screen_note": "Thanks for trusting us with these numbers. They help us create your personalized plan.",
       "fields": [
         [
           {
@@ -241,29 +241,7 @@ const formConfig: FormConfig = {
           "validation": {
             "min": 70,
             "max": 700,
-            "error": "Enter weight between 70-700 lbs",
-            "less_than_field": {
-              "field": "highest_weight",
-              "error": "Current weight cannot be higher than your highest weight"
-            }
-          }
-        },
-        {
-          "id": "highest_weight",
-          "type": "number",
-          "label": "What was your highest weight?",
-          "help_text": "This helps us understand your journey",
-          "min": 70,
-          "max": 700,
-          "required": true,
-          "validation": {
-            "min": 70,
-            "max": 700,
-            "error": "Enter weight between 70-700 lbs",
-            "greater_than_field": {
-              "field": "weight",
-              "error": "Highest weight must be greater than or equal to current weight"
-            }
+            "error": "Enter weight between 70-700 lbs"
           }
         }
       ],
@@ -312,32 +290,76 @@ const formConfig: FormConfig = {
     },
     {
       "id": "assess.goal_weight",
-      "type": "number",
+      "type": "composite",
       "phase": "qualify",
-      "title": "What's your goal weight?",
-      "help_text": "A rough estimate is fine",
-      "label": "Target weight",
-      "suffix": "lb",
-      "min": 80,
-      "max": 500,
-      "required": true,
-      "validation": {
-        "min": 80,
-        "max": 500,
-        "error": "Enter weight between 80-500 lbs",
-        "less_than_field": {
-          "field": "weight",
-          "error": "Goal weight must be less than your current weight"
+      "title": "What are your weight goals?",
+      "help_text": "Understanding where you've been and where you want to go helps us create your personalized plan",
+      "fields": [
+        {
+          "id": "goal_weight",
+          "type": "number",
+          "label": "Target weight (lb)",
+          "min": 80,
+          "max": 500,
+          "required": true,
+          "validation": {
+            "min": 80,
+            "max": 500,
+            "error": "Enter weight between 80-500 lbs",
+            "less_than_field": {
+              "field": "weight",
+              "error": "Goal weight must be less than your current weight"
+            }
+          }
+        },
+        {
+          "id": "highest_weight",
+          "type": "number",
+          "label": "What was your highest weight? (lb)",
+          "help_text": "This helps us understand your journey",
+          "min": 70,
+          "max": 700,
+          "required": true,
+          "validation": {
+            "min": 70,
+            "max": 700,
+            "error": "Enter weight between 70-700 lbs",
+            "greater_than_field": {
+              "field": "weight",
+              "error": "Highest weight must be greater than or equal to current weight"
+            }
+          }
         }
-      },
-      "next": "interstitial.success"
+      ],
+      "next": "visual.treatment_intro"
     },
 
+    // Visual Treatment Introduction
     {
-      "id": "interstitial.success",
+      "id": "visual.treatment_intro",
+      "type": "content",
+      "phase": "qualify",
+      "headline": "Real Results",
+      "body": "With our GLP-1 program, members achieve significant, sustainable weight loss. The data speaks for itself.",
+      "cta_primary": {
+        "label": "Continue"
+      },
+      "next": "visual.weight_loss_graph"
+    },
+
+    // Weight Loss Graph Visualization with Interstitial
+    {
+      "id": "visual.weight_loss_graph",
       "type": "interstitial",
       "phase": "qualify",
-      "variant": "stat_success",
+      "variant": "weight_loss_graph",
+      "title": "See the Difference",
+      "subtitle": "Clinically-proven weight loss with medical supervision",
+      "message": "",
+      "stat_number": "20%",
+      "stat_text": "average weight loss",
+      "stat_subtitle": "months to goal",
+      "stat_highlight": "Zappy",
       "next": "capture.email"
     },
 
@@ -371,7 +393,7 @@ const formConfig: FormConfig = {
       "type": "content",
       "phase": "qualify",
       "headline": "Thank you! Now, let's build your health profile",
-      "body": "Next up: a quick health assessment to make sure we find the safest, most effective treatment for you.\n\nThink of this as your personal roadmap—every answer helps us personalize your care.",
+      "body": "Your Privacy: Your health information is protected under HIPAA. We use secure storage and encryption, and your data is only shared with your healthcare provider—never sold to third parties.",
       "cta_primary": {
         "label": "Continue"
       },
@@ -420,22 +442,21 @@ const formConfig: FormConfig = {
       "next": "assess.mental_health"
     },
 
-    // Mental Health Cluster
+    // Mental Health Cluster with Suicidal Ideation
     {
       "id": "assess.mental_health",
       "type": "composite",
       "phase": "assess_safety",
-      "title": "🔒 Your mental health matters to us",
-      "help_text": "These medications can affect mood and appetite. We ask these questions to ensure your safety and find the best treatment for you. Your information is protected by HIPAA.",
+      "title": "Your mental health matters to us",
+      "help_text": "These questions help us make sure this medication is right for you and that we can support you properly",
       "safety_critical": true,
-      "post_screen_note": "Thank you for sharing this sensitive information. Your honesty helps us provide the safest, most personalized care possible.",
-      "auto_advance_on": "none",
-      "auto_advance_delay": 600,
+      "post_screen_note": "Thank you for sharing this sensitive information.",
       "fields": [
         {
           "id": "mental_health_diagnosis",
           "type": "multi_select",
-          "label": "Mental health conditions",
+          "label": "Have you been diagnosed with any of these?",
+          "auto_advance": true,
           "options": [
             { "value": "none", "label": "None of these" },
             { "value": "depression", "label": "Depression" },
@@ -444,6 +465,7 @@ const formConfig: FormConfig = {
             { "value": "panic", "label": "Panic disorder" },
             { "value": "ptsd", "label": "PTSD" },
             { "value": "ocd", "label": "OCD" },
+            { "value": "thoughts_harm", "label": "Thoughts of harming yourself or others" },
             { "value": "other", "label": "Other" }
           ]
         },
@@ -458,25 +480,9 @@ const formConfig: FormConfig = {
           }
         }
       ],
-      "next": "assess.mental_health_ideation"
-    },
-    {
-      "id": "assess.mental_health_ideation",
-      "type": "single_select",
-      "phase": "assess_safety",
-      "field_id": "current_thoughts",
-      "title": "We need to ask an important safety question",
-      "help_text": "Are you currently having thoughts of harming yourself or others? GLP-1 medications can affect mood in some people, so this question helps us ensure your safety throughout treatment.",
-      "safety_critical": true,
-      "auto_advance": true,
-      "options": [
-        { "value": "no", "label": "No" },
-        { "value": "yes", "label": "Yes" }
-      ],
-      "required": true,
       "next_logic": [
         {
-          "if": "answer == 'yes'",
+          "if": "mental_health_diagnosis contains 'thoughts_harm'",
           "go_to": "assess.mental_health_crisis"
         },
         {
@@ -489,8 +495,8 @@ const formConfig: FormConfig = {
       "type": "terminal",
       "phase": "assess_safety",
       "status": "warning",
-      "title": "Your safety comes first",
-      "body": "Your safety comes first. Weight loss medications can affect mood, so we need you to get support before continuing.\n\nWe care about you and want you to get the support you deserve.\n\n**Please reach out now:**",
+      "title": "We're worried about you",
+      "body": "Thank you for being honest with us. Your safety matters more than anything else.\n\nWeight loss medications can affect mood, so we can't move forward right now. But we want to make sure you get the support you deserve.\n\n**Please reach out now:**",
       "resources": [
         {
           "icon_name": "phone",
@@ -513,7 +519,8 @@ const formConfig: FormConfig = {
       "id": "assess.eating_relationship",
       "type": "single_select",
       "phase": "assess_safety",
-      "title": "Have you been diagnosed with an eating disorder?",
+      "title": "We need to ask about eating disorders",
+      "help_text": "This isn't about judgment—it's about making sure medication is safe for you. If you have concerns, we'll work with you to find the right path forward",
       "safety_critical": true,
       "auto_advance": true,
       "options": [
@@ -606,6 +613,7 @@ const formConfig: FormConfig = {
       "type": "single_select",
       "phase": "assess_medical",
       "title": "How often do you drink alcohol?",
+      "help_text": "Alcohol can interact with medication, so this helps us keep you safe",
       "auto_advance": true,
       "required": true,
       "options": [
@@ -1208,8 +1216,8 @@ const formConfig: FormConfig = {
       "id": "treatment.glp1_history",
       "type": "composite",
       "phase": "treatment",
-      "title": "Which GLP-1 medications have you used?",
-      "help_text": "Details appear below each one you check",
+      "title": "Tell us about your experience with GLP-1s",
+      "help_text": "Check any you've tried—we'll ask for a few details to understand what worked (or didn't) for you",
       "fields": [
         {
           "id": "used_wegovy",

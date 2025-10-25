@@ -57,7 +57,7 @@ export default function PlanSelectionScreen({ screen, answers, updateAnswer, onS
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
     >
-      <ScreenLayout title={title || 'Select Your Plan'} helpText={helpText}>
+      <ScreenLayout title={title || 'Select Your Plan'} helpText="">
         {selectedMedicationName && (
           <div className="mb-6 p-4 bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5 rounded-xl border border-[#0D9488]/20">
             <p className="text-sm text-neutral-600">

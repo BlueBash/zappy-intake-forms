@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Check, CheckCircle2, Sparkles } from 'lucide-react';
-import { apiClient, type PackagePlan } from '../../utils/api';
+import { type PackagePlan, apiClient } from '../../utils/api';
+import { Check, TrendingDown, Sparkles, Calendar, Package } from 'lucide-react';
 
 interface PlanSelectionOnlyProps {
   medication: string;
@@ -12,6 +12,7 @@ interface PlanSelectionOnlyProps {
   pharmacyName?: string;
 }
 
+// Helper to format currency values
 const formatCurrency = (value?: number) => {
   if (typeof value !== 'number' || Number.isNaN(value)) return '—';
   return new Intl.NumberFormat('en-US', {
@@ -21,18 +22,17 @@ const formatCurrency = (value?: number) => {
   }).format(value);
 };
 
-const PlanSelectionOnly: React.FC<PlanSelectionOnlyProps> = ({
+export default function PlanSelectionOnly({
   medication,
   selectedPlanId,
   onSelect,
   state = '',
   serviceType = 'Weight Loss',
   pharmacyName = '',
-}) => {
+}: PlanSelectionOnlyProps) {
   const [plans, setPlans] = useState<PackagePlan[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -45,70 +45,10 @@ const PlanSelectionOnly: React.FC<PlanSelectionOnlyProps> = ({
       setError('');
 
       try {
-        // Fetch plans from API
         const packages = await apiClient.getPackages(state, serviceType, medication, pharmacyName);
-        
-        if (packages && packages.length > 0) {
-          setPlans(packages);
-        } else {
-          // Fallback to mock plans if API returns empty
-          const mockPlans: PackagePlan[] = [
-          {
-            id: '1-month',
-            name: '1 Month Supply',
-            plan: '1 Month Supply',
-            invoice_amount: 299,
-            invoiceAmount: 299,
-            medication: medication,
-            pharmacy: 'Multiple Available',
-            popular: false,
-            features: [
-              'Monthly medication supply',
-              'Provider consultation included',
-              'Ongoing support',
-              'Cancel anytime'
-            ]
-          },
-          {
-            id: '3-month',
-            name: '3 Month Supply',
-            plan: '3 Month Supply',
-            invoice_amount: 849,
-            invoiceAmount: 849,
-            medication: medication,
-            pharmacy: 'Multiple Available',
-            popular: true,
-            features: [
-              '3 months of medication',
-              'Save 5% vs monthly',
-              'Provider consultation included',
-              'Priority support',
-              'Free shipping'
-            ]
-          },
-          {
-            id: '6-month',
-            name: '6 Month Supply',
-            plan: '6 Month Supply',
-            invoice_amount: 1599,
-            invoiceAmount: 1599,
-            medication: medication,
-            pharmacy: 'Multiple Available',
-            popular: false,
-            features: [
-              '6 months of medication',
-              'Save 10% vs monthly',
-              'Provider consultation included',
-              'Premium support',
-              'Free priority shipping',
-              'Best value'
-            ]
-          }
-          ];
-          setPlans(mockPlans);
-        }
+        setPlans(packages || []);
       } catch (fetchError) {
-        console.error(fetchError);
+        console.error('Error fetching plans:', fetchError);
         setError(fetchError instanceof Error ? fetchError.message : 'Failed to load plans');
         setPlans([]);
       } finally {
@@ -118,15 +58,6 @@ const PlanSelectionOnly: React.FC<PlanSelectionOnlyProps> = ({
 
     fetchPlans();
   }, [medication, state, serviceType, pharmacyName]);
-
-  const handlePlanClick = (planId: string) => {
-    setExpandedPlanId(expandedPlanId === planId ? null : planId);
-  };
-
-  const handleSelectPlan = (planId: string, plan: PackagePlan) => {
-    onSelect(planId, plan);
-    setExpandedPlanId(null); // Collapse after selection
-  };
 
   if (loading) {
     return (
@@ -147,6 +78,14 @@ const PlanSelectionOnly: React.FC<PlanSelectionOnlyProps> = ({
     );
   }
 
+  if (!medication) {
+    return (
+      <div className="text-center py-8 text-neutral-500">
+        Please select a medication first
+      </div>
+    );
+  }
+
   if (plans.length === 0) {
     return (
       <div className="text-center py-12">
@@ -157,178 +96,151 @@ const PlanSelectionOnly: React.FC<PlanSelectionOnlyProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      {selectedPlanId && (
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-2"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#0D9488]/10 via-[#FF7A59]/10 to-[#0D9488]/10 border border-[#0D9488]/20">
-            <CheckCircle2 className="w-4 h-4 text-[#0D9488]" />
-            <span className="text-sm text-neutral-700">Plan selected</span>
+      {/* Image Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-xl"
+      >
+        <div className="relative h-48 sm:h-56 bg-gradient-to-br from-[#0D9488]/10 to-[#14B8A6]/10 flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,_#0D9488_1px,_transparent_1px)] bg-[length:20px_20px]" />
+          <div className="relative z-10 text-center text-white px-6">
+            <Package className="w-12 h-12 mx-auto mb-3 opacity-80" />
+            <h3 className="text-xl font-semibold mb-1">Professional-Grade Medication</h3>
+            <p className="text-sm text-white/90">Delivered directly to your door</p>
           </div>
-        </motion.div>
-      )}
+        </div>
+      </motion.div>
 
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="space-y-4">
         {plans.map((plan, index) => {
+          const isSelected = plan.id === selectedPlanId;
           const price = plan.invoice_amount ?? plan.invoiceAmount;
-          const isSelected = selectedPlanId === plan.id;
-          const isExpanded = expandedPlanId === plan.id;
+          const savingsPercent = (plan as any).savingsPercent || 0;
+          const savings = (plan as any).savings || 0;
 
           return (
-            <motion.div
+            <motion.button
               key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.08, duration: 0.4 }}
-              className={`relative rounded-xl border-2 transition-all duration-300 overflow-hidden ${
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              onClick={() => onSelect(plan.id, plan)}
+              className={`relative w-full p-5 rounded-xl border-2 transition-all duration-300 text-left overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40 focus:ring-offset-2 ${
                 isSelected
-                  ? 'border-[#0D9488] bg-gradient-to-br from-[#0D9488]/5 via-white to-[#14B8A6]/5 shadow-xl'
-                  : 'border-gray-300 bg-white hover:border-[#0D9488]/50 hover:shadow-lg'
+                  ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 via-white to-[#14B8A6]/5 shadow-lg'
+                  : 'border-gray-200 bg-white hover:border-[#0D9488]/40 hover:shadow-md'
               }`}
             >
               {/* Popular Badge */}
               {plan.popular && (
-                <div className="absolute top-0 right-0 bg-gradient-to-r from-[#FF7A59] to-[#FF6B4A] text-white px-4 py-1.5 rounded-bl-xl rounded-tr-xl text-xs font-semibold flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  Most Popular
+                <div className="absolute top-0 right-0 overflow-hidden">
+                  <div className="relative">
+                    <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white text-xs flex items-center gap-1 shadow-md">
+                      <Sparkles className="w-3 h-3 fill-current" />
+                      <span>Most Popular</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* Card Header */}
-              <button
-                onClick={() => handlePlanClick(plan.id)}
-                className="w-full p-6 text-left focus:outline-none transition-all"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`text-lg font-medium mb-2 transition-colors ${
+              <div className="flex items-start justify-between gap-4 mt-1">
+                <div className="flex-1">
+                  <h4 className={`text-lg mb-1 transition-colors ${
+                    isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
+                  }`}>
+                    {plan.name || plan.plan}
+                  </h4>
+                  <p className="text-sm text-neutral-600 mb-3">
+                    {(plan as any).description || plan.description || 'Quality medication plan'}
+                  </p>
+
+                  {/* Billing & Delivery Details */}
+                  {((plan as any).billingFrequency || (plan as any).deliveryInfo) && (
+                    <div className="space-y-1.5 mb-3">
+                      {(plan as any).billingFrequency && (
+                        <div className="flex items-center gap-2 text-xs text-neutral-600">
+                          <Calendar className="w-3.5 h-3.5 text-[#0D9488]" />
+                          <span>{(plan as any).billingFrequency}</span>
+                        </div>
+                      )}
+                      {(plan as any).deliveryInfo && (
+                        <div className="flex items-center gap-2 text-xs text-neutral-600">
+                          <Package className="w-3.5 h-3.5 text-[#0D9488]" />
+                          <span>{(plan as any).deliveryInfo}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Savings Badge */}
+                  {savings > 0 && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FF7A59]/10 to-[#FF9A7F]/10 border border-[#FF7A59]/20">
+                      <TrendingDown className="w-4 h-4 text-[#FF7A59]" />
+                      <span className="text-sm text-[#FF7A59]">
+                        Save {formatCurrency(savings)} ({savingsPercent}%)
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <div className="text-right">
+                    <div className={`text-2xl font-bold transition-colors ${
                       isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
                     }`}>
-                      {plan.name || plan.plan}
-                    </h3>
-                    <div className="flex items-baseline gap-1 mb-3">
-                      <span className={`text-3xl font-bold transition-colors ${
-                        isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
-                      }`}>
-                        {formatCurrency(price)}
-                      </span>
-                      <span className="text-sm text-neutral-500">/total</span>
+                      {formatCurrency(price)}
                     </div>
-                    {!isExpanded && (
-                      <p className="text-sm text-neutral-600">{plan.medication}</p>
-                    )}
+                    <div className="text-xs text-neutral-500">/month</div>
                   </div>
 
-                  {/* Status Icons */}
-                  <div className="flex flex-col items-end gap-2">
-                    {isSelected && (
-                      <motion.div
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                        className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0D9488] to-[#14B8A6] flex items-center justify-center shadow-lg"
-                      >
-                        <Check className="w-5 h-5 text-white" strokeWidth={3} />
-                      </motion.div>
-                    )}
+                  {isSelected && (
                     <motion.div
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                      className={`p-2 rounded-lg transition-all ${
-                        isExpanded 
-                          ? 'bg-[#0D9488]/10' 
-                          : 'bg-gray-100 hover:bg-gray-200'
-                      }`}
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                      className="w-7 h-7 rounded-full bg-gradient-to-br from-[#0D9488] to-[#14B8A6] flex items-center justify-center shadow-md flex-shrink-0"
                     >
-                      <ChevronDown className={`w-5 h-5 transition-colors ${
-                        isExpanded ? 'text-[#0D9488]' : 'text-neutral-600'
-                      }`} />
+                      <Check className="w-5 h-5 text-white" strokeWidth={3} />
                     </motion.div>
-                  </div>
+                  )}
                 </div>
-              </button>
+              </div>
 
-              {/* Expanded Details */}
-              <AnimatePresence>
-                {isExpanded && (
+              {/* Features List - Expanded when selected */}
+              {isSelected && Array.isArray(plan.features) && plan.features.length > 0 && (
+                <AnimatePresence>
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
+                    className="overflow-hidden mt-4 pt-4 border-t border-[#0D9488]/10"
                   >
-                    <div className="px-6 pb-6 pt-2 space-y-4 border-t border-[#0D9488]/10">
-                      {/* Details */}
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <span className="text-sm text-neutral-500 min-w-[80px]">Medication:</span>
-                          <span className="text-sm text-neutral-900">{plan.medication}</span>
-                        </div>
-                        {plan.pharmacy && (
-                          <div className="flex items-start gap-2">
-                            <span className="text-sm text-neutral-500 min-w-[80px]">Pharmacy:</span>
-                            <span className="text-sm text-neutral-900">{plan.pharmacy}</span>
+                    <div className="space-y-2">
+                      {plan.features.map((feature, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="flex items-start gap-2 text-sm text-neutral-700"
+                        >
+                          <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[#0D9488] to-[#14B8A6] flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
                           </div>
-                        )}
-                      </div>
-
-                      {/* Features */}
-                      {Array.isArray(plan.features) && plan.features.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium text-neutral-900 mb-3">What's included:</p>
-                          <ul className="space-y-2">
-                            {plan.features.map((feature, idx) => (
-                              <motion.li
-                                key={idx}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="flex items-start gap-2 text-sm text-neutral-700"
-                              >
-                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#0D9488] to-[#14B8A6] flex items-center justify-center flex-shrink-0 mt-0.5">
-                                  <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                                </div>
-                                <span>{feature}</span>
-                              </motion.li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {/* Select Button */}
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectPlan(plan.id, plan);
-                        }}
-                        className={`w-full py-3 rounded-xl font-medium transition-all duration-300 shadow-md hover:shadow-lg ${
-                          isSelected
-                            ? 'bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white'
-                            : 'bg-gradient-to-r from-gray-100 to-gray-200 text-neutral-700 hover:from-gray-200 hover:to-gray-300'
-                        }`}
-                      >
-                        <span className="inline-flex items-center gap-2">
-                          {isSelected && <Check className="w-4 h-4" strokeWidth={3} />}
-                          {isSelected ? 'Selected' : 'Select this plan'}
-                        </span>
-                      </motion.button>
+                          <span>{feature}</span>
+                        </motion.div>
+                      ))}
                     </div>
                   </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+                </AnimatePresence>
+              )}
+            </motion.button>
           );
         })}
       </div>
     </div>
   );
-};
-
-export default PlanSelectionOnly;
+}

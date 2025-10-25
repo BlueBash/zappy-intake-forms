@@ -460,7 +460,6 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           )
       }
       case 'medication_details_group': {
-        console.log("asdasdadasdas")
         const groupField = field as MedicationDetailsGroupField;
         const findFirstCheckbox = (items: FieldOrFieldGroup[]): CheckboxField | undefined => {
           for (const item of items) {
@@ -479,32 +478,19 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           if (!primaryCheckbox) return;
 
           const target = event.target as HTMLElement | null;
-          console.log('[CompositeScreen] medication group click', {
-            targetTag: target?.tagName,
-            targetId: target?.id,
-            primaryCheckboxId: primaryCheckbox.id,
-            currentValue: answers[primaryCheckbox.id],
-          });
           if (!target) return;
 
           const interactive = target.closest('input, select, textarea, button, a');
           if (interactive) {
-            console.log('[CompositeScreen] click ignored because interactive element present');
             return;
           }
 
           const labelEl = target.closest('label');
           if (labelEl) {
-            const checkboxInLabel = labelEl.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
-            console.log('[CompositeScreen] click inside label', {
-              hasCheckbox: Boolean(checkboxInLabel),
-              checkboxId: checkboxInLabel?.id,
-            });
             return;
           }
 
           const currentValue = !!answers[primaryCheckbox.id];
-          console.log('[CompositeScreen] toggling primary checkbox to', !currentValue);
           updateAnswer(primaryCheckbox.id, !currentValue);
         };
 
@@ -561,10 +547,6 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                 return;
               }
               event.stopPropagation();
-              console.log('[CompositeScreen] checkbox tile click', {
-                fieldId: checkboxField.id,
-                previousValue: !!value,
-              });
               updateAnswer(checkboxField.id, !value);
             }}
           >
@@ -573,10 +555,6 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
               label={checkboxField.label || ''}
               checked={!!value}
               onChange={(e) => {
-                console.log('[CompositeScreen] checkbox input change', {
-                  fieldId: checkboxField.id,
-                  newValue: e.target.checked,
-                });
                 updateAnswer(checkboxField.id, e.target.checked);
               }}
             />

@@ -290,13 +290,14 @@ export interface TerminalScreen extends BaseScreen {
 
 export interface InterstitialScreen extends BaseScreen {
   type: 'interstitial';
-  variant?: 'stat' | 'motivation' | 'testimonial' | 'trust' | 'process' | 'stat_success' | 'stat_science' | 'stat_personalized';
+  variant?: 'stat' | 'motivation' | 'testimonial' | 'trust' | 'process' | 'stat_success' | 'stat_science' | 'stat_personalized' | 'weight_loss_graph';
   stat_number?: string;
   stat_text?: string;
   stat_highlight?: string;
   background_image?: string;
   stat_subtitle?: string;
   title?: string;
+  subtitle?: string;
   message?: string;
   testimonial_title?: string;
   testimonial_subtitle?: string;

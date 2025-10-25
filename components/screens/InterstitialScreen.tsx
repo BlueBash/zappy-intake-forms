@@ -1,12 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Shield, Lock, Package, CheckCircle2, TrendingUp, Users, Award, FlaskConical, Brain, Heart, Target } from 'lucide-react';
+import WeightLossGraph from '../ui/WeightLossGraph';
 
 interface InterstitialScreenProps {
   screen: {
     id: string;
     type: 'interstitial';
-    variant?: 'stat' | 'motivation' | 'testimonial' | 'trust' | 'process' | 'stat_success' | 'stat_science' | 'stat_personalized';
+    variant?: 'stat' | 'motivation' | 'testimonial' | 'trust' | 'process' | 'stat_success' | 'stat_science' | 'stat_personalized' | 'weight_loss_graph';
     
     // For stat variant
     stat_number?: string;
@@ -17,6 +18,7 @@ interface InterstitialScreenProps {
     
     // For motivation variant
     title?: string;
+    subtitle?: string;
     message?: string;
     
     // For testimonial variant
@@ -476,6 +478,108 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
               </div>
             </div>
           </motion.div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // WEIGHT_LOSS_GRAPH VARIANT - Show treatment impact with graph
+  if (variant === 'weight_loss_graph') {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.6 }}
+        className="min-h-screen flex items-center justify-center p-6 md:p-8 bg-gradient-to-br from-[#FDFBF7] via-white to-[#FFF5F3]"
+      >
+        <div className="w-full max-w-6xl">
+          {/* Header */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-center mb-8"
+          >
+            {screen.title && (
+              <h2 className="text-4xl md:text-5xl text-neutral-900 mb-4">
+                {screen.title}
+              </h2>
+            )}
+            {screen.subtitle && (
+              <p className="text-lg md:text-xl text-neutral-600 max-w-2xl mx-auto">
+                {screen.subtitle}
+              </p>
+            )}
+          </motion.div>
+
+          {/* Graph */}
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="mb-8"
+          >
+            <WeightLossGraph companyName={screen.stat_highlight || 'ZAPPY'} />
+          </motion.div>
+
+          {/* Supporting Message */}
+          {screen.message && (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 2.2, duration: 0.5 }}
+              className="text-center mb-10 max-w-2xl mx-auto"
+            >
+              <p className="text-base md:text-lg text-neutral-700 leading-relaxed">
+                {screen.message}
+              </p>
+            </motion.div>
+          )}
+
+          {/* Stats Row */}
+          {screen.stat_number && screen.stat_text && (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 2.4, duration: 0.5 }}
+              className="flex flex-wrap justify-center gap-8 mb-12"
+            >
+              <div className="text-center">
+                <div className="text-5xl md:text-6xl bg-gradient-to-r from-[#FF6B4A] to-[#FF8A6B] bg-clip-text text-transparent mb-2">
+                  {screen.stat_number}
+                </div>
+                <div className="text-sm text-neutral-600">{screen.stat_text}</div>
+              </div>
+              {screen.stat_subtitle && (
+                <div className="text-center">
+                  <div className="text-5xl md:text-6xl text-neutral-900 mb-2">
+                    12
+                  </div>
+                  <div className="text-sm text-neutral-600">{screen.stat_subtitle}</div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 2.6, duration: 0.5 }}
+            className="flex justify-center"
+          >
+            <motion.button
+              onClick={onSubmit}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="group bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white px-10 py-5 rounded-full flex items-center gap-3 shadow-[0_10px_40px_rgba(13,148,136,0.3)] hover:shadow-[0_20px_60px_rgba(13,148,136,0.4)] transition-all duration-300"
+            >
+              <span className="font-semibold text-lg">Continue</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+            </motion.button>
+          </motion.div>
+
         </div>
       </motion.div>
     );
