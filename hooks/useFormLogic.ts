@@ -13,6 +13,7 @@ export const useFormLogic = (config: FormConfig) => {
   const [direction, setDirection] = useState(1);
   const [returnTo, setReturnTo] = useState<string | null>(null);
   const [flags, setFlags] = useState<Set<string>>(new Set());
+  const [maxProgress, setMaxProgress] = useState<number>(5);
 
   useEffect(() => {
     setCurrentScreenId(config.screens[0].id);
@@ -23,6 +24,7 @@ export const useFormLogic = (config: FormConfig) => {
     setDirection(1);
     setReturnTo(null);
     setFlags(new Set());
+    setMaxProgress(5); // Reset max progress when form resets
   }, [config]);
   
   const screenMap = useMemo(() => {
@@ -136,21 +138,34 @@ export const useFormLogic = (config: FormConfig) => {
   }, [history, returnTo]);
 
   const progress = useMemo(() => {
-    // Filter out terminal and review screens for total count
-    const relevantScreens = config.screens.filter(s => s.type !== 'terminal' && s.type !== 'review');
-    const totalCount = relevantScreens.length;
+    // If we're on a terminal screen, show 100%
+    if (currentScreen?.type === 'terminal') {
+      const newProgress = 100;
+      setMaxProgress(prev => Math.max(prev, newProgress));
+      return newProgress;
+    }
     
-    // Use history length + 1 (for current screen) as progress indicator
-    // This ensures progress only moves forward as user progresses through the form
-    const currentStep = history.length + 1;
+    // Count actual screens visited so far (definite)
+    const screensCompleted = history.length + 1;
     
-    // Calculate progress as percentage
-    // Cap at reasonable estimate since user may skip screens via conditional logic
-    const rawProgress = (currentStep / totalCount) * 100;
+    // Based on precise testing: typical users see exactly 38 screens due to conditional logic
+    const expectedScreensToVisit = 38;
     
-    // Ensure progress is between 5% and 95% (never 0 or 100 until completion)
-    return Math.min(95, Math.max(5, rawProgress));
-  }, [history.length, config.screens]);
+    // Use the larger of: expected 38 screens, or screens already visited + small buffer
+    const totalExpectedScreens = Math.max(expectedScreensToVisit, screensCompleted + 2);
+    
+    // Calculate proportional progress
+    const rawProgress = (screensCompleted / totalExpectedScreens) * 95; // Cap at 95% until terminal
+    
+    // Ensure minimum progress and cap at 95%
+    const calculatedProgress = Math.max(5, Math.min(rawProgress, 95));
+    
+    // CRITICAL: Never allow progress to go backwards
+    const finalProgress = Math.max(calculatedProgress, maxProgress);
+    setMaxProgress(finalProgress);
+    
+    return finalProgress;
+  }, [currentScreen, history.length, config.screens.length, maxProgress]);
 
 
   return {

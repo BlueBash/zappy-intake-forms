@@ -6,8 +6,33 @@ import NavigationButtons from '../common/NavigationButtons';
 import { ScreenProps } from './common';
 import { apiClient, type MedicationOption } from '../../utils/api';
 import { getDoseOptions, type DoseOption } from '../../utils/doseOptions';
+import { InfoTooltip } from '../common/InfoTooltip';
 
 const DEFAULT_SERVICE_TYPE = 'Weight Loss';
+
+// Medication descriptions
+const MEDICATION_DESCRIPTIONS: Record<string, string> = {
+  'Semaglutide': 'GLP-1 injection for weight management',
+  'Tirzepatide': 'Dual GIP/GLP-1 injection for weight loss',
+  'Wegovy': 'FDA-approved brand name semaglutide',
+  'Ozempic': 'Brand name semaglutide originally for diabetes',
+  'Mounjaro': 'Brand name tirzepatide for diabetes management',
+  'Zepbound': 'FDA-approved brand name tirzepatide for weight loss',
+  'Saxenda': 'Daily GLP-1 injection for weight management',
+  'Victoza': 'Daily GLP-1 injection for diabetes',
+};
+
+const getMedicationDescription = (name: string): string => {
+  return MEDICATION_DESCRIPTIONS[name] || 'GLP-1 medication for weight management';
+};
+
+// Pharmacy metadata (for vitamin info)
+const PHARMACY_METADATA: Record<string, { vitamin?: string }> = {
+  'Empower': { vitamin: 'B6' },
+  'Hallandale': { vitamin: 'B12' },
+  'Olympia': {},
+  'Wells': {},
+};
 
 const MedicationOptionsScreen: React.FC<ScreenProps> = ({
   screen,
@@ -94,9 +119,15 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
   };
 
   const handlePharmacySelect = (pharmacyName: string, medicationName: string) => {
+    console.log('🏥 Pharmacy selected:', pharmacyName, 'for medication:', medicationName);
     setSelectedMedication(medicationName);
     setSelectedPharmacy(pharmacyName);
     setSelectedDose(''); // Clear dose when changing pharmacy
+    
+    // Debug: Check dose options
+    const doses = getDoseOptions(medicationName);
+    console.log('💊 Dose options for', medicationName, ':', doses);
+    console.log('📊 Number of doses:', doses.length);
     
     // Update answers
     updateAnswer('selected_medication', medicationName);
@@ -120,6 +151,9 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
       };
       updateAnswer('medication_pharmacy_preferences', pharmacyPrefs);
     }
+    
+    // Auto-advance to next screen
+    onSubmit();
   };
 
   // Get the current medication's pharmacies and dose options
@@ -129,8 +163,6 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
   );
 
   const pharmacies = currentMedicationData?.pharmacies || [];
-  const doseOptions = expandedMedication ? getDoseOptions(expandedMedication) : [];
-  const hasHigherDoses = doseOptions.some(d => d.requiresScript);
 
   const isComplete = !!(selectedMedication && selectedPharmacy && selectedDose);
 
@@ -139,7 +171,7 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
     return (
       <ScreenLayout title={title} helpText={helpText}>
         <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0D9488]"></div>
           <p className="mt-4 text-neutral-600">Loading medication options...</p>
         </div>
       </ScreenLayout>
@@ -212,6 +244,10 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
             const isMedicationSelected = selectedMedication === med.medication;
             const isThisPharmacySelected = (pharmacy: string) => 
               selectedPharmacy === pharmacy && selectedMedication === med.medication;
+            
+            // Get dose options for THIS medication
+            const doseOptions = getDoseOptions(med.medication);
+            const hasHigherDoses = doseOptions.some(d => d.requiresScript);
 
             return (
               <motion.div
@@ -225,24 +261,41 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
                 <motion.button
                   onClick={() => handleMedicationClick(med.medication)}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full py-5 px-6 transition-all duration-300 text-left relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 ${
+                  className={`w-full py-[18px] px-6 transition-all duration-300 text-left group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40 focus:ring-offset-2 ${
                     isExpanded 
-                      ? 'rounded-t-xl border-2 border-b border-primary bg-primary/5 border-b-primary/20'
+                      ? 'rounded-t-xl border-2 border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 via-[#FF7A59]/5 to-[#14B8A6]/5'
                       : isMedicationSelected
-                      ? 'rounded-xl border-2 border-primary bg-primary/5 shadow-md'
-                      : 'rounded-xl border-2 border-gray-200 bg-white hover:border-primary/30 hover:shadow-md hover:scale-[1.01]'
+                      ? 'rounded-xl border-2 border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 via-[#FF7A59]/5 to-[#14B8A6]/5 shadow-md'
+                      : 'rounded-xl border-2 border-gray-300 bg-white hover:border-[#0D9488]/40 hover:shadow-md hover:scale-[1.01]'
                   }`}
                   style={{ transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
                 >
-                  <div className="flex items-center justify-between">
-                    {/* Medication Name */}
-                    <div className="flex-1">
-                      <span className={`text-lg leading-relaxed ${isMedicationSelected || isExpanded ? 'text-primary font-medium' : 'text-neutral-800'}`}>
-                        {med.medication}
-                      </span>
-                      <p className="text-sm text-neutral-600 mt-1">
-                        Available at {med.pharmacies.length} {med.pharmacies.length === 1 ? 'pharmacy' : 'pharmacies'}
-                      </p>
+                  <div className="flex items-center gap-4">
+                    {/* Medication Image Placeholder */}
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-[#FDFBF7] to-gray-50 flex items-center justify-center flex-shrink-0 border border-gray-100">
+                      <svg 
+                        className="w-8 h-8 text-gray-400" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={1.5} 
+                          d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" 
+                        />
+                      </svg>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`leading-relaxed ${isMedicationSelected || isExpanded ? 'text-[#0D9488] font-medium' : 'text-neutral-700'}`}>
+                          {med.medication}
+                        </span>
+                      </div>
+                      <p className="text-sm text-neutral-600">{getMedicationDescription(med.medication)}</p>
                     </div>
 
                     {/* Expand Chevron */}
@@ -251,7 +304,7 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
                       transition={{ duration: 0.3 }}
                       className="flex-shrink-0"
                     >
-                      <ChevronDown className={`w-5 h-5 ${isMedicationSelected || isExpanded ? 'text-primary' : 'text-gray-400'}`} />
+                      <ChevronDown className={`w-5 h-5 ${isMedicationSelected || isExpanded ? 'text-[#0D9488]' : 'text-gray-400'}`} />
                     </motion.div>
                   </div>
                 </motion.button>
@@ -266,52 +319,68 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
                       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="px-6 pb-6 pt-4 rounded-b-xl bg-primary/5 border-2 border-t-0 border-primary space-y-5">
-                        {/* Pharmacy Selection */}
+                      <div className="px-6 pb-6 pt-4 rounded-b-xl bg-gradient-to-r from-[#0D9488]/5 via-[#FF7A59]/5 to-[#14B8A6]/5 border-2 border-t-0 border-[#0D9488] space-y-5">
+                        {/* Pharmacy Selection - Pill Buttons */}
                         <div className="space-y-3">
-                          <p className="text-sm font-medium text-neutral-700">Select pharmacy:</p>
+                          <p className="text-sm text-neutral-700">Do you have a preference for a pharmacy?</p>
                           <div className="flex flex-wrap gap-2">
-                            {pharmacies.map((pharmacy, pIndex) => (
-                              <motion.button
-                                key={pharmacy}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: pIndex * 0.05, duration: 0.3 }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handlePharmacySelect(pharmacy, med.medication);
-                                }}
-                                whileTap={{ scale: 0.95 }}
-                                whileHover={{ scale: 1.02 }}
-                                className={`px-4 py-2.5 rounded-full border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 flex items-center gap-2 ${
-                                  isThisPharmacySelected(pharmacy)
-                                    ? 'border-primary bg-primary text-white shadow-md'
-                                    : 'border-gray-300 bg-white text-neutral-700 hover:border-primary/50 hover:bg-primary/5'
-                                }`}
-                                style={{ transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
-                              >
-                                {isThisPharmacySelected(pharmacy) && (
-                                  <Check className="w-4 h-4" strokeWidth={3} />
-                                )}
-                                <span className="text-sm">{pharmacy}</span>
-                              </motion.button>
-                            ))}
+                            {pharmacies.map((pharmacy, pIndex) => {
+                              const isPharmacySelected = isThisPharmacySelected(pharmacy);
+                              const pharmacyMeta = PHARMACY_METADATA[pharmacy];
+                              
+                              return (
+                                <motion.button
+                                  key={pharmacy}
+                                  initial={{ opacity: 0, scale: 0.9 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: pIndex * 0.08, duration: 0.3 }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePharmacySelect(pharmacy, med.medication);
+                                  }}
+                                  whileTap={{ scale: 0.95 }}
+                                  whileHover={{ scale: 1.02 }}
+                                  className={`px-4 py-2.5 rounded-full border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40 focus:ring-offset-2 flex items-center gap-2 ${
+                                    isPharmacySelected
+                                      ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white shadow-md'
+                                      : 'border-gray-300 bg-white text-neutral-700 hover:border-[#0D9488]/50 hover:bg-[#0D9488]/5'
+                                  }`}
+                                  style={{ transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                                >
+                                  {isPharmacySelected && (
+                                    <Check className="w-4 h-4" strokeWidth={3} />
+                                  )}
+                                  <span className="text-sm flex items-center gap-1.5">
+                                    {pharmacy}
+                                    {pharmacyMeta?.vitamin && (
+                                      <>
+                                        <span className="font-semibold"> (+ Vitamin {pharmacyMeta.vitamin})</span>
+                                        <InfoTooltip 
+                                          content={`This formulation includes vitamin ${pharmacyMeta.vitamin}. There is no difference in effectiveness compared to formulations without vitamins.`}
+                                          side="top"
+                                        />
+                                      </>
+                                    )}
+                                  </span>
+                                </motion.button>
+                              );
+                            })}
                           </div>
                         </div>
 
                         {/* Dose Selection - Appears When Pharmacy Selected */}
                         <AnimatePresence mode="wait">
-                          {selectedPharmacy && selectedMedication === med.medication && doseOptions.length > 0 && (
+                          {selectedPharmacy && selectedMedication === med.medication && doseOptions.length > 0 ? (
                             <motion.div
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: 'auto' }}
                               exit={{ opacity: 0, height: 0 }}
                               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                              className="overflow-hidden space-y-3 pt-3 border-t-2 border-primary/10"
+                              className="overflow-hidden space-y-3 pt-3 border-t-2 border-[#0D9488]/10"
                             >
                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                 <div>
-                                  <p className="text-sm font-medium text-neutral-700">Preferred dose (optional):</p>
+                                  <p className="text-sm text-neutral-700">Do you have any preference for the dose?</p>
                                   <p className="text-xs text-neutral-500 mt-0.5">Your provider will make the final determination</p>
                                 </div>
                                 {hasHigherDoses && (
@@ -322,7 +391,7 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
                                 )}
                               </div>
 
-                              {/* Dose Options */}
+                              {/* Dose Options - Pill Buttons */}
                               <div className="flex flex-wrap gap-2">
                                 {doseOptions.map((dose, doseIndex) => {
                                   const isDoseSelected = selectedDose === dose.value;
@@ -338,10 +407,10 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
                                       }}
                                       whileTap={{ scale: 0.95 }}
                                       whileHover={{ scale: 1.02 }}
-                                      className={`px-4 py-2.5 rounded-full border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 flex items-center gap-2 ${
+                                      className={`px-4 py-2.5 rounded-full border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40 focus:ring-offset-2 flex items-center gap-2 ${
                                         isDoseSelected
-                                          ? 'border-primary bg-primary text-white shadow-md'
-                                          : 'border-gray-300 bg-white text-neutral-700 hover:border-primary/50 hover:bg-primary/5'
+                                          ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white shadow-md'
+                                          : 'border-gray-300 bg-white text-neutral-700 hover:border-[#0D9488]/50 hover:bg-[#0D9488]/5'
                                       }`}
                                       style={{ transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
                                     >
@@ -357,25 +426,13 @@ const MedicationOptionsScreen: React.FC<ScreenProps> = ({
                                 })}
                               </div>
 
-                              {/* Done Button */}
-                              {selectedDose && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ duration: 0.3 }}
-                                  className="pt-2 flex justify-end"
-                                >
-                                  <button
-                                    onClick={handleDone}
-                                    className="py-2 px-6 rounded-lg bg-primary text-white transition-all duration-300 hover:shadow-lg hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
-                                    style={{ transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
-                                  >
-                                    Done
-                                  </button>
-                                </motion.div>
-                              )}
                             </motion.div>
-                          )}
+                          ) : selectedPharmacy && selectedMedication === med.medication ? (
+                            <div className="text-xs text-gray-500 pt-3">
+                              Debug: Pharmacy selected but no doses found for {med.medication}. 
+                              DoseOptions length: {doseOptions.length}
+                            </div>
+                          ) : null}
                         </AnimatePresence>
                       </div>
                     </motion.div>

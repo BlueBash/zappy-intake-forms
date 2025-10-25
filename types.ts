@@ -10,7 +10,8 @@ export type ScreenType =
   | 'consent' 
   | 'review' 
   | 'terminal'
-  | 'interstitial';
+  | 'interstitial'
+  | 'plan_selection';
 
 export type FieldType = 
   | 'text' 
@@ -320,6 +321,14 @@ export interface InterstitialScreen extends BaseScreen {
   }>;
 }
 
+export interface PlanSelectionScreen extends BaseScreen {
+  type: 'plan_selection';
+  title: string;
+  help_text?: string;
+  required?: boolean;
+  service_type?: string;
+}
+
 export type Screen = 
   | ContentScreen 
   | SingleSelectScreen 
@@ -331,7 +340,8 @@ export type Screen =
   | ConsentScreen 
   | ReviewScreen 
   | TerminalScreen
-  | InterstitialScreen;
+  | InterstitialScreen
+  | PlanSelectionScreen;
 
 // Form configuration
 export interface Theme {

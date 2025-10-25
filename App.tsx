@@ -478,10 +478,6 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       return <MedicationPreferenceScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 
-    if (screen.id.startsWith('treatment.plan_selection')) {
-      return <PlanSelectionScreen key={screen.id} {...commonProps} screen={screen} />;
-    }
-
     if (screen.id === 'logistics.discount_code') {
       return <DiscountCodeScreen key={screen.id} {...commonProps} screen={screen} />;
     }
@@ -521,6 +517,8 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         return <TerminalScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'interstitial':
         return <InterstitialScreen key={screen.id} screen={screen} onSubmit={goToNext} />;
+      case 'plan_selection':
+        return <PlanSelectionScreen key={screen.id} {...commonProps} screen={screen} />;
       default:
         return <div>Unknown screen type: {(screen as any).type}</div>;
     }

@@ -1923,11 +1923,10 @@ const formConfig: FormConfig = {
     },
     {
       "id": "treatment.plan_selection.generic",
-      "type": "single_select",
+      "type": "plan_selection",
       "phase": "treatment",
       "title": "Choose Your Plan",
       "help_text": "A licensed healthcare provider will review your information and may recommend appropriate treatment. This is not a guarantee for a prescription.",
-      "auto_advance": true,
       "required": true,
       "next": "logistics.checkout"
     },

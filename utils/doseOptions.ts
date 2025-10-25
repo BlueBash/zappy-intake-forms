@@ -9,6 +9,7 @@ export interface DoseOption {
 
 export const DOSE_OPTIONS_BY_MEDICATION: Record<string, DoseOption[]> = {
   'Semaglutide': [
+    { value: 'no-preference', label: 'No preference' },
     { value: '0.25mg', label: '0.25 mg' },
     { value: '0.5mg', label: '0.5 mg' },
     { value: '1mg', label: '1 mg', requiresScript: true },
@@ -16,6 +17,7 @@ export const DOSE_OPTIONS_BY_MEDICATION: Record<string, DoseOption[]> = {
     { value: '2.4mg', label: '2.4 mg', requiresScript: true },
   ],
   'Tirzepatide': [
+    { value: 'no-preference', label: 'No preference' },
     { value: '2.5mg', label: '2.5 mg' },
     { value: '5mg', label: '5 mg' },
     { value: '7.5mg', label: '7.5 mg', requiresScript: true },
@@ -24,6 +26,7 @@ export const DOSE_OPTIONS_BY_MEDICATION: Record<string, DoseOption[]> = {
     { value: '15mg', label: '15 mg', requiresScript: true },
   ],
   'Wegovy': [
+    { value: 'no-preference', label: 'No preference' },
     { value: '0.25mg', label: '0.25 mg' },
     { value: '0.5mg', label: '0.5 mg' },
     { value: '1mg', label: '1 mg', requiresScript: true },
@@ -31,12 +34,14 @@ export const DOSE_OPTIONS_BY_MEDICATION: Record<string, DoseOption[]> = {
     { value: '2.4mg', label: '2.4 mg', requiresScript: true },
   ],
   'Ozempic': [
+    { value: 'no-preference', label: 'No preference' },
     { value: '0.25mg', label: '0.25 mg' },
     { value: '0.5mg', label: '0.5 mg' },
     { value: '1mg', label: '1 mg', requiresScript: true },
     { value: '2mg', label: '2 mg', requiresScript: true },
   ],
   'Mounjaro': [
+    { value: 'no-preference', label: 'No preference' },
     { value: '2.5mg', label: '2.5 mg' },
     { value: '5mg', label: '5 mg' },
     { value: '7.5mg', label: '7.5 mg', requiresScript: true },
@@ -45,6 +50,7 @@ export const DOSE_OPTIONS_BY_MEDICATION: Record<string, DoseOption[]> = {
     { value: '15mg', label: '15 mg', requiresScript: true },
   ],
   'Zepbound': [
+    { value: 'no-preference', label: 'No preference' },
     { value: '2.5mg', label: '2.5 mg' },
     { value: '5mg', label: '5 mg' },
     { value: '7.5mg', label: '7.5 mg', requiresScript: true },
@@ -53,12 +59,14 @@ export const DOSE_OPTIONS_BY_MEDICATION: Record<string, DoseOption[]> = {
     { value: '15mg', label: '15 mg', requiresScript: true },
   ],
   'Saxenda': [
+    { value: 'no-preference', label: 'No preference' },
     { value: '0.6mg', label: '0.6 mg' },
     { value: '1.2mg', label: '1.2 mg' },
     { value: '1.8mg', label: '1.8 mg' },
     { value: '3mg', label: '3 mg' },
   ],
   'Victoza': [
+    { value: 'no-preference', label: 'No preference' },
     { value: '0.6mg', label: '0.6 mg' },
     { value: '1.2mg', label: '1.2 mg' },
     { value: '1.8mg', label: '1.8 mg' },
@@ -67,5 +75,7 @@ export const DOSE_OPTIONS_BY_MEDICATION: Record<string, DoseOption[]> = {
 
 // Helper to get dose options for a medication
 export function getDoseOptions(medicationName: string): DoseOption[] {
-  return DOSE_OPTIONS_BY_MEDICATION[medicationName] || [];
+  // Strip vitamin suffix if present (e.g., "Semaglutide-Methylcobalamin" -> "Semaglutide")
+  const baseName = medicationName.split('-')[0];
+  return DOSE_OPTIONS_BY_MEDICATION[baseName] || DOSE_OPTIONS_BY_MEDICATION[medicationName] || [];
 }
