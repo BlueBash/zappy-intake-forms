@@ -371,6 +371,7 @@ const formConfig: FormConfig = {
       "type": "composite",
       "phase": "qualify",
       "title": "Let's save your progress and find your treatment plan",
+      "footer_note": "Your Privacy: Your health information is protected under HIPAA. We use secure storage and encryption, and your data is only shared with your healthcare provider—never sold to third parties.",
       "fields": [
         {
           "id": "email",
@@ -385,18 +386,6 @@ const formConfig: FormConfig = {
           }
         }
       ],
-      "next": "transition.health_questions"
-    },
-
-    {
-      "id": "transition.health_questions",
-      "type": "content",
-      "phase": "qualify",
-      "headline": "Thank you! Now, let's build your health profile",
-      "body": "Your Privacy: Your health information is protected under HIPAA. We use secure storage and encryption, and your data is only shared with your healthcare provider—never sold to third parties.",
-      "cta_primary": {
-        "label": "Continue"
-      },
       "next": "assess.sex_birth"
     },
 
@@ -534,7 +523,7 @@ const formConfig: FormConfig = {
           "go_to": "assess.eating_disorder_type"
         },
         {
-          "else": "transition.lifestyle_questions"
+          "else": "assess.substance_use_alcohol"
         }
       ]
     },
@@ -594,17 +583,6 @@ const formConfig: FormConfig = {
       "cta_primary": {
         "label": "Continue"
       },
-      "next": "transition.lifestyle_questions"
-    },
-    {
-      "id": "transition.lifestyle_questions",
-      "type": "content",
-      "phase": "assess_medical",
-      "headline": "A few quick lifestyle questions",
-      "body": "These help us understand your overall health and any factors that might affect treatment.",
-      "cta_primary": {
-        "label": "Continue"
-      },
       "next": "assess.substance_use_alcohol"
     },
 
@@ -654,17 +632,6 @@ const formConfig: FormConfig = {
         { "value": "none", "label": "None of these" }
       ],
       "required": true,
-      "next": "transition.medical_history"
-    },
-    {
-      "id": "transition.medical_history",
-      "type": "content",
-      "phase": "assess_medical",
-      "headline": "You're doing great—almost through this section!",
-      "body": "Just a few more questions about your medical history, then we'll talk about treatment options.",
-      "cta_primary": {
-        "label": "Continue"
-      },
       "next": "assess.diabetes"
     },
 
@@ -1182,8 +1149,8 @@ const formConfig: FormConfig = {
       "id": "transition.treatment_intro",
       "type": "content",
       "phase": "treatment",
-      "headline": "You're through the health questions—nice work!",
-      "body": "Now let's talk treatment. If you've used GLP-1s before, we'd love to know what worked or didn't. This helps us find the right approach for you.",
+      "headline": "Great work! Now, let's find your treatment",
+      "body": "If you've tried GLP-1s before, sharing that experience helps us personalize your plan.",
       "cta_primary": {
         "label": "Continue"
       },
@@ -1868,7 +1835,7 @@ const formConfig: FormConfig = {
           "go_to": "treatment.medication_options"
         },
         {
-          "else": "transition.final_section"
+          "else": "treatment.plan_selection.generic"
         }
       ]
     },
@@ -1887,7 +1854,7 @@ const formConfig: FormConfig = {
       "phase": "treatment",
       "title": "Which medications interest you?",
       "required": true,
-      "next": "transition.final_section"
+      "next": "logistics.checkout"
     },
     {
       "id": "treatment.plan_selection.semaglutide_brand",
@@ -1897,7 +1864,7 @@ const formConfig: FormConfig = {
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "transition.final_section"
+      "next": "logistics.checkout"
     },
     {
       "id": "treatment.plan_selection.semaglutide_compound",
@@ -1907,7 +1874,7 @@ const formConfig: FormConfig = {
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "transition.final_section"
+      "next": "logistics.checkout"
     },
     {
       "id": "treatment.plan_selection.tirzepatide_brand",
@@ -1917,7 +1884,7 @@ const formConfig: FormConfig = {
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "transition.final_section"
+      "next": "logistics.checkout"
     },
     {
       "id": "treatment.plan_selection.tirzepatide_compound",
@@ -1927,7 +1894,7 @@ const formConfig: FormConfig = {
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "transition.final_section"
+      "next": "logistics.checkout"
     },
     {
       "id": "treatment.plan_selection.generic",
