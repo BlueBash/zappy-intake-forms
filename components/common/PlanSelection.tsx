@@ -201,7 +201,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
               {/* Collapsed Header */}
               <button
                 onClick={() => handlePlanClick(plan.id)}
-                className="w-full p-6 text-left focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40 focus:ring-offset-2 rounded-2xl transition-all"
+                className="w-full p-6 text-left focus:outline-none rounded-2xl transition-all"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">

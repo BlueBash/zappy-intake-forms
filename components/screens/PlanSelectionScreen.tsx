@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
 import PlanSelection from '../common/PlanSelection';
+import DiscountSelection from '../common/DiscountSelection';
 import { ScreenProps } from './common';
 import type { PackagePlan } from '../../utils/api';
 
@@ -77,6 +78,7 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
 }) => {
   const title = 'headline' in screen ? screen.headline : (screen as any).title;
   const helpText = 'body' in screen ? screen.body : (screen as any).help_text;
+  const autoAdvance = (screen as any)?.auto_advance ?? false;
 
   const stateCode = answers['shipping_state'] || answers['demographics.state'] || answers['state'] || '';
   const serviceType =
@@ -90,6 +92,8 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
   const selectedPharmacy = pharmacyPreferences[selectedMedication]?.[0];
   const requiresDoseStrategy = Boolean(answers['plan_requires_dose_strategy']);
   const doseStrategy = answers['dose_strategy'] || '';
+  
+  const [discountCode, setDiscountCode] = useState(answers['discount_code'] || '');
 
   const handlePlanSelect = (planId: string, plan: PackagePlan | null) => {
     updateAnswer('selected_plan_id', planId);
@@ -105,6 +109,13 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
       const needsDoseStrategy = requiresDoseStrategyForPlan(plan);
       updateAnswer('plan_requires_dose_strategy', needsDoseStrategy);
       updateAnswer('dose_strategy', needsDoseStrategy ? '' : 'maintenance');
+      
+      // Auto-advance if enabled and no dose strategy is required
+      if (autoAdvance && !needsDoseStrategy) {
+        setTimeout(() => {
+          onSubmit();
+        }, 600);
+      }
     } else {
       updateAnswer('selected_plan', '');
       updateAnswer('selected_plan_name', '');
@@ -120,6 +131,18 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
 
   const handleDoseStrategyChange = (value: string) => {
     updateAnswer('dose_strategy', value);
+    
+    // Auto-advance if enabled and all requirements are met
+    if (autoAdvance && selectedPlanId) {
+      setTimeout(() => {
+        onSubmit();
+      }, 600);
+    }
+  };
+
+  const handleDiscountCodeChange = (code: string) => {
+    setDiscountCode(code);
+    updateAnswer('discount_code', code);
   };
 
   return (
@@ -136,6 +159,15 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
         doseStrategy={doseStrategy}
         onDoseStrategyChange={handleDoseStrategyChange}
       />
+
+      {selectedPlanId && (
+        <div className="mt-8">
+          <DiscountSelection
+            value={discountCode}
+            onChange={handleDiscountCodeChange}
+          />
+        </div>
+      )}
 
       <NavigationButtons
         showBack={showBack}

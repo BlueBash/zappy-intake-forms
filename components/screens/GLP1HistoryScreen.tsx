@@ -4,6 +4,8 @@ import { ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Check } from 'lucide
 import Input from '../ui/Input';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
+import { TouchButton } from '../common/TouchButton';
+import { InfoTooltip } from '../common/InfoTooltip';
 import { ScreenProps } from './common';
 
 interface MedicationDetail {
@@ -126,18 +128,6 @@ const medications: MedicationData[] = [
       { value: '1.8mg', label: '1.8 mg' },
     ],
   },
-  {
-    id: 'liraglutide_compound',
-    name: 'Compounded Liraglutide',
-    subtitle: 'From compounding pharmacy',
-    category: 'liraglutide',
-    doseOptions: [
-      { value: '0.6mg', label: '0.6 mg' },
-      { value: '1.2mg', label: '1.2 mg' },
-      { value: '1.8mg', label: '1.8 mg' },
-      { value: '3mg', label: '3 mg' },
-    ],
-  },
 ];
 
 const categoryLabels = {
@@ -168,6 +158,7 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
     sideEffects: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showFullList, setShowFullList] = useState(true);
 
   useEffect(() => {
     const selected: string[] = [];
@@ -258,45 +249,6 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
     }
   };
 
-  const toggleOtherMedication = () => {
-    if (otherMedication.selected) {
-      setOtherMedication({
-        selected: false,
-        expanded: false,
-        name: '',
-        duration: '',
-        lastTaken: '',
-        highestDose: '',
-        sideEffects: '',
-      });
-      if (expandedMedication === 'other') {
-        setExpandedMedication(null);
-      }
-    } else {
-      setOtherMedication({
-        ...otherMedication,
-        selected: true,
-        expanded: true,
-      });
-      setExpandedMedication('other');
-    }
-    setErrors({});
-  };
-
-  const updateOtherMedicationField = (field: string, value: string) => {
-    setOtherMedication({
-      ...otherMedication,
-      [field]: value,
-    });
-    
-    const errorKey = `other_${field}`;
-    if (errors[errorKey]) {
-      const newErrors = { ...errors };
-      delete newErrors[errorKey];
-      setErrors(newErrors);
-    }
-  };
-
   const hasCurrentMedication = (): boolean => {
     return selectedMedications.some(medId => medicationDetails[medId]?.currentlyTaking === 'yes');
   };
@@ -328,6 +280,12 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
       return false;
     }
     return true;
+  };
+
+  const hasCompleteMedication = (): boolean => {
+    const hasCompleteStandard = selectedMedications.some(medId => isMedicationComplete(medId));
+    const hasCompleteOther = otherMedication.selected && isOtherMedicationComplete();
+    return hasCompleteStandard || hasCompleteOther;
   };
 
   const handleNext = () => {
@@ -386,21 +344,34 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
     return acc;
   }, {} as Record<string, MedicationData[]>);
 
+  Object.keys(groupedMedications).forEach((category) => {
+    groupedMedications[category].sort((a, b) => {
+      const aSelected = selectedMedications.includes(a.id);
+      const bSelected = selectedMedications.includes(b.id);
+      
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      
+      return 0;
+    });
+  });
+
   return (
     <ScreenLayout
       title="Which GLP-1 medications have you used?"
+      helpText="Select each medication and provide details about your experience"
       showLoginLink={showLoginLink}
     >
-      <div className="space-y-8">
+      <div className="space-y-6">
         {(selectedMedications.length > 0 || otherMedication.selected) && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="text-center"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-              <CheckCircle2 className="w-4 h-4 text-primary" />
-              <span className="text-sm text-neutral-700">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0D9488]/5 border border-[#0D9488]/20">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#0D9488]" />
+              <span className="text-xs text-neutral-700">
                 {selectedMedications.length + (otherMedication.selected ? 1 : 0)} selected
               </span>
             </div>
@@ -419,390 +390,337 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
           </motion.div>
         )}
 
-        {Object.entries(groupedMedications).map(([category, meds], categoryIndex) => (
-          <div key={category}>
-            <h3 className="text-sm uppercase tracking-wider text-neutral-500 mb-3 px-1">
-              {categoryLabels[category as keyof typeof categoryLabels]}
-            </h3>
-            <div className="space-y-3">
-              {meds.map((med, index) => {
-                const isSelected = selectedMedications.includes(med.id);
-                const isExpanded = expandedMedication === med.id;
-                const isComplete = isMedicationComplete(med.id);
-                const hasError = errors[med.id];
-                const shouldShowCurrentlyTaking = shouldAskCurrentlyTaking(med.id);
-                const details = medicationDetails[med.id];
+        {!showFullList && hasCompleteMedication() && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {Object.entries(groupedMedications).map(([category, meds]) => {
+              const selectedInCategory = meds.filter(med => selectedMedications.includes(med.id));
+              if (selectedInCategory.length === 0) return null;
 
-                return (
-                  <motion.div
-                    key={med.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      delay: categoryIndex * 0.05 + index * 0.03,
-                      duration: 0.3,
-                    }}
-                    className={`rounded-xl border-2 transition-all duration-200 ${
-                      hasError
-                        ? 'border-red-300 bg-red-50'
-                        : isSelected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-gray-200 bg-white'
-                    }`}
-                    data-error={hasError ? 'true' : undefined}
-                  >
-                    <button
-                      onClick={() => toggleMedication(med.id)}
-                      className="w-full text-left p-4 focus:outline-none rounded-xl"
-                    >
-                      <div className="flex items-center gap-3">
+              return (
+                <div key={category}>
+                  <h3 className="text-xs uppercase tracking-wider text-neutral-400 mb-2 px-1">
+                    {categoryLabels[category as keyof typeof categoryLabels]}
+                  </h3>
+                  <div className="space-y-2">
+                    {selectedInCategory.map((med) => {
+                      const isComplete = isMedicationComplete(med.id);
+                      return (
                         <div
-                          className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${
-                            isSelected
-                              ? 'bg-primary border-primary'
-                              : 'border-gray-300'
-                          }`}
+                          key={med.id}
+                          className="rounded-xl border-2 border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5 p-3"
                         >
-                          {isSelected && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className={`font-medium ${isSelected ? 'text-primary' : 'text-neutral-900'}`}>
-                            {med.name}
-                          </div>
-                          <div className="text-sm text-neutral-600 truncate">{med.subtitle}</div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {isSelected && isComplete && (
-                            <CheckCircle2 className="w-5 h-5 text-primary" />
-                          )}
-                          {isSelected && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleExpanded(med.id);
-                              }}
-                              className="p-1 hover:bg-primary/10 rounded transition-colors"
-                            >
-                              {isExpanded ? (
-                                <ChevronUp className="w-5 h-5 text-primary" />
-                              ) : (
-                                <ChevronDown className="w-5 h-5 text-primary" />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-
-                    <AnimatePresence>
-                      {isSelected && isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="px-4 pb-4 pt-2 space-y-4 border-t border-primary/20">
-                            {hasError && (
-                              <div className="p-3 rounded-lg bg-red-100 border border-red-200 flex items-start gap-2">
-                                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                                <p className="text-sm text-red-700">{errors[med.id]}</p>
-                              </div>
-                            )}
-
-                            {shouldShowCurrentlyTaking && (
-                              <div>
-                                <label className="block text-sm text-neutral-700 mb-3">
-                                  Are you currently taking {med.name}? <span className="text-red-500">*</span>
-                                </label>
-                                <div className="flex gap-3">
-                                  <button
-                                    onClick={() => updateMedicationDetail(med.id, 'currentlyTaking', 'yes')}
-                                    className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all duration-200 ${
-                                      details?.currentlyTaking === 'yes'
-                                        ? 'border-primary bg-primary text-white'
-                                        : 'border-gray-200 bg-white text-neutral-700 hover:border-primary/30'
-                                    }`}
-                                  >
-                                    Yes
-                                  </button>
-                                  <button
-                                    onClick={() => updateMedicationDetail(med.id, 'currentlyTaking', 'no')}
-                                    className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all duration-200 ${
-                                      details?.currentlyTaking === 'no'
-                                        ? 'border-primary bg-primary text-white'
-                                        : 'border-gray-200 bg-white text-neutral-700 hover:border-primary/30'
-                                    }`}
-                                  >
-                                    No
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-
-                            {(shouldShowCurrentlyTaking ? details?.currentlyTaking : true) && (
-                              <>
-                                <div>
-                                  <label className="block text-sm text-neutral-700 mb-2">
-                                    {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes'
-                                      ? 'How long have you been on it?'
-                                      : 'How long were you on it?'}{' '}
-                                    <span className="text-red-500">*</span>
-                                  </label>
-                                  <Input
-                                    value={details?.duration || ''}
-                                    onChange={(e) => updateMedicationDetail(med.id, 'duration', e.target.value)}
-                                    placeholder="e.g., 6 months, 1 year"
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="block text-sm text-neutral-700 mb-2">
-                                    {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes'
-                                      ? 'When did you last take it?'
-                                      : 'When did you stop?'}{' '}
-                                    <span className="text-red-500">*</span>
-                                  </label>
-                                  <Input
-                                    value={details?.lastTaken || ''}
-                                    onChange={(e) => updateMedicationDetail(med.id, 'lastTaken', e.target.value)}
-                                    placeholder="e.g., Last week, 3 months ago"
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="block text-sm text-neutral-700 mb-2">
-                                    Highest dose taken? <span className="text-red-500">*</span>
-                                  </label>
-                                  <p className="text-xs text-neutral-500 mb-3">
-                                    A copy of the script will be required to continue doses higher than 0.5 mg
-                                  </p>
-                                  <div className="grid grid-cols-3 gap-2">
-                                    {med.doseOptions.map((option) => (
-                                      <button
-                                        key={option.value}
-                                        onClick={() => updateMedicationDetail(med.id, 'highestDose', option.value)}
-                                        className={`py-2.5 px-3 rounded-lg border-2 transition-all duration-200 text-sm ${
-                                          details?.highestDose === option.value
-                                            ? 'border-primary bg-primary text-white'
-                                            : 'border-gray-200 bg-white text-neutral-700 hover:border-primary/30'
-                                        }`}
-                                      >
-                                        {option.label}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <label className="block text-sm text-neutral-700 mb-2">
-                                    Any side effects? <span className="text-neutral-500">(optional)</span>
-                                  </label>
-                                  <textarea
-                                    value={details?.sideEffects || ''}
-                                    onChange={(e) => updateMedicationDetail(med.id, 'sideEffects', e.target.value)}
-                                    placeholder="e.g., Nausea, constipation, fatigue"
-                                    rows={3}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-all duration-200 resize-none"
-                                  />
-                                </div>
-                              </>
-                            )}
-
+                          <div className="flex items-center gap-2.5">
+                            <CheckCircle2 className="w-5 h-5 text-[#0D9488] flex-shrink-0" />
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-[#0D9488]">{med.name}</div>
+                            </div>
                             {isComplete && (
-                              <div className="flex justify-end">
-                                <motion.button
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  onClick={() => setExpandedMedication(null)}
-                                  className="py-2 px-6 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all duration-200 text-sm"
-                                >
-                                  Done
-                                </motion.button>
-                              </div>
+                              <div className="text-xs text-neutral-600">Complete</div>
                             )}
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-
-        {/* Other category */}
-        <div>
-          <h3 className="text-sm uppercase tracking-wider text-neutral-500 mb-3 px-1">
-            {categoryLabels.other}
-          </h3>
-          <div className="space-y-3">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`rounded-xl border-2 transition-all duration-200 ${
-                errors.other
-                  ? 'border-red-300 bg-red-50'
-                  : otherMedication.selected
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 bg-white'
-              }`}
-              data-error={errors.other ? 'true' : undefined}
-            >
-              <button
-                onClick={toggleOtherMedication}
-                className="w-full text-left p-4 focus:outline-none rounded-xl"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${
-                      otherMedication.selected
-                        ? 'bg-primary border-primary'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    {otherMedication.selected && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
+                        </div>
+                      );
+                    })}
                   </div>
+                </div>
+              );
+            })}
 
-                  <div className="flex-1 min-w-0">
-                    <div className={`font-medium ${otherMedication.selected ? 'text-primary' : 'text-neutral-900'}`}>
-                      Other GLP-1 Medication
+            {otherMedication.selected && (
+              <div>
+                <h3 className="text-xs uppercase tracking-wider text-neutral-400 mb-2 px-1">Other</h3>
+                <div className="rounded-xl border-2 border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5 p-3">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-5 h-5 text-[#0D9488] flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-[#0D9488]">
+                        {otherMedication.name || 'Other GLP-1'}
+                      </div>
                     </div>
-                    <div className="text-sm text-neutral-600 truncate">Not listed above</div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {otherMedication.selected && isOtherMedicationComplete() && (
-                      <CheckCircle2 className="w-5 h-5 text-primary" />
-                    )}
-                    {otherMedication.selected && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOtherMedication({ ...otherMedication, expanded: !otherMedication.expanded });
-                          setExpandedMedication(otherMedication.expanded ? null : 'other');
-                        }}
-                        className="p-1 hover:bg-primary/10 rounded transition-colors"
-                      >
-                        {otherMedication.expanded ? (
-                          <ChevronUp className="w-5 h-5 text-primary" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-primary" />
-                        )}
-                      </button>
+                    {isOtherMedicationComplete() && (
+                      <div className="text-xs text-neutral-600">Complete</div>
                     )}
                   </div>
                 </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-4">
+              <button
+                onClick={() => setShowFullList(true)}
+                className="flex-1 sm:flex-none min-h-[48px] px-6 py-3 bg-white text-neutral-700 border-2 border-gray-200 hover:border-[#0D9488]/30 rounded-xl font-medium transition-all duration-200 focus:outline-none"
+              >
+                + Add Another Medication
               </button>
+              
+              <button
+                onClick={handleNext}
+                className="flex-1 sm:flex-none min-h-[48px] px-8 py-3 bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white hover:from-[#0F766E] hover:to-[#0D9488] rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none"
+              >
+                Continue
+              </button>
+            </div>
+          </motion.div>
+        )}
 
-              <AnimatePresence>
-                {otherMedication.selected && otherMedication.expanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-4 pb-4 pt-2 space-y-4 border-t border-primary/20">
-                      {errors.other && (
-                        <div className="p-3 rounded-lg bg-red-100 border border-red-200 flex items-start gap-2">
-                          <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                          <p className="text-sm text-red-700">{errors.other}</p>
-                        </div>
-                      )}
+        {showFullList && (
+          <>
+            {Object.entries(groupedMedications).map(([category, meds]) => (
+              <div key={category}>
+                <h3 className="text-xs uppercase tracking-wider text-neutral-400 mb-2 px-1">
+                  {categoryLabels[category as keyof typeof categoryLabels]}
+                </h3>
+                <div className="space-y-2">
+                  {meds.map((med, index) => {
+                    const isSelected = selectedMedications.includes(med.id);
+                    const isExpanded = expandedMedication === med.id;
+                    const isComplete = isMedicationComplete(med.id);
+                    const hasError = errors[med.id];
+                    const shouldShowCurrentlyTaking = shouldAskCurrentlyTaking(med.id);
+                    const details = medicationDetails[med.id];
+                    
+                    const prevMed = index > 0 ? meds[index - 1] : null;
+                    const isPrevSelected = prevMed ? selectedMedications.includes(prevMed.id) : false;
+                    const showSeparator = !isSelected && isPrevSelected;
 
-                      <div>
-                        <label className="block text-sm text-neutral-700 mb-2">
-                          Medication name <span className="text-red-500">*</span>
-                        </label>
-                        <Input
-                          value={otherMedication.name}
-                          onChange={(e) => updateOtherMedicationField('name', e.target.value)}
-                          placeholder="e.g., Lixisenatide, Dulaglutide"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm text-neutral-700 mb-2">
-                          How long were you on it? <span className="text-red-500">*</span>
-                        </label>
-                        <Input
-                          value={otherMedication.duration}
-                          onChange={(e) => updateOtherMedicationField('duration', e.target.value)}
-                          placeholder="e.g., 6 months, 1 year"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm text-neutral-700 mb-2">
-                          When did you stop? <span className="text-red-500">*</span>
-                        </label>
-                        <Input
-                          value={otherMedication.lastTaken}
-                          onChange={(e) => updateOtherMedicationField('lastTaken', e.target.value)}
-                          placeholder="e.g., Last week, 3 months ago"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm text-neutral-700 mb-2">
-                          Highest dose taken? <span className="text-red-500">*</span>
-                        </label>
-                        <Input
-                          value={otherMedication.highestDose}
-                          onChange={(e) => updateOtherMedicationField('highestDose', e.target.value)}
-                          placeholder="e.g., 2.5 mg"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm text-neutral-700 mb-2">
-                          Any side effects? <span className="text-neutral-500">(optional)</span>
-                        </label>
-                        <textarea
-                          value={otherMedication.sideEffects}
-                          onChange={(e) => updateOtherMedicationField('sideEffects', e.target.value)}
-                          placeholder="e.g., Nausea, constipation, fatigue"
-                          rows={3}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-all duration-200 resize-none"
-                        />
-                      </div>
-
-                      {isOtherMedicationComplete() && (
-                        <div className="flex justify-end">
-                          <motion.button
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            onClick={() => {
-                              setOtherMedication({ ...otherMedication, expanded: false });
-                              setExpandedMedication(null);
-                            }}
-                            className="py-2 px-6 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all duration-200 text-sm"
+                    return (
+                      <div key={`wrapper-${med.id}`} className="space-y-2">
+                        {showSeparator && (
+                          <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex items-center gap-2 py-1 px-1"
                           >
-                            Done
-                          </motion.button>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </div>
-        </div>
-      </div>
+                            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent" />
+                            <span className="text-[10px] uppercase tracking-wider text-neutral-400">Available</span>
+                            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent" />
+                          </motion.div>
+                        )}
+                        <motion.div
+                          key={med.id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{
+                            layout: { type: "spring", stiffness: 350, damping: 30 },
+                            opacity: { duration: 0.2 },
+                          }}
+                          className={`rounded-xl border-2 transition-all duration-200 ${
+                            hasError
+                              ? 'border-red-300 bg-red-50'
+                              : isSelected
+                              ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5 shadow-sm'
+                              : 'border-gray-200 bg-white'
+                          }`}
+                          data-error={hasError ? 'true' : undefined}
+                        >
+                          <button
+                            onClick={() => toggleMedication(med.id)}
+                            className="w-full text-left p-3 min-h-[48px] focus:outline-none rounded-xl"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                                  isSelected
+                                    ? 'bg-gradient-to-br from-[#0D9488] to-[#14B8A6] border-[#0D9488]'
+                                    : 'border-gray-300'
+                                }`}
+                              >
+                                {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                              </div>
 
-      <NavigationButtons
-        showBack={showBack}
-        onBack={onBack}
-        onNext={handleNext}
-        isNextDisabled={false}
-      />
+                              <div className="flex-1 min-w-0">
+                                <div className={`text-sm font-medium ${isSelected ? 'text-[#0D9488]' : 'text-neutral-900'}`}>
+                                  {med.name}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                {isSelected && isComplete && (
+                                  <CheckCircle2 className="w-4 h-4 text-[#0D9488]" />
+                                )}
+                                {isSelected && (
+                                  <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleExpanded(med.id);
+                                    }}
+                                    className="p-1 hover:bg-[#0D9488]/10 rounded transition-colors cursor-pointer"
+                                  >
+                                    {isExpanded ? (
+                                      <ChevronUp className="w-4 h-4 text-[#0D9488]" />
+                                    ) : (
+                                      <ChevronDown className="w-4 h-4 text-[#0D9488]" />
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+
+                          <AnimatePresence>
+                            {isSelected && isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="px-3 pb-3 pt-2 space-y-3 border-t border-[#0D9488]/10">
+                                  {hasError && (
+                                    <div className="p-2.5 rounded-lg bg-red-100 border border-red-200 flex items-start gap-2">
+                                      <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                                      <p className="text-xs text-red-700">{errors[med.id]}</p>
+                                    </div>
+                                  )}
+
+                                  {shouldShowCurrentlyTaking && (
+                                    <div>
+                                      <div className="flex items-center gap-1.5 mb-2">
+                                        <label className="text-xs text-neutral-700">
+                                          Currently taking? <span className="text-[#FF7A59]">*</span>
+                                        </label>
+                                        <InfoTooltip 
+                                          content="This helps us understand if you're actively using this medication."
+                                          side="right"
+                                        />
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <TouchButton
+                                          onClick={() => updateMedicationDetail(med.id, 'currentlyTaking', 'yes')}
+                                          selected={details?.currentlyTaking === 'yes'}
+                                          variant="outline"
+                                          size="sm"
+                                          fullWidth
+                                        >
+                                          Yes
+                                        </TouchButton>
+                                        <TouchButton
+                                          onClick={() => updateMedicationDetail(med.id, 'currentlyTaking', 'no')}
+                                          selected={details?.currentlyTaking === 'no'}
+                                          variant="outline"
+                                          size="sm"
+                                          fullWidth
+                                        >
+                                          No
+                                        </TouchButton>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {(shouldShowCurrentlyTaking ? details?.currentlyTaking : true) && (
+                                    <>
+                                      <div>
+                                        <label className="block text-xs text-neutral-700 mb-1.5">
+                                          {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' ? 'How long?' : 'Duration'}{' '}
+                                          <span className="text-[#FF7A59]">*</span>
+                                        </label>
+                                        <Input
+                                          id={`${med.id}_duration`}
+                                          value={details?.duration || ''}
+                                          onChange={(e) => updateMedicationDetail(med.id, 'duration', e.target.value)}
+                                          placeholder="e.g., 6 months"
+                                        />
+                                      </div>
+
+                                      <div>
+                                        <label className="block text-xs text-neutral-700 mb-1.5">
+                                          {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' ? 'Last dose' : 'When stopped'}{' '}
+                                          <span className="text-[#FF7A59]">*</span>
+                                        </label>
+                                        <Input
+                                          id={`${med.id}_last_taken`}
+                                          value={details?.lastTaken || ''}
+                                          onChange={(e) => updateMedicationDetail(med.id, 'lastTaken', e.target.value)}
+                                          placeholder="e.g., Last week"
+                                        />
+                                      </div>
+
+                                      <div>
+                                        <div className="flex items-center gap-1.5 mb-2">
+                                          <label className="text-xs text-neutral-700">
+                                            Highest dose <span className="text-[#FF7A59]">*</span>
+                                          </label>
+                                          <InfoTooltip 
+                                            content="A prescription copy is required to continue doses higher than 0.5 mg."
+                                            side="right"
+                                          />
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                          {med.doseOptions.map((option) => (
+                                            <TouchButton
+                                              key={option.value}
+                                              onClick={() => updateMedicationDetail(med.id, 'highestDose', option.value)}
+                                              selected={details?.highestDose === option.value}
+                                              variant="outline"
+                                              size="sm"
+                                              className="text-xs"
+                                            >
+                                              {option.label}
+                                            </TouchButton>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      <div>
+                                        <label className="block text-xs text-neutral-700 mb-1.5">
+                                          Side effects? <span className="text-neutral-500">(optional)</span>
+                                        </label>
+                                        <textarea
+                                          value={details?.sideEffects || ''}
+                                          onChange={(e) => updateMedicationDetail(med.id, 'sideEffects', e.target.value)}
+                                          placeholder="e.g., Nausea"
+                                          rows={2}
+                                          className="w-full px-3 py-2 text-sm bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#0D9488] transition-all duration-200 resize-none"
+                                        />
+                                      </div>
+
+                                      {isComplete && (
+                                        <div className="flex justify-end pt-1">
+                                          <TouchButton
+                                            onClick={() => {
+                                              setExpandedMedication(null);
+                                              setShowFullList(false);
+                                            }}
+                                            variant="primary"
+                                            size="sm"
+                                            className="px-6"
+                                          >
+                                            Done
+                                          </TouchButton>
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </motion.div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {showFullList && (
+          <NavigationButtons
+            showBack={showBack}
+            onBack={onBack}
+            onNext={handleNext}
+            isNextDisabled={false}
+          />
+        )}
+      </div>
     </ScreenLayout>
   );
 };

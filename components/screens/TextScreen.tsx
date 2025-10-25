@@ -205,7 +205,7 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
                 onBlur={handleBlur}
                 placeholder={placeholder}
                 rows={5}
-                className="block w-full rounded-xl transition-colors py-[18px] px-5 text-[1.0625rem] text-stone-900 border-2 border-stone-300 focus:border-primary focus:outline-none focus:ring-0"
+                className="block w-full rounded-xl transition-colors py-[18px] px-5 text-[1.0625rem] text-stone-900 border-2 border-stone-300 focus:border-primary focus:outline-none"
               />
             ) : (
               <Input

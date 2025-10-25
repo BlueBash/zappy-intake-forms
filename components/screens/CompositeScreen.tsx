@@ -338,7 +338,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
               onBlur={() => handleBlur(field.id)}
               placeholder={field.placeholder}
               rows={textField.rows || 4}
-              className={`block w-full rounded-lg transition-all duration-200 py-[18px] px-5 text-[1.0625rem] text-stone-900 border-2 ${errors[field.id] ? 'border-red-500' : 'border-stone-200'} focus:border-primary focus:ring-4 focus:ring-primary-200/75 focus:outline-none`}
+              className={`block w-full rounded-lg transition-all duration-200 py-[18px] px-5 text-[1.0625rem] text-stone-900 border-2 ${errors[field.id] ? 'border-red-500' : 'border-stone-200'} focus:border-primary focus:outline-none`}
             />
             {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
           </div>
@@ -534,7 +534,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         return (
           <div 
             className={`p-5 bg-white rounded-2xl shadow-sm cursor-pointer transition-all ${
-              value ? 'border-0 ring-2 ring-primary' : 'border-2 border-stone-200 hover:border-primary/50'
+              value ? 'border-2 border-primary' : 'border-2 border-stone-200 hover:border-primary/50'
             }`}
             onClick={() => updateAnswer(consentField.id, !value)}
           >
@@ -553,7 +553,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         return (
           <div 
             className={`p-5 bg-white rounded-2xl shadow-sm cursor-pointer transition-all ${
-              value ? 'border-0 ring-2 ring-primary' : 'border-2 border-stone-200 hover:border-primary/50'
+              value ? 'border-2 border-primary' : 'border-2 border-stone-200 hover:border-primary/50'
             }`}
             onClick={(event) => {
               const target = event.target as HTMLElement | null;

@@ -333,6 +333,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   initial={reducedMotion ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={reducedMotion ? { duration: 0.01 } : { delay: 0.3, duration: 0.3 }}
+                  className="flex justify-center"
                 >
                   <motion.button
                     onClick={onSubmit}
@@ -448,9 +449,10 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                 </motion.div>
 
                 <motion.div
-                  initial={{ y: 20, opacity: 0 }}
+                  initial={reducedMotion ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.7, duration: 0.5 }}
+                  transition={reducedMotion ? { duration: 0.01 } : { delay: 0.7, duration: 0.5 }}
+                  className="flex justify-center"
                 >
                   <motion.button
                     onClick={onSubmit}
@@ -555,6 +557,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.7, duration: 0.5 }}
+                  className="flex justify-center"
                 >
                   <motion.button
                     onClick={onSubmit}
@@ -633,7 +636,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.5 }}
-            className="flex justify-end"
+            className="flex justify-center"
           >
             <button
               onClick={onSubmit}

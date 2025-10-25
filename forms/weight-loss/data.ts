@@ -1852,18 +1852,26 @@ const formConfig: FormConfig = {
       "required": true,
       "options": [
         { "value": "yes", "label": "Yes, I have a specific medication in mind" },
-        { "value": "no", "label": "No, I'm open to recommendations" },
-        { "value": "no_preference", "label": "No preference - I'll follow medical advice" }
+        { "value": "no", "label": "No, I'm open to recommendations" }
       ],
       "next_logic": [
         {
           "if": "answer == 'yes'",
-          "go_to": "treatment.medication_preference"
+          "go_to": "treatment.medication_options"
         },
         {
-          "else": "treatment.plan_selection.generic"
+          "else": "transition.final_section"
         }
       ]
+    },
+    {
+      "id": "treatment.medication_options",
+      "type": "single_select",
+      "phase": "treatment",
+      "title": "Which medication are you interested in?",
+      "required": true,
+      "options": [],
+      "next": "treatment.plan_selection.generic"
     },
     {
       "id": "treatment.medication_preference",
@@ -1871,7 +1879,7 @@ const formConfig: FormConfig = {
       "phase": "treatment",
       "title": "Which medications interest you?",
       "required": true,
-      "next": "treatment.plan_selection.generic"
+      "next": "transition.final_section"
     },
     {
       "id": "treatment.plan_selection.semaglutide_brand",
@@ -1881,7 +1889,7 @@ const formConfig: FormConfig = {
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
+      "next": "transition.final_section"
     },
     {
       "id": "treatment.plan_selection.semaglutide_compound",
@@ -1891,7 +1899,7 @@ const formConfig: FormConfig = {
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
+      "next": "transition.final_section"
     },
     {
       "id": "treatment.plan_selection.tirzepatide_brand",
@@ -1901,7 +1909,7 @@ const formConfig: FormConfig = {
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
+      "next": "transition.final_section"
     },
     {
       "id": "treatment.plan_selection.tirzepatide_compound",
@@ -1911,7 +1919,7 @@ const formConfig: FormConfig = {
       "help_text": "Includes medication, provider consultations, and support.",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
+      "next": "transition.final_section"
     },
     {
       "id": "treatment.plan_selection.generic",
@@ -1921,33 +1929,14 @@ const formConfig: FormConfig = {
       "help_text": "A licensed healthcare provider will review your information and may recommend appropriate treatment. This is not a guarantee for a prescription.",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
+      "next": "logistics.checkout"
     },
     {
-      "id": "logistics.discount_code",
-      "type": "text",
-      "phase": "treatment",
-      "title": "Have a discount code?",
-      "placeholder": "Enter code",
-      "required": false,
-      "next": "transition.final_section"
-    },
-    {
-      "id": "transition.final_section",
-      "type": "content",
-      "phase": "treatment",
-      "headline": "Almost there!",
-      "body": "Just need your contact and shipping info, then you're all set. Your provider will review everything within 24 hours.",
-      "cta_primary": {
-        "label": "Finish Up"
-      },
-      "next": "logistics.contact_info"
-    },
-    {
-      "id": "logistics.contact_info",
+      "id": "logistics.checkout",
       "type": "composite",
       "phase": "treatment",
-      "title": "Where can we reach you?",
+      "title": "Complete your order",
+      "help_text": "Just need a few details to finalize your order",
       "fields": [
         [
           {
@@ -1982,16 +1971,7 @@ const formConfig: FormConfig = {
             "pattern": "^\\(\\d{3}\\) \\d{3}-\\d{4}$",
             "error": "Enter a valid phone number"
           }
-        }
-      ],
-      "next": "logistics.shipping_address"
-    },
-    {
-      "id": "logistics.shipping_address",
-      "type": "composite",
-      "phase": "treatment",
-      "title": "Where should we ship your medication?",
-      "fields": [
+        },
         {
           "id": "address_line1",
           "type": "text",
@@ -2023,40 +2003,29 @@ const formConfig: FormConfig = {
             "error": "Enter a valid city"
           }
         },
-        [
-          {
-            "id": "state",
-            "type": "single_select",
-            "label": "State",
-            "required": true,
-            "options": []
-          },
-          {
-            "id": "zip_code",
-            "type": "text",
-            "label": "ZIP",
-            "placeholder": "12345",
-            "mask": "#####",
-            "required": true,
-            "validation": {
-              "pattern": "^\\d{5}$",
-              "error": "Enter a valid 5-digit ZIP"
-            }
+        {
+          "id": "state",
+          "type": "single_select",
+          "label": "State",
+          "required": true,
+          "options": []
+        },
+        {
+          "id": "zip_code",
+          "type": "text",
+          "label": "ZIP code",
+          "placeholder": "12345",
+          "mask": "#####",
+          "required": true,
+          "validation": {
+            "pattern": "^\\d{5}$",
+            "error": "Enter a valid 5-digit ZIP"
           }
-        ]
-      ],
-      "next": "logistics.create_password"
-    },
-    {
-      "id": "logistics.create_password",
-      "type": "composite",
-      "phase": "treatment",
-      "title": "Create your account",
-      "fields": [
+        },
         {
           "id": "password",
           "type": "password",
-          "label": "Password",
+          "label": "Create a password",
           "placeholder": "At least 8 characters",
           "required": true,
           "validation": {
