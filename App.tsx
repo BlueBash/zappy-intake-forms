@@ -6,7 +6,6 @@ import type { Screen, FormConfig } from './types';
 import defaultFormConfig from './forms/weight-loss/data';
 import { apiClient } from './utils/api';
 
-import ProgressBar from './components/ui/ProgressBar';
 import SingleSelectScreen from './components/screens/SingleSelectScreen';
 import CompositeScreen from './components/screens/CompositeScreen';
 import ContentScreen from './components/screens/ContentScreen';
@@ -547,6 +546,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       onBack: goToPrev,
       defaultCondition: resolvedCondition,
       showLoginLink,
+      progress, // Pass actual form progress to all screens
     };
 
     if (screen.id === 'treatment.glp1_history') {
@@ -635,7 +635,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       
       <div className="relative w-full max-w-2xl mx-auto flex flex-col flex-grow">
         <div className="flex flex-col flex-grow">
-          {activeFormConfig.settings.progress_bar && <ProgressBar progress={progress} />}
+          {/* Progress bar now in ScreenHeader for ALL screens */}
           
           <main className="flex-grow w-full relative flex flex-col min-h-0">
               <AnimatePresence mode="wait" initial={false} custom={direction}>

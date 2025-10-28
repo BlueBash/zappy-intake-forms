@@ -2,12 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { ScreenProps } from './common';
-import ScreenLayout from '../common/ScreenLayout';
+import ScreenHeader from '../common/ScreenHeader';
+import ValidationCheckmark from '../common/ValidationCheckmark';
+import ErrorMessage from '../common/ErrorMessage';
 import Input from '../ui/Input';
 import NavigationButtons from '../common/NavigationButtons';
 import { TextScreen as TextScreenType } from '../../types';
 
-const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, headerSize }) => {
+interface TextScreenProps extends ScreenProps {
+  screen: TextScreenType;
+  progress?: number; // Actual form progress percentage
+}
+
+const TextScreen: React.FC<TextScreenProps> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, headerSize, progress = 0 }) => {
   const { id, title, help_text, placeholder, required, validation, mask, min_today, multiline } = screen;
   const value = answers[id] || '';
   const [error, setError] = useState<string | undefined>(undefined);
@@ -161,8 +168,27 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full flex flex-col items-center min-h-screen pt-4 pb-8"
     >
-      <ScreenLayout title={title} helpText={help_text} headerSize={headerSize}>
+      <div className="w-full max-w-2xl px-6">
+        {/* ⭐ ScreenHeader with back button, logo, and REAL progress */}
+        <ScreenHeader
+          onBack={showBack ? onBack : undefined}
+          sectionLabel={screen.phase || "Form"}
+          progressPercentage={progress}
+        />
+        
+        {/* Title & Help Text */}
+        {title && (
+          <h2 className="text-2xl sm:text-3xl md:text-4xl text-neutral-900 mb-4 leading-tight tracking-tight text-center">
+            {title}
+          </h2>
+        )}
+        {help_text && (
+          <p className="text-base mb-8 text-neutral-600 leading-relaxed text-center max-w-xl mx-auto">
+            {help_text}
+          </p>
+        )}
         
         {/* 🎁 PROMOTIONAL BANNER - Only show on email screen */}
         {isEmailField && (
@@ -195,29 +221,37 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
           </motion.div>
         )}
         
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="w-full space-y-8">
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="w-full space-y-4">
             {multiline ? (
-              <textarea
-                ref={textareaRef}
-                id={id}
-                value={value}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder={placeholder}
-                rows={5}
-                className="block w-full rounded-xl transition-colors py-[18px] px-5 text-[1.0625rem] text-stone-900 border-2 border-stone-300 focus:border-primary focus:outline-none"
-              />
+              <div>
+                <textarea
+                  ref={textareaRef}
+                  id={id}
+                  value={value}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder={placeholder}
+                  rows={5}
+                  className="block w-full rounded-xl transition-colors py-[18px] px-5 text-[1.0625rem] text-stone-900 border-2 border-stone-300 focus:border-primary focus:outline-none"
+                />
+                {/* ⭐ NEW: Standardized error message */}
+                <ErrorMessage error={error} />
+              </div>
             ) : (
-              <Input
-                ref={inputRef}
-                id={id}
-                value={value}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder={placeholder}
-                error={error}
-                maxLength={mask === '##/##/####' || mask === '##-##-####' ? 10 : undefined}
-              />
+              <div className="relative">
+                <Input
+                  ref={inputRef}
+                  id={id}
+                  value={value}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder={placeholder}
+                  error={error}
+                  maxLength={mask === '##/##/####' || mask === '##-##-####' ? 10 : undefined}
+                />
+                {/* ⭐ NEW: Validation checkmark appears when field is valid */}
+                <ValidationCheckmark show={!error && isComplete && value.length > 0} />
+              </div>
             )}
             <NavigationButtons 
               showBack={showBack}
@@ -227,7 +261,7 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
               nextButtonType="submit"
             />
         </form>
-      </ScreenLayout>
+      </div>
     </motion.div>
   );
 };

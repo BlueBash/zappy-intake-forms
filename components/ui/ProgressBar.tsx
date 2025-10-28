@@ -27,7 +27,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress }) => {
       aria-label={`Form completion: ${Math.round(progress)}%`}
     >
       <motion.div
-        className="h-full bg-gradient-progress"
+        className="h-full bg-[var(--teal)]"
         style={{
           width: springProgress,
           // Respect reduced motion preferences

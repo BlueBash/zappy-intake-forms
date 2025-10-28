@@ -1,16 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ScreenProps } from './common';
-import ScreenLayout from '../common/ScreenLayout';
+import ScreenHeader from '../common/ScreenHeader';
 import NavigationButtons from '../common/NavigationButtons';
 import RegionDropdown from '../common/RegionDropdown';
 import Select from '../ui/Select';
 import Button from '../ui/Button';
 import { SingleSelectScreen as SingleSelectScreenType } from '../../types';
 
+interface SingleSelectScreenProps extends ScreenProps {
+  screen: SingleSelectScreenType;
+  progress?: number; // Actual form progress percentage
+}
+
 const DROPDOWN_THRESHOLD = 15;
 
-const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, showLoginLink }) => {
+const SingleSelectScreen: React.FC<SingleSelectScreenProps> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, showLoginLink, progress = 0 }) => {
   const { id, title, help_text, options = [], required, auto_advance = true, field_id } = screen;
   // Use field_id if provided, otherwise use id
   const answerId = field_id || id;
@@ -61,30 +66,57 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
     };
 
     return (
-      <ScreenLayout title={title} helpText={help_text} showLoginLink={showLoginLink}>
-        <div className="space-y-4">
-          <RegionDropdown
-            value={stateValue}
-            onChange={handleStateChange}
-            placeholder="Select your state"
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full flex flex-col items-center min-h-screen pt-4 pb-8"
+      >
+        <div className="w-full max-w-2xl px-6">
+          {/* ⭐ ScreenHeader with back button, logo, and REAL progress */}
+          <ScreenHeader
+            onBack={showBack ? onBack : undefined}
+            sectionLabel={screen.phase || "Form"}
+            progressPercentage={progress}
           />
-          {isStateRestricted && (
-            <div
-              className="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-600 shadow-inner shadow-rose-100/60"
-              role="alert"
-              aria-live="assertive"
-            >
-              Unfortunately, we are not able to service patients in Alabama. Redirecting you to ZappyHealth.com…
-            </div>
+          
+          {/* Title & Help Text */}
+          {title && (
+            <h2 className="text-2xl sm:text-3xl md:text-4xl text-neutral-900 mb-4 leading-tight tracking-tight text-center">
+              {title}
+            </h2>
           )}
+          {help_text && (
+            <p className="text-base mb-8 text-neutral-600 leading-relaxed text-center max-w-xl mx-auto">
+              {help_text}
+            </p>
+          )}
+          
+          <div className="space-y-4">
+            <RegionDropdown
+              value={stateValue}
+              onChange={handleStateChange}
+              placeholder="Select your state"
+            />
+            {isStateRestricted && (
+              <div
+                className="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-600 shadow-inner shadow-rose-100/60"
+                role="alert"
+                aria-live="assertive"
+              >
+                Unfortunately, we are not able to service patients in Alabama. Redirecting you to ZappyHealth.com…
+              </div>
+            )}
+          </div>
+          <NavigationButtons
+            showBack={showBack}
+            onBack={onBack}
+            onNext={onSubmit}
+            isNextDisabled={!stateValue || isStateRestricted}
+          />
         </div>
-        <NavigationButtons
-          showBack={showBack}
-          onBack={onBack}
-          onNext={onSubmit}
-          isNextDisabled={!stateValue || isStateRestricted}
-        />
-      </ScreenLayout>
+      </motion.div>
     );
   }
 
@@ -109,17 +141,43 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   const showBackOnly = auto_advance && !renderAsDropdown && showBack;
 
   return (
-    <ScreenLayout title={title} helpText={help_text} showLoginLink={showLoginLink}>
-      {renderAsDropdown ? (
-        <Select
-          id={answerId}
-          options={options}
-          value={selectedValue || ''}
-          onChange={handleDropdownChange}
-          required={required}
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full flex flex-col items-center min-h-screen pt-4 pb-8"
+    >
+      <div className="w-full max-w-2xl px-6">
+        {/* ⭐ ScreenHeader with back button, logo, and REAL progress */}
+        <ScreenHeader
+          onBack={showBack ? onBack : undefined}
+          sectionLabel={screen.phase || "Form"}
+          progressPercentage={progress}
         />
-      ) : (
-        <div className="space-y-3 mb-14">
+        
+        {/* Title & Help Text */}
+        {title && (
+          <h2 className="text-2xl sm:text-3xl md:text-4xl text-neutral-900 mb-4 leading-tight tracking-tight text-center">
+            {title}
+          </h2>
+        )}
+        {help_text && (
+          <p className="text-base mb-8 text-neutral-600 leading-relaxed text-center max-w-xl mx-auto">
+            {help_text}
+          </p>
+        )}
+        
+        {renderAsDropdown ? (
+          <Select
+            id={answerId}
+            options={options}
+            value={selectedValue || ''}
+            onChange={handleDropdownChange}
+            required={required}
+          />
+        ) : (
+          <div className="space-y-3 mb-14">
           {options.map((option, index) => {
             const isSelected = selectedValue === option.value;
             const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -190,30 +248,31 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
               </motion.button>
             );
           })}
-        </div>
-      )}
-      
-      {showNavButtons && (
-        <NavigationButtons
-          showBack={showBack}
-          onBack={onBack}
-          onNext={onSubmit}
-          isNextDisabled={!isComplete}
-        />
-      )}
+          </div>
+        )}
+        
+        {showNavButtons && (
+          <NavigationButtons
+            showBack={showBack}
+            onBack={onBack}
+            onNext={onSubmit}
+            isNextDisabled={!isComplete}
+          />
+        )}
 
-      {!showNavButtons && showBackOnly && (
-        <div className="w-full flex justify-start mt-10">
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            aria-label="Go back to the previous question"
-          >
-            Back
-          </Button>
-        </div>
-      )}
-    </ScreenLayout>
+        {!showNavButtons && showBackOnly && (
+          <div className="w-full flex justify-start mt-10">
+            <Button
+              variant="ghost"
+              onClick={onBack}
+              aria-label="Go back to the previous question"
+            >
+              Back
+            </Button>
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 };
 
