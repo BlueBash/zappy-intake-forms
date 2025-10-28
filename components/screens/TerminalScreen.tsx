@@ -24,12 +24,12 @@ const customIconMap: Record<string, React.FC<{ className?: string }>> = {
     journey: JourneyIcon,
 };
 
-const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = ({ screen, calculations = {}, showBack, onBack }) => {
+const TerminalScreen: React.FC<ScreenProps & { screen: TerminalScreenType }> = ({ screen, calculations = {}, answers = {}, showBack, onBack }) => {
   const { title, body, status, resources, next_steps, cta_primary, links } = screen;
   const icon = status ? statusIconMap[status] : null;
 
-  const interpolatedTitle = interpolateText(title, calculations);
-  const interpolatedBody = interpolateText(body, calculations);
+  const interpolatedTitle = interpolateText(title, calculations, answers);
+  const interpolatedBody = interpolateText(body, calculations, answers);
 
   const handlePrimaryClick = useCallback(() => {
     if (!cta_primary?.url) {

@@ -30,39 +30,43 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.4 }}
-      className="flex justify-between items-center mt-12"
+      className="flex justify-between items-center mt-12 w-full"
       style={style}
     >
-      {/* BACK BUTTON */}
-      {showBack && onBack ? (
+      {/* BACK BUTTON - Left side */}
+      <div className="flex-shrink-0">
+        {showBack && onBack ? (
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            type="button"
+            className="group"
+          >
+            {/* Arrow slides left on hover */}
+            <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+            Back
+          </Button>
+        ) : (
+          <div className="w-[100px]" /> 
+        )}
+      </div>
+
+      {/* CONTINUE BUTTON - Right side */}
+      <div className="flex-shrink-0">
         <Button
-          onClick={onBack}
-          variant="ghost"
-          type="button"
+          onClick={nextButtonType === 'button' ? onNext : undefined}
+          type={nextButtonType}
+          variant="primary"
+          size="lg"
+          disabled={isNextDisabled}
+          isLoading={isNextLoading}
           className="group"
         >
-          {/* Arrow slides left on hover */}
-          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-          Back
+          {nextLabel}
+          {/* Arrow slides right on hover */}
+          <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
         </Button>
-      ) : (
-        <div />
-      )}
-
-      {/* CONTINUE BUTTON */}
-      <Button
-        onClick={nextButtonType === 'button' ? onNext : undefined}
-        type={nextButtonType}
-        variant="primary"
-        size="lg"
-        disabled={isNextDisabled}
-        isLoading={isNextLoading}
-        className="group"
-      >
-        {nextLabel}
-        {/* Arrow slides right on hover */}
-        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-      </Button>
+      </div>
     </motion.div>
   );
 };

@@ -146,10 +146,60 @@ textarea:focus {
   border-radius: inherit;
 }
 
+/* Remove browser chrome from date/time inputs */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+/* Remove ALL ring effects from inputs and textareas to prevent double borders */
+input, textarea, select {
+  --tw-ring-shadow: 0 0 #0000 !important;
+  box-shadow: none !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  --tw-ring-shadow: 0 0 #0000 !important;
+  box-shadow: none !important;
+}
+
+/* Ensure date inputs don't get double borders or outlines */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="datetime-local"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+/* Extra protection for date inputs */
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  border: none !important;
+  padding: 0;
+}
+
 /* Only apply focus-visible outline to interactive elements that don't have custom focus styles */
 button:focus-visible:not([class*="border"]),
 a:focus-visible {
   outline: 2px solid #0D9488 !important;
   outline-offset: 2px;
   border-radius: 0.375rem;
+}
+
+/* Prevent ring and border utilities from stacking */
+[class*="ring-"].border-2,
+[class*="ring-"][class*="border-"] {
+  border: 0 !important;
 }

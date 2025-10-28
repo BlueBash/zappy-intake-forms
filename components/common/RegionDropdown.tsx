@@ -192,7 +192,7 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
         onClick={handleInputClick}
         onKeyDown={handleKeyDown}
         disabled={disabled}
-        className="w-full py-[18px] px-5 text-[1.0625rem] border-2 border-stone-200 rounded-lg focus:outline-none focus:ring-0 focus:border-primary transition-all disabled:bg-stone-100 focus:shadow-none"
+        className="w-full py-[18px] px-5 text-[1.0625rem] border-2 border-stone-300 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-stone-100"
         autoComplete="off"
       />
 
@@ -208,7 +208,7 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
       </div>
 
       {isOpen && !disabled && (
-        <div className="absolute z-10 w-full mt-1 bg-white border-2 border-stone-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-10 w-full mt-1 bg-white border-2 border-stone-300 rounded-xl shadow-lg max-h-60 overflow-y-auto" style={{ boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)' }}>
           {filteredRegions.length > 0 ? (
             filteredRegions.map((region, index) => (
               <button

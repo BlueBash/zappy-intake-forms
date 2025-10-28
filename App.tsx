@@ -17,14 +17,19 @@ import DateScreen from './components/screens/DateScreen';
 import ConsentScreen from './components/screens/ConsentScreen';
 import TerminalScreen from './components/screens/TerminalScreen';
 import ReviewScreen from './components/screens/ReviewScreen';
-import MedicationSelectionScreen from './components/screens/MedicationSelectionScreen';
+// import MedicationSelectionScreen from './components/screens/MedicationSelectionScreen';
 import PlanSelectionScreen from './components/screens/PlanSelectionScreen';
 import MedicationOptionsScreen from './components/screens/MedicationOptionsScreen';
 import DiscountCodeScreen from './components/screens/DiscountCodeScreen';
 import InterstitialScreen from './components/screens/InterstitialScreen';
 import GLP1HistoryScreen from './components/screens/GLP1HistoryScreen';
+import MedicationChoiceScreen from './components/screens/MedicationChoiceScreen';
+import AccountCreationScreen from './components/screens/AccountCreationScreen';
 import MedicationPreferenceInitialScreen from './components/screens/MedicationPreferenceInitialScreen';
+import MedicationPreferenceScreen from './components/screens/MedicationPreferenceScreen';
+import WeightLossGraphScreen from './components/screens/WeightLossGraphScreen';
 import { buildMedicationHistorySummary } from './utils/medicationHistory';
+import AutocompleteScreen from './components/screens/AutocompleteScreen';
 
 type ProgramTheme = {
   headerBg: string;
@@ -125,6 +130,9 @@ interface AppProps {
   defaultCondition?: string;
 }
 
+const FORM_SAVE_PREFIX = 'zappy_form_save_';
+const AUTO_SAVE_INTERVAL_MS = 30000; // 30 seconds
+
 const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondition }) => {
   const activeFormConfig = providedFormConfig ?? defaultFormConfig;
   const resolvedCondition = defaultCondition ?? activeFormConfig.default_condition ?? 'Weight Loss';
@@ -154,9 +162,24 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       return null;
     }
   });
+  
+  // Auto-save state
+  const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const lastEmailSyncedRef = useRef<string | null>(null);
   const previousScreenIdRef = useRef<string | null>(null);
   const formSubmittedRef = useRef(false);
+  const sessionIdRef = useRef<string>(() => {
+    // Generate or retrieve session ID for saving progress before email is captured
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('zappy_session_id') : null;
+    if (stored) return stored;
+    const newId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('zappy_session_id', newId);
+    }
+    return newId;
+  });
 
   if (previousScreenIdRef.current === null) {
     previousScreenIdRef.current = currentScreen.id;
@@ -165,6 +188,70 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [screenAnnouncement, setScreenAnnouncement] = useState<string>('');
+
+  // Get save key based on email or session ID
+  const getSaveKey = useCallback(() => {
+    if (isValidEmail(answers.email)) {
+      return `${FORM_SAVE_PREFIX}${(answers.email as string).trim().toLowerCase()}`;
+    }
+    return `${FORM_SAVE_PREFIX}${sessionIdRef.current}`;
+  }, [answers.email]);
+
+  // Save progress to localStorage
+  const saveProgress = useCallback(() => {
+    if (formSubmittedRef.current) return;
+    
+    try {
+      setIsSaving(true);
+      setSaveError(null);
+      
+      const saveData = {
+        answers,
+        currentScreenId: currentScreen.id,
+        history,
+        calculations,
+        timestamp: Date.now(),
+        condition: resolvedCondition,
+      };
+      
+      const saveKey = getSaveKey();
+      localStorage.setItem(saveKey, JSON.stringify(saveData));
+      setLastSavedTime(new Date());
+      
+      // If user has provided email, also save under email key and clear session save
+      if (isValidEmail(answers.email)) {
+        const sessionKey = `${FORM_SAVE_PREFIX}${sessionIdRef.current}`;
+        if (sessionKey !== saveKey) {
+          localStorage.removeItem(sessionKey);
+        }
+      }
+    } catch (error) {
+      console.error('[AutoSave] Failed to save progress', error);
+      setSaveError('Unable to save progress');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [answers, currentScreen.id, history, calculations, resolvedCondition, getSaveKey]);
+
+  // Auto-save effect - saves every 30 seconds
+  useEffect(() => {
+    if (formSubmittedRef.current) return;
+    
+    // Save immediately on answer change (debounced by interval)
+    const saveInterval = setInterval(() => {
+      saveProgress();
+    }, AUTO_SAVE_INTERVAL_MS);
+
+    return () => clearInterval(saveInterval);
+  }, [saveProgress]);
+
+  // Save on screen change
+  useEffect(() => {
+    if (!formSubmittedRef.current && history.length > 0) {
+      saveProgress();
+    }
+  }, [currentScreen.id, saveProgress, history.length]);
+
 
   useEffect(() => {
     const { theme } = activeFormConfig.settings;
@@ -305,8 +392,6 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       setSubmitError(null);
       setIsSubmitting(true);
 
-      console.warn('[Consultation] handleReviewSubmit triggered');
-
       const responses = JSON.parse(JSON.stringify(answers));
 
       const existingAddress = responses.address || {};
@@ -377,14 +462,16 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       const payload = {
         condition: responses.condition,
         responses,
-        intake_form: activeFormConfig,
-        timestamp: new Date().toISOString(),
+        // intake_form: activeFormConfig,
+        // timestamp: new Date().toISOString(),
       };
 
-      console.warn('[Consultation] Submitting payload', payload);
-      const submissionResponse = await apiClient.submitConsultation(payload);
+      const submissionResponse :any = await apiClient.submitConsultation(payload);
       const formRequestId = extractFormRequestId(submissionResponse);
-
+      console.log('submissionResponse', submissionResponse);
+      const paymentUrl = `/payment.html?client_secret=${submissionResponse?.payment_intent?.client_secret}&payment_intent=${submissionResponse?.payment_intent?.id}&amount=${submissionResponse?.payment_intent?.amount}&invoice_id=${submissionResponse?.invoice?.id}&currency=${submissionResponse?.payment_intent?.currency}`;
+      console.log('paymentUrl', paymentUrl);
+      
       try {
         await syncLead({
           reason: 'form_submission',
@@ -407,7 +494,8 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         setLeadId(null);
       }
 
-      goToNext();
+      // Redirect to payment page
+      window.location.href = paymentUrl;
     } catch (error) {
       console.error(error);
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit form');
@@ -465,16 +553,24 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       return <GLP1HistoryScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 
+    if (screen.id === 'treatment.medication_choice') {
+      return <MedicationChoiceScreen key={screen.id} {...commonProps} screen={screen} />;
+    }
+
+    if (screen.id === 'checkout.account_creation') {
+      return <AccountCreationScreen {...commonProps} screen={screen} key={screen.id}  onSubmit={handleReviewSubmit}/>;
+    }
+
     if (screen.id === 'treatment.medication_preference_initial') {
       return <MedicationPreferenceInitialScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 
-    if (screen.id === 'treatment.medication_preference') {
-      return <MedicationOptionsScreen key={screen.id} {...commonProps} screen={screen} />;
+    if (screen.id === 'treatment.medication_options') {
+      return <MedicationOptionsScreen key={screen.id} {...commonProps} screen={screen} goToScreen={goToScreen} />;
     }
 
-    if (screen.id.startsWith('treatment.plan_selection')) {
-      return <PlanSelectionScreen key={screen.id} {...commonProps} screen={screen} />;
+    if (screen.id === 'treatment.medication_preference') {
+      return <MedicationPreferenceScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 
     if (screen.id === 'logistics.discount_code') {
@@ -484,6 +580,8 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     switch (screen.type) {
       case 'single_select':
         return <SingleSelectScreen key={screen.id} {...commonProps} screen={screen} />;
+      case 'autocomplete':
+        return <AutocompleteScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'multi_select':
         return <MultiSelectScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'composite':
@@ -513,9 +611,11 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
           />
         );
       case 'terminal':
-        return <TerminalScreen key={screen.id} {...commonProps} screen={screen} />;
+        return <TerminalScreen {...commonProps} screen={screen} key={screen.id} />;
       case 'interstitial':
-        return <InterstitialScreen key={screen.id} screen={screen} onSubmit={goToNext} />;
+        return <InterstitialScreen screen={screen} onSubmit={goToNext} />;
+      case 'plan_selection':
+        return <PlanSelectionScreen {...commonProps} screen={screen} />;
       default:
         return <div>Unknown screen type: {(screen as any).type}</div>;
     }

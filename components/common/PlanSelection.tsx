@@ -184,10 +184,10 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.08, duration: 0.4 }}
               layout
-              className={`relative rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
+              className={`relative rounded-xl border-2 transition-all duration-300 overflow-hidden ${
                 isSelected
                   ? 'border-[#0D9488] bg-gradient-to-br from-[#0D9488]/5 via-white to-[#14B8A6]/5 shadow-xl'
-                  : 'border-gray-200 bg-white hover:border-[#0D9488]/30 hover:shadow-lg'
+                  : 'border-stone-300 bg-white hover:border-[#0D9488]/50 hover:shadow-lg'
               }`}
             >
               {/* Popular badge */}
@@ -201,7 +201,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
               {/* Collapsed Header */}
               <button
                 onClick={() => handlePlanClick(plan.id)}
-                className="w-full p-6 text-left focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40 focus:ring-offset-2 rounded-2xl transition-all"
+                className="w-full p-6 text-left focus:outline-none rounded-2xl transition-all"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
@@ -210,15 +210,13 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
                     }`}>
                       {plan.name || plan.plan || 'Plan'}
                     </h3>
-                    <div className="flex items-baseline gap-2 mb-3">
+                    <div className="flex items-baseline gap-1 mb-3">
                       <span className={`text-3xl transition-colors ${
                         isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
                       }`}>
                         {formatCurrency(price)}
                       </span>
-                      {plan.plan && (
-                        <span className="text-sm text-neutral-500">/ {plan.plan}</span>
-                      )}
+                      <span className="text-sm text-neutral-500">/month</span>
                     </div>
                     {!isExpanded && plan.medication && (
                       <p className="text-sm text-neutral-600 truncate">{plan.medication}</p>
@@ -315,6 +313,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
                             {[
                               { value: 'maintenance', label: 'Maintenance', desc: 'Keep my dose the same each month' },
                               { value: 'escalation', label: 'Escalation', desc: 'Increase my dose each month as appropriate' },
+                              { value: 'no_preference', label: 'No preference', desc: "I'll follow medical advice" },
                             ].map((option) => {
                               const isStrategySelected = doseStrategy === option.value;
                               return (
@@ -324,16 +323,16 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
                                     e.stopPropagation();
                                     onDoseStrategyChange(option.value);
                                   }}
-                                  className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-all duration-200 ${
-                                    isStrategySelected
-                                      ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5'
-                                      : 'border-gray-200 hover:border-[#0D9488]/30'
-                                  }`}
+                  className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-all duration-200 ${
+                    isStrategySelected
+                      ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5'
+                      : 'border-stone-300 hover:border-[#0D9488]/50'
+                  }`}
                                 >
                                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
                                     isStrategySelected
                                       ? 'border-[#0D9488] bg-gradient-to-br from-[#0D9488] to-[#14B8A6]'
-                                      : 'border-gray-300'
+                                      : 'border-stone-300'
                                   }`}>
                                     {isStrategySelected && (
                                       <Check className="w-3 h-3 text-white" strokeWidth={3} />

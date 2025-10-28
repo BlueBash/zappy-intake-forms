@@ -38,7 +38,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               block w-full rounded-lg transition-all duration-200 bg-white appearance-none
               py-[18px] px-5 text-[1.0625rem] text-stone-900
               border-2 shadow-none
-              focus:border-primary focus:ring-0 focus:outline-none focus:shadow-none
+              focus:border-primary focus:outline-none
               ${error ? 'border-red-500' : 'border-stone-200'}
             `}
             {...props}

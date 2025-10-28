@@ -18,7 +18,7 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed';
   
   const sizeClasses = {
     md: 'py-2.5 px-6 text-base',
@@ -26,9 +26,9 @@ const Button: React.FC<ButtonProps> = ({
   };
   
   const variantClasses = {
-    primary: 'text-white bg-gradient-to-r from-[#0D9488] to-[#14B8A6] hover:from-[#0F766E] hover:to-[#0D9488] shadow-lg hover:shadow-xl',
-    secondary: 'bg-white text-neutral-600 border-2 border-gray-200 hover:enabled:bg-neutral-50 hover:enabled:border-neutral-300',
-    ghost: 'text-neutral-600 hover:enabled:bg-neutral-100 hover:enabled:text-neutral-900'
+    primary: 'text-white bg-gradient-to-r from-[#0D9488] to-[#14B8A6] hover:from-[#0F766E] hover:to-[#0D9488] shadow-lg hover:shadow-xl focus-visible:ring-4 focus-visible:ring-primary/20',
+    secondary: 'bg-white text-neutral-600 border-2 border-gray-200 hover:enabled:bg-neutral-50 hover:enabled:border-neutral-300 focus-visible:border-primary',
+    ghost: 'text-neutral-600 hover:enabled:bg-neutral-100 hover:enabled:text-neutral-900 focus-visible:ring-4 focus-visible:ring-primary/20'
   };
 
   return (

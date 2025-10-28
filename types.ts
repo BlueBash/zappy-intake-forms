@@ -3,6 +3,7 @@ export type ScreenType =
   | 'content' 
   | 'single_select' 
   | 'multi_select' 
+  | 'autocomplete'
   | 'composite' 
   | 'text'
   | 'number'
@@ -10,7 +11,8 @@ export type ScreenType =
   | 'consent' 
   | 'review' 
   | 'terminal'
-  | 'interstitial';
+  | 'interstitial'
+  | 'plan_selection';
 
 export type FieldType = 
   | 'text' 
@@ -85,6 +87,11 @@ export interface ConditionalDisplay {
   show_if: string;
 }
 
+export interface ProgressiveDisplay {
+  show_after_field: string;
+  show_if_condition?: string;
+}
+
 // Field types
 export interface BaseField {
   id: string;
@@ -96,6 +103,7 @@ export interface BaseField {
   validation?: Validation;
   conditional_options?: ConditionalOptions;
   conditional_display?: ConditionalDisplay;
+  progressive_display?: ProgressiveDisplay;
 }
 
 export interface TextField extends BaseField {
@@ -117,8 +125,10 @@ export interface SelectField extends BaseField {
   type: 'single_select' | 'multi_select';
   options: Option[];
   other_text_id?: string;
+  other_text_placeholder?: string;
   risk_level?: string;
   auto_advance?: boolean;
+  conditional_warnings?: ConditionalWarning[];
 }
 
 export interface CheckboxField extends BaseField {
@@ -173,14 +183,33 @@ export interface SingleSelectScreen extends BaseScreen {
   safety_critical?: boolean;
 }
 
+export interface AutocompleteScreen extends BaseScreen {
+  type: 'autocomplete';
+  title: string;
+  help_text?: string;
+  options?: Option[];
+  required?: boolean;
+  field_id?: string;
+  safety_critical?: boolean;
+}
+
+export interface ConditionalWarning {
+  show_if_value: string;
+  message: string;
+  title?: string;
+  type?: 'error' | 'warning' | 'info';
+}
+
 export interface MultiSelectScreen extends BaseScreen {
   type: 'multi_select';
   title: string;
   help_text?: string;
   options?: Option[];
   other_text_id?: string;
+  other_text_placeholder?: string;
   required?: boolean;
   safety_critical?: boolean;
+  conditional_warnings?: ConditionalWarning[];
 }
 
 export interface TextScreen extends BaseScreen {
@@ -289,13 +318,14 @@ export interface TerminalScreen extends BaseScreen {
 
 export interface InterstitialScreen extends BaseScreen {
   type: 'interstitial';
-  variant?: 'stat' | 'motivation' | 'testimonial' | 'trust' | 'process' | 'stat_success' | 'stat_science' | 'stat_personalized';
+  variant?: 'stat' | 'motivation' | 'testimonial' | 'trust' | 'process' | 'stat_success' | 'stat_science' | 'stat_personalized' | 'weight_loss_graph';
   stat_number?: string;
   stat_text?: string;
   stat_highlight?: string;
   background_image?: string;
   stat_subtitle?: string;
   title?: string;
+  subtitle?: string;
   message?: string;
   testimonial_title?: string;
   testimonial_subtitle?: string;
@@ -320,9 +350,18 @@ export interface InterstitialScreen extends BaseScreen {
   }>;
 }
 
+export interface PlanSelectionScreen extends BaseScreen {
+  type: 'plan_selection';
+  title: string;
+  help_text?: string;
+  required?: boolean;
+  service_type?: string;
+}
+
 export type Screen = 
   | ContentScreen 
   | SingleSelectScreen 
+  | AutocompleteScreen
   | MultiSelectScreen 
   | TextScreen
   | NumberScreen
@@ -331,7 +370,8 @@ export type Screen =
   | ConsentScreen 
   | ReviewScreen 
   | TerminalScreen
-  | InterstitialScreen;
+  | InterstitialScreen
+  | PlanSelectionScreen;
 
 // Form configuration
 export interface Theme {

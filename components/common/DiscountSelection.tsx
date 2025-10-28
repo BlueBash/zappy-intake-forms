@@ -83,7 +83,7 @@ const DiscountSelection: React.FC<DiscountSelectionProps> = ({
                   setError('');
                 }}
                 placeholder="Enter code"
-                className="flex-1 px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="flex-1 px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:border-primary"
                 disabled={loading}
               />
               <button

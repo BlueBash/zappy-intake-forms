@@ -1,11 +1,9 @@
-import React from 'react';
+import { motion } from 'framer-motion';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
-import PlanSelection from '../common/PlanSelection';
+import PlanSelectionOnly from '../common/PlanSelectionOnly';
 import { ScreenProps } from './common';
 import type { PackagePlan } from '../../utils/api';
-
-const DEFAULT_SERVICE_TYPE = 'Weight Loss';
 
 const formatCurrency = (value?: number) => {
   if (typeof value !== 'number' || Number.isNaN(value)) return '';
@@ -16,80 +14,36 @@ const formatCurrency = (value?: number) => {
   }).format(value);
 };
 
-const MULTI_MONTH_THRESHOLD = 2;
-
-const requiresDoseStrategyForPlan = (plan: PackagePlan | null): boolean => {
-  if (!plan) return false;
-
-  // Prefer explicit duration fields if provided by the API.
-  const durationFields = [
-    (plan as any)?.duration_in_months,
-    (plan as any)?.durationInMonths,
-    (plan as any)?.durationMonths,
-    (plan as any)?.months,
-  ];
-
-  const explicitDuration = durationFields.find((value) => value !== undefined && value !== null);
-  if (explicitDuration !== undefined) {
-    const parsedDuration = Number(explicitDuration);
-    if (!Number.isNaN(parsedDuration)) {
-      return parsedDuration >= MULTI_MONTH_THRESHOLD;
-    }
-  }
-
-  const textSources = [plan.plan, plan.name, (plan as any)?.term, (plan as any)?.description]
-    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-    .map((value) => value.toLowerCase());
-
-  if (textSources.length === 0) return false;
-
-  const includesMonthToMonth = textSources.some((value) => {
-    const normalized = value.replace(/[-\u2010-\u2015]/g, ' ');
-    return normalized.includes('month to month');
-  });
-
-  if (includesMonthToMonth) {
-    return false;
-  }
-
-  for (const value of textSources) {
-    const normalized = value.replace(/[\u2010-\u2015]/g, '-');
-    const match = normalized.match(/\b(\d+)\s*(?:-|\s)?\s*month(s)?\b/);
-    if (match) {
-      const months = Number(match[1]);
-      if (!Number.isNaN(months) && months >= MULTI_MONTH_THRESHOLD) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-};
-
-const PlanSelectionScreen: React.FC<ScreenProps> = ({
-  screen,
-  answers,
-  updateAnswer,
-  onSubmit,
-  showBack,
-  onBack,
-  defaultCondition,
-}) => {
+export default function PlanSelectionScreen({ screen, answers, updateAnswer, onSubmit, showBack, onBack, defaultCondition }: ScreenProps) {
   const title = 'headline' in screen ? screen.headline : (screen as any).title;
   const helpText = 'body' in screen ? screen.body : (screen as any).help_text;
 
-  const stateCode = answers['shipping_state'] || answers['demographics.state'] || answers['state'] || '';
-  const serviceType =
-    (screen as any)?.service_type && typeof (screen as any).service_type === 'string'
-      ? (screen as any).service_type
-      : defaultCondition || DEFAULT_SERVICE_TYPE;
-  const selectedMedication = answers['selected_medication'] || '';
-  const preferredMedication = answers['preferred_medication'] || '';
+  const selectedMedication = answers['selected_medication'] || answers['medication_choice'] || '';
+  const selectedMedicationName = answers['selected_medication_name'] || selectedMedication || '';
   const selectedPlanId = answers['selected_plan_id'] || '';
+  const stateCode = answers['home_state'] || answers['shipping_state'] || answers['state'] || '';
+  const serviceType = typeof (screen as any)?.service_type === 'string' 
+    ? (screen as any).service_type 
+    : defaultCondition || 'Weight Loss';
   const pharmacyPreferences = (answers['medication_pharmacy_preferences'] as Record<string, string[]>) || {};
-  const selectedPharmacy = pharmacyPreferences[selectedMedication]?.[0];
-  const requiresDoseStrategy = Boolean(answers['plan_requires_dose_strategy']);
-  const doseStrategy = answers['dose_strategy'] || '';
+  const selectedPharmacyId = pharmacyPreferences[selectedMedication]?.[0] || '';
+  
+  // Map pharmacy ID to name for API
+  const pharmacyMap: Record<string, string> = {
+    'empower': 'Empower',
+    'hallandale': 'Hallandale',
+    'olympia': 'Olympia',
+    'wells': 'Wells',
+    'no-preference': ''
+  };
+  const selectedPharmacyName = pharmacyMap[selectedPharmacyId] || selectedPharmacyId;
+  
+  // Map medication ID to full name for API
+  const medicationMap: Record<string, string> = {
+    'semaglutide': 'Semaglutide',
+    'tirzepatide': 'Tirzepatide'
+  };
+  const selectedMedicationForAPI = medicationMap[selectedMedication] || selectedMedication;
 
   const handlePlanSelect = (planId: string, plan: PackagePlan | null) => {
     updateAnswer('selected_plan_id', planId);
@@ -102,9 +56,6 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
       updateAnswer('selected_plan_medication', plan.medication || '');
       updateAnswer('selected_plan_pharmacy', plan.pharmacy || '');
       updateAnswer('selected_plan_details', plan);
-      const needsDoseStrategy = requiresDoseStrategyForPlan(plan);
-      updateAnswer('plan_requires_dose_strategy', needsDoseStrategy);
-      updateAnswer('dose_strategy', needsDoseStrategy ? '' : 'maintenance');
     } else {
       updateAnswer('selected_plan', '');
       updateAnswer('selected_plan_name', '');
@@ -113,38 +64,43 @@ const PlanSelectionScreen: React.FC<ScreenProps> = ({
       updateAnswer('selected_plan_medication', '');
       updateAnswer('selected_plan_pharmacy', '');
       updateAnswer('selected_plan_details', null);
-      updateAnswer('plan_requires_dose_strategy', false);
-      updateAnswer('dose_strategy', 'maintenance');
     }
   };
 
-  const handleDoseStrategyChange = (value: string) => {
-    updateAnswer('dose_strategy', value);
-  };
-
   return (
-    <ScreenLayout title={title} helpText={helpText}>
-      <PlanSelection
-        serviceType={serviceType}
-        state={stateCode}
-        medication={selectedMedication}
-        pharmacyName={selectedPharmacy}
-        preferredMedication={preferredMedication}
-        selectedPlanId={selectedPlanId}
-        onSelect={handlePlanSelect}
-        requiresDoseStrategy={requiresDoseStrategy}
-        doseStrategy={doseStrategy}
-        onDoseStrategyChange={handleDoseStrategyChange}
-      />
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <ScreenLayout title={title || 'Select Your Plan'} helpText="">
+        {selectedMedicationName && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5 rounded-xl border border-[#0D9488]/20">
+            <p className="text-sm text-neutral-600">
+              Selected Medication: <span className="font-medium text-[#0D9488]">{selectedMedicationName}</span>
+            </p>
+          </div>
+        )}
 
-      <NavigationButtons
-        showBack={showBack}
-        onBack={onBack}
-        onNext={onSubmit}
-        isNextDisabled={!selectedPlanId || (requiresDoseStrategy && !doseStrategy)}
-      />
-    </ScreenLayout>
+        <div className="mb-8">
+          <PlanSelectionOnly
+            medication={selectedMedicationForAPI}
+            selectedPlanId={selectedPlanId}
+            onSelect={handlePlanSelect}
+            state={stateCode}
+            serviceType={serviceType}
+            pharmacyName={selectedPharmacyName}
+          />
+        </div>
+
+        <NavigationButtons
+          showBack={showBack}
+          onBack={onBack}
+          onNext={onSubmit}
+          isNextDisabled={!selectedPlanId}
+        />
+      </ScreenLayout>
+    </motion.div>
   );
-};
-
-export default PlanSelectionScreen;
+}

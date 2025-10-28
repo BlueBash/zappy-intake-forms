@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { CheckCircle2, Sparkles } from 'lucide-react';
 import { ScreenProps } from './common';
 import { ContentScreen as ContentScreenType, ConsentItem } from '../../types';
 import NavigationButtons from '../common/NavigationButtons';
@@ -32,10 +33,12 @@ const SmoothText: React.FC<{ text: string; className?: string; key?: string }> =
 };
 
 const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ screen, onSubmit, showBack, onBack, updateAnswer, answers, calculations = {}, headerSize = 'text-4xl sm:text-5xl' }) => {
-  const { headline, body, cta_primary, status, consent_items, image } = screen;
+  const { headline, body, cta_primary, status, consent_items, image, id } = screen;
 
   const interpolatedHeadline = interpolateText(headline, calculations, answers);
   const interpolatedBody = interpolateText(body, calculations, answers);
+  
+  const isCelebration = id === 'complete.celebration' || headline?.includes('🎉');
 
   const initialConsents = consent_items?.reduce((acc, item) => {
     acc[item.id] = !!answers[item.id];
@@ -97,10 +100,76 @@ const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ 
           </>
         )}
 
-        <h2 className="text-4xl md:text-5xl font-semibold mb-8 text-neutral-700 leading-tight">
-            {interpolatedHeadline}
-        </h2>
-        {interpolatedBody && <SmoothText text={interpolatedBody} className="text-xl mb-12 max-w-2xl text-neutral-600 leading-relaxed whitespace-pre-line" />}
+        {isCelebration && (
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ 
+              delay: 0.2, 
+              duration: 0.6,
+              type: "spring",
+              stiffness: 200,
+              damping: 15
+            }}
+            className="inline-flex items-center justify-center mb-6 sm:mb-8"
+          >
+            <div className="relative">
+              <CheckCircle2 className="w-20 h-20 sm:w-24 sm:h-24 text-[#10b981]" strokeWidth={2} />
+              
+              {/* Sparkle effects */}
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  opacity: [0.5, 1, 0.5]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute -top-2 -right-2"
+              >
+                <Sparkles className="w-6 h-6 text-[#f59e0b]" />
+              </motion.div>
+              
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  opacity: [0.5, 1, 0.5]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.5
+                }}
+                className="absolute -bottom-1 -left-2"
+              >
+                <Sparkles className="w-5 h-5 text-[#f59e0b]" />
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        <motion.h2 
+          initial={{ opacity: isCelebration ? 0 : 1, y: isCelebration ? 20 : 0 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: isCelebration ? 0.4 : 0, duration: isCelebration ? 0.4 : 0 }}
+          className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-4 sm:mb-5 text-neutral-900 leading-snug tracking-tight"
+          style={{ letterSpacing: '-0.02em' }}
+        >
+          {interpolatedHeadline}
+        </motion.h2>
+        {interpolatedBody && (
+          <motion.div
+            initial={{ opacity: isCelebration ? 0 : 1, y: isCelebration ? 20 : 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: isCelebration ? 0.5 : 0, duration: isCelebration ? 0.4 : 0 }}
+            className="mb-8 sm:mb-10"
+          >
+            <SmoothText text={interpolatedBody} className="text-base sm:text-lg mb-8 sm:mb-10 max-w-lg text-neutral-700 leading-relaxed" />
+          </motion.div>
+        )}
         
         {consent_items && (
           <div className="w-full max-w-[672px] space-y-3 mb-8 text-left">

@@ -654,15 +654,6 @@ const formConfig: FormConfig = {
       "help_text": "Plans and pricing are based on your selected therapy and state",
       "auto_advance": true,
       "required": true,
-      "next": "logistics.discount_code"
-    },
-    {
-      "id": "logistics.discount_code",
-      "type": "text",
-      "phase": "treatment",
-      "title": "Have a discount code?",
-      "placeholder": "Enter code",
-      "required": false,
       "next": "transition.final_section"
     },
     {

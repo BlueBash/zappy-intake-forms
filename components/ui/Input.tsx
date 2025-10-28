@@ -39,19 +39,18 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-invalid={!!error}
             aria-describedby={error ? errorId : undefined}
             className={`
-              block w-full rounded-lg transition-all
+              block w-full rounded-xl transition-colors duration-200
               py-[18px] px-5 text-[1.0625rem] text-stone-900
-              border-2
-              focus:outline-none focus:ring-0 focus:shadow-none
+              border-2 ${error ? 'border-red-300' : 'border-stone-300'}
+              focus:outline-none
+              ${error ? 'focus:border-red-500' : 'focus:border-primary'}
               ${hasTrailingAdornment ? 'pr-14' : ''}
-              ${error
-                ? 'border-red-300 focus:border-red-400'
-                : 'border-stone-200 focus:border-primary'
-              }
             `}
             style={{
-              transitionDuration: 'var(--timing-fast)',
-              transitionTimingFunction: 'var(--easing-elegant)'
+              boxShadow: 'none',
+              WebkitAppearance: 'none',
+              MozAppearance: 'none',
+              appearance: 'none',
             }}
             {...props}
           />
