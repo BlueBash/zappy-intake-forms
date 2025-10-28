@@ -18,7 +18,7 @@ const MedicationSelectionScreen: React.FC<ScreenProps> = ({
   const title = 'headline' in screen ? screen.headline : (screen as any).title;
   const helpText = 'body' in screen ? screen.body : (screen as any).help_text;
 
-  const stateCode = answers['demographics.state'] || answers['shipping_state'] || answers['state'] || '';
+  const stateCode = answers['home_state'] || answers['shipping_state'] || answers['state'] || '';
   const serviceType =
     (screen as any)?.service_type && typeof (screen as any).service_type === 'string'
       ? (screen as any).service_type

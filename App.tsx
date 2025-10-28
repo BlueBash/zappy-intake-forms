@@ -17,16 +17,19 @@ import DateScreen from './components/screens/DateScreen';
 import ConsentScreen from './components/screens/ConsentScreen';
 import TerminalScreen from './components/screens/TerminalScreen';
 import ReviewScreen from './components/screens/ReviewScreen';
-import MedicationSelectionScreen from './components/screens/MedicationSelectionScreen';
+// import MedicationSelectionScreen from './components/screens/MedicationSelectionScreen';
 import PlanSelectionScreen from './components/screens/PlanSelectionScreen';
 import MedicationOptionsScreen from './components/screens/MedicationOptionsScreen';
 import DiscountCodeScreen from './components/screens/DiscountCodeScreen';
 import InterstitialScreen from './components/screens/InterstitialScreen';
 import GLP1HistoryScreen from './components/screens/GLP1HistoryScreen';
+import MedicationChoiceScreen from './components/screens/MedicationChoiceScreen';
+import AccountCreationScreen from './components/screens/AccountCreationScreen';
 import MedicationPreferenceInitialScreen from './components/screens/MedicationPreferenceInitialScreen';
 import MedicationPreferenceScreen from './components/screens/MedicationPreferenceScreen';
 import WeightLossGraphScreen from './components/screens/WeightLossGraphScreen';
 import { buildMedicationHistorySummary } from './utils/medicationHistory';
+import AutocompleteScreen from './components/screens/AutocompleteScreen';
 
 type ProgramTheme = {
   headerBg: string;
@@ -459,13 +462,16 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       const payload = {
         condition: responses.condition,
         responses,
-        intake_form: activeFormConfig,
-        timestamp: new Date().toISOString(),
+        // intake_form: activeFormConfig,
+        // timestamp: new Date().toISOString(),
       };
 
-      const submissionResponse = await apiClient.submitConsultation(payload);
+      const submissionResponse :any = await apiClient.submitConsultation(payload);
       const formRequestId = extractFormRequestId(submissionResponse);
-
+      console.log('submissionResponse', submissionResponse);
+      const paymentUrl = `/payment.html?client_secret=${submissionResponse?.payment_intent?.client_secret}&payment_intent=${submissionResponse?.payment_intent?.id}&amount=${submissionResponse?.payment_intent?.amount}&invoice_id=${submissionResponse?.invoice?.id}&currency=${submissionResponse?.payment_intent?.currency}`;
+      console.log('paymentUrl', paymentUrl);
+      
       try {
         await syncLead({
           reason: 'form_submission',
@@ -488,7 +494,8 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         setLeadId(null);
       }
 
-      goToNext();
+      // Redirect to payment page
+      window.location.href = paymentUrl;
     } catch (error) {
       console.error(error);
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit form');
@@ -546,6 +553,14 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       return <GLP1HistoryScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 
+    if (screen.id === 'treatment.medication_choice') {
+      return <MedicationChoiceScreen key={screen.id} {...commonProps} screen={screen} />;
+    }
+
+    if (screen.id === 'checkout.account_creation') {
+      return <AccountCreationScreen {...commonProps} screen={screen} key={screen.id}  onSubmit={handleReviewSubmit}/>;
+    }
+
     if (screen.id === 'treatment.medication_preference_initial') {
       return <MedicationPreferenceInitialScreen key={screen.id} {...commonProps} screen={screen} />;
     }
@@ -565,6 +580,8 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     switch (screen.type) {
       case 'single_select':
         return <SingleSelectScreen key={screen.id} {...commonProps} screen={screen} />;
+      case 'autocomplete':
+        return <AutocompleteScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'multi_select':
         return <MultiSelectScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'composite':
@@ -594,11 +611,11 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
           />
         );
       case 'terminal':
-        return <TerminalScreen key={screen.id} {...commonProps} screen={screen} />;
+        return <TerminalScreen {...commonProps} screen={screen} key={screen.id} />;
       case 'interstitial':
-        return <InterstitialScreen key={screen.id} screen={screen} onSubmit={goToNext} />;
+        return <InterstitialScreen screen={screen} onSubmit={goToNext} />;
       case 'plan_selection':
-        return <PlanSelectionScreen key={screen.id} {...commonProps} screen={screen} />;
+        return <PlanSelectionScreen {...commonProps} screen={screen} />;
       default:
         return <div>Unknown screen type: {(screen as any).type}</div>;
     }

@@ -32,16 +32,39 @@ const checkCondition = (condition: string, answers: Record<string, any>): boolea
 };
 
 const shouldShowField = (field: Field, answers: Record<string, any>): boolean => {
-  if (!field.conditional_display) return true;
-  const { show_if } = field.conditional_display;
+  // Check progressive_display first
+  if (field.progressive_display) {
+    const { show_after_field, show_if_condition } = field.progressive_display;
+    const previousFieldValue = answers[show_after_field];
+    
+    // Don't show if the previous field hasn't been answered
+    if (previousFieldValue === undefined || previousFieldValue === null || previousFieldValue === '') {
+      return false;
+    }
+    
+    // If there's an additional condition, check it
+    if (show_if_condition) {
+      return checkCondition(show_if_condition, answers);
+    }
+    
+    // Otherwise, show it if the previous field has a value
+    return true;
+  }
+  
+  // Check conditional_display
+  if (field.conditional_display) {
+    const { show_if } = field.conditional_display;
 
-  if (show_if.includes(' OR ')) {
-    return show_if.split(' OR ').some(cond => checkCondition(cond.trim(), answers));
+    if (show_if.includes(' OR ')) {
+      return show_if.split(' OR ').some(cond => checkCondition(cond.trim(), answers));
+    }
+    if (show_if.includes(' AND ')) {
+      return show_if.split(' AND ').every(cond => checkCondition(cond.trim(), answers));
+    }
+    return checkCondition(show_if, answers);
   }
-  if (show_if.includes(' AND ')) {
-    return show_if.split(' AND ').every(cond => checkCondition(cond.trim(), answers));
-  }
-  return checkCondition(show_if, answers);
+  
+  return true;
 };
 
 const applyPhoneMask = (value: string): string => {
@@ -61,7 +84,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
   const autoAdvanceTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const initialState = answers['demographics.state'];
+    const initialState = answers['home_state'];
     if (initialState && (answers['state'] === undefined || answers['state'] === null || answers['state'] === '')) {
       updateAnswer('state', initialState);
     }
@@ -310,7 +333,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
       return null;
     }
     const value = answers[field.id];
-
+    
     switch (field.type) {
       case 'text':
       case 'email':
@@ -404,6 +427,30 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
             ? (selectField.conditional_options.options_map[answers[selectField.conditional_options.based_on]] || [])
             : selectField.options;
 
+        const activeWarnings = selectField.conditional_warnings?.filter(warning => 
+          value === warning.show_if_value
+        ) || [];
+
+        const handleSelect = (val: string) => {
+          updateAnswer(field.id, val);
+          
+          // Handle auto-advance if enabled
+          if (selectField.auto_advance && val) {
+            // For GLP-1 experience screen, only auto-advance when "yes" is selected
+            if (field.id === 'glp1_has_tried' && val !== 'yes') {
+              return; // Don't auto-advance for "no" answer
+            }
+            
+            if (autoAdvanceTimeoutRef.current) {
+              clearTimeout(autoAdvanceTimeoutRef.current);
+            }
+            const delay = 300; // 300ms delay as per React component
+            autoAdvanceTimeoutRef.current = setTimeout(() => {
+              onSubmit();
+            }, delay);
+          }
+        };
+
         return (
             <div>
                 {field.label && (
@@ -419,8 +466,47 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                 <SingleSelectButtonGroup
                     options={options}
                     selectedValue={value}
-                    onSelect={(val) => updateAnswer(field.id, val)}
+                    onSelect={handleSelect}
                 />
+                {activeWarnings.map((warning, index) => {
+                  const warningType = warning.type || 'error';
+                  const styles = {
+                    error: {
+                      container: 'bg-red-50 border-red-200',
+                      icon: 'text-red-500',
+                      title: 'text-red-900',
+                      message: 'text-red-700',
+                      iconPath: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
+                    },
+                    warning: {
+                      container: 'bg-amber-50 border-amber-200',
+                      icon: 'text-amber-500',
+                      title: 'text-amber-900',
+                      message: 'text-amber-700',
+                      iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                    },
+                    info: {
+                      container: 'bg-blue-50 border-blue-200',
+                      icon: 'text-blue-500',
+                      title: 'text-blue-900',
+                      message: 'text-blue-700',
+                      iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                    }
+                  };
+                  const style = styles[warningType as keyof typeof styles];
+                  
+                  return (
+                    <div key={index} className={`mt-4 p-4 rounded-xl border ${style.container} flex items-start gap-3`}>
+                      <svg className={`w-5 h-5 ${style.icon} flex-shrink-0 mt-0.5`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={style.iconPath} />
+                      </svg>
+                      <div>
+                        <p className={`text-sm font-medium ${style.title}`}>{warning.title || 'Important'}</p>
+                        <p className={`text-sm ${style.message} mt-1`}>{warning.message}</p>
+                      </div>
+                    </div>
+                  );
+                })}
                 {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
             </div>
         )
@@ -428,8 +514,9 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
       case 'multi_select': {
           const multiSelectField = field as SelectField;
           const handleMultiSelectChange = (newValues: string[]) => {
-            if (field.id === 'mental_health_diagnosis' && !newValues.includes('other')) {
-              updateAnswer('mental_health_other', '');
+            // Clear other text when "other" is deselected
+            if (multiSelectField.other_text_id && !newValues.includes('other')) {
+              updateAnswer(multiSelectField.other_text_id, '');
             }
             updateAnswer(field.id, newValues);
             
@@ -444,6 +531,8 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
               }, delay);
             }
           };
+          const selectedValues = value || [];
+          const showOtherInput = multiSelectField.other_text_id && selectedValues.includes('other');
           return (
             <div>
               <CheckboxGroup
@@ -451,10 +540,62 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                 label={field.label}
                 help_text={field.help_text}
                 options={multiSelectField.options}
-                selectedValues={value || []}
+                selectedValues={selectedValues}
                 onChange={handleMultiSelectChange}
                 exclusiveValue="none"
               />
+              {showOtherInput && (
+                <div className="mt-3">
+                  <Input
+                    id={multiSelectField.other_text_id}
+                    placeholder={multiSelectField.other_text_placeholder ?? "Please specify"}
+                    value={answers[multiSelectField.other_text_id] || ''}
+                    onChange={(e) => updateAnswer(multiSelectField.other_text_id!, e.target.value)}
+                    autoFocus
+                  />
+                </div>
+              )}
+              {multiSelectField.conditional_warnings && multiSelectField.conditional_warnings
+                .filter(warning => selectedValues.includes(warning.show_if_value))
+                .map((warning, index) => {
+                  const warningType = warning.type || 'error';
+                  const styles = {
+                    error: {
+                      container: 'bg-red-50 border-red-200',
+                      icon: 'text-red-500',
+                      title: 'text-red-900',
+                      message: 'text-red-700',
+                      iconPath: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
+                    },
+                    warning: {
+                      container: 'bg-amber-50 border-amber-200',
+                      icon: 'text-amber-500',
+                      title: 'text-amber-900',
+                      message: 'text-amber-700',
+                      iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                    },
+                    info: {
+                      container: 'bg-blue-50 border-blue-200',
+                      icon: 'text-blue-500',
+                      title: 'text-blue-900',
+                      message: 'text-blue-700',
+                      iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                    }
+                  };
+                  const style = styles[warningType as keyof typeof styles];
+                  
+                  return (
+                    <div key={index} className={`mt-4 p-4 rounded-xl border ${style.container} flex items-start gap-3`}>
+                      <svg className={`w-5 h-5 ${style.icon} flex-shrink-0 mt-0.5`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={style.iconPath} />
+                      </svg>
+                      <div>
+                        <p className={`text-sm font-medium ${style.title}`}>{warning.title || 'Important'}</p>
+                        <p className={`text-sm ${style.message} mt-1`}>{warning.message}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
             </div>
           )
@@ -586,13 +727,43 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           if (Array.isArray(fieldOrGroup)) {
             return (
               <div key={`group-${index}`} className="grid grid-cols-2 gap-4">
-                {fieldOrGroup.map(field => (
-                  <div key={field.id}>{renderField(field)}</div>
-                ))}
+                {fieldOrGroup.map(field => {
+                  const fieldContent = renderField(field);
+                  return (
+                    <div key={field.id}>
+                      {field.progressive_display ? (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {fieldContent}
+                        </motion.div>
+                      ) : (
+                        fieldContent
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             );
           } else {
-            return <div key={fieldOrGroup.id}>{renderField(fieldOrGroup)}</div>;
+            const fieldContent = renderField(fieldOrGroup);
+            return (
+              <div key={fieldOrGroup.id}>
+                {fieldOrGroup.progressive_display ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {fieldContent}
+                  </motion.div>
+                ) : (
+                  fieldContent
+                )}
+              </div>
+            );
           }
         })}
       </div>

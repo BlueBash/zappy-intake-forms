@@ -14,11 +14,23 @@ export interface MedicationOption {
 
 export interface PackagePlan {
   id: string;
-  name?: string;
-  plan?: string;
-  medication?: string;
-  pharmacy?: string;
+  created_at?: string;
+  updated_at?: string;
+  discount?: any;
+  discount_tag?: string;
   invoice_amount?: number;
+  invoice_amount_starter?: number | null;
+  insurance?: boolean;
+  is_active?: boolean;
+  medication?: string;
+  medication_id?: string;
+  name?: string;
+  payment_plan_start_after?: number | null;
+  pharmacy?: string;
+  pharmacy_id?: string;
+  plan?: string;
+  service_type?: string;
+  // Legacy camelCase fields for backward compatibility
   invoiceAmount?: number;
   features?: string[];
   popular?: boolean;

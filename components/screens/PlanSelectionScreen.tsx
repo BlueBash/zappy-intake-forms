@@ -21,12 +21,29 @@ export default function PlanSelectionScreen({ screen, answers, updateAnswer, onS
   const selectedMedication = answers['selected_medication'] || answers['medication_choice'] || '';
   const selectedMedicationName = answers['selected_medication_name'] || selectedMedication || '';
   const selectedPlanId = answers['selected_plan_id'] || '';
-  const stateCode = answers['demographics.state'] || answers['shipping_state'] || answers['state'] || '';
+  const stateCode = answers['home_state'] || answers['shipping_state'] || answers['state'] || '';
   const serviceType = typeof (screen as any)?.service_type === 'string' 
     ? (screen as any).service_type 
     : defaultCondition || 'Weight Loss';
   const pharmacyPreferences = (answers['medication_pharmacy_preferences'] as Record<string, string[]>) || {};
-  const selectedPharmacy = pharmacyPreferences[selectedMedication]?.[0] || '';
+  const selectedPharmacyId = pharmacyPreferences[selectedMedication]?.[0] || '';
+  
+  // Map pharmacy ID to name for API
+  const pharmacyMap: Record<string, string> = {
+    'empower': 'Empower',
+    'hallandale': 'Hallandale',
+    'olympia': 'Olympia',
+    'wells': 'Wells',
+    'no-preference': ''
+  };
+  const selectedPharmacyName = pharmacyMap[selectedPharmacyId] || selectedPharmacyId;
+  
+  // Map medication ID to full name for API
+  const medicationMap: Record<string, string> = {
+    'semaglutide': 'Semaglutide',
+    'tirzepatide': 'Tirzepatide'
+  };
+  const selectedMedicationForAPI = medicationMap[selectedMedication] || selectedMedication;
 
   const handlePlanSelect = (planId: string, plan: PackagePlan | null) => {
     updateAnswer('selected_plan_id', planId);
@@ -68,12 +85,12 @@ export default function PlanSelectionScreen({ screen, answers, updateAnswer, onS
 
         <div className="mb-8">
           <PlanSelectionOnly
-            medication={selectedMedication}
+            medication={selectedMedicationForAPI}
             selectedPlanId={selectedPlanId}
             onSelect={handlePlanSelect}
             state={stateCode}
             serviceType={serviceType}
-            pharmacyName={selectedPharmacy}
+            pharmacyName={selectedPharmacyName}
           />
         </div>
 
