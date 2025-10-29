@@ -12,6 +12,8 @@ import SingleSelectButtonGroup from '../common/SingleSelectButtonGroup';
 import { BMIGauge } from '../ui/Illustrations';
 import RegionDropdown from '../common/RegionDropdown';
 
+const MINIMUM_SUPPORTED_AGE = 18;
+
 const checkCondition = (condition: string, answers: Record<string, any>): boolean => {
   const containsMatch = condition.match(/(\w+)\s+contains\s+['"]?([\w\s/.-]+)['"]?/);
   if (containsMatch) {
@@ -76,6 +78,54 @@ const applyPhoneMask = (value: string): string => {
     if (length <= 3) return `(${digitsOnly}`;
     if (length <= 6) return `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3)}`;
     return `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6, 10)}`;
+};
+
+const isDobFieldId = (fieldId: string): boolean =>
+  fieldId === 'dob' || fieldId.endsWith('.dob') || fieldId === 'demographics.dob';
+
+const padDatePart = (value: number): string => value.toString().padStart(2, '0');
+
+const formatDateToISO = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = padDatePart(date.getMonth() + 1);
+  const day = padDatePart(date.getDate());
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateToDisplay = (date: Date): string => {
+  const month = padDatePart(date.getMonth() + 1);
+  const day = padDatePart(date.getDate());
+  const year = date.getFullYear();
+  return `${month}/${day}/${year}`;
+};
+
+const parseDateString = (value: string): Date | null => {
+  if (!value) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    const parsed = new Date(year, month - 1, day);
+    if (parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day) {
+      return parsed;
+    }
+    return null;
+  }
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+    const [month, day, year] = value.split('/').map(Number);
+    const parsed = new Date(year, month - 1, day);
+    if (parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const getYearsAgoDate = (years: number): Date => {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - years);
+  return date;
 };
 
 const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, headerSize, calculations = {}, showLoginLink }) => {
@@ -340,8 +390,37 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
       case 'password': {
         const textField = field as TextField;
         const isPhoneMask = textField.mask === '(###) ###-####';
+        const isDobField = isDobFieldId(field.id);
+        const storedValue = typeof value === 'string' ? value : '';
+        const storedDobDate = isDobField ? parseDateString(storedValue) : null;
+        const dobInputValue = isDobField && storedDobDate ? formatDateToISO(storedDobDate) : '';
+        const minimumAllowedAge = isDobField ? Math.max(textField.validation?.min_age ?? 0, MINIMUM_SUPPORTED_AGE) : undefined;
+        const dobMaxDate = isDobField ? formatDateToISO(getYearsAgoDate(minimumAllowedAge ?? MINIMUM_SUPPORTED_AGE)) : undefined;
+        const dobMinDate =
+          isDobField && textField.validation?.max_age !== undefined
+            ? formatDateToISO(getYearsAgoDate(textField.validation.max_age))
+            : undefined;
 
         const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            if (isDobField) {
+              const isoValue = e.target.value;
+              if (!isoValue) {
+                updateAnswer(field.id, '');
+                if (errors[field.id]) {
+                  setErrors(prev => ({ ...prev, [field.id]: undefined }));
+                }
+                return;
+              }
+              const parsed = parseDateString(isoValue);
+              if (parsed) {
+                const displayValue = formatDateToDisplay(parsed);
+                updateAnswer(field.id, displayValue);
+                if (errors[field.id]) {
+                  setErrors(prev => ({ ...prev, [field.id]: undefined }));
+                }
+              }
+              return;
+            }
             const val = e.target.value;
             if (isPhoneMask) {
                 updateAnswer(field.id, applyPhoneMask(val));
@@ -368,15 +447,18 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         ) : (
           <Input
             id={field.id}
-            type={field.type}
+            type={isDobField ? 'date' : field.type}
             label={field.label}
             help_text={field.help_text}
             placeholder={field.placeholder}
-            value={value || ''}
+            value={isDobField ? dobInputValue : storedValue || ''}
             onChange={handleChange}
             onBlur={() => handleBlur(field.id)}
             error={errors[field.id]}
-            maxLength={isPhoneMask ? 14 : undefined}
+            max={isDobField ? dobMaxDate : undefined}
+            min={isDobField ? dobMinDate : undefined}
+            maxLength={!isDobField && isPhoneMask ? 14 : undefined}
+            required={textField.required}
           />
         );
       }

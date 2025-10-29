@@ -13,7 +13,7 @@ interface StateOption {
   code: string;
 }
 
-const US_STATES: StateOption[] = [
+export const US_STATES: StateOption[] = [
   { name: 'Alabama', code: 'AL' },
   { name: 'Alaska', code: 'AK' },
   { name: 'Arizona', code: 'AZ' },

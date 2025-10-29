@@ -94,7 +94,7 @@ const formConfig: FormConfig = {
       id: "demographics",
       type: "composite",
       phase: "qualify",
-      title: "We'll need a parent or guardian to consent",
+      title: "A few things about you",
       fields: [
         {
           id: "dob",

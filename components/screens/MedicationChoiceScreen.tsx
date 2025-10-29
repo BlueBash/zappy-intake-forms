@@ -141,6 +141,20 @@ const ensureNoPreferenceOption = (options: DoseOption[], shouldInclude: boolean)
   return [{ value: 'no-preference', label: 'No preference' }, ...options];
 };
 
+const formatDoseForSubmission = (doseValue: string): string => {
+  const trimmed = (doseValue ?? '').trim();
+
+  if (!trimmed) return '';
+  if (trimmed === 'no-preference') return trimmed;
+
+  const numericMatch = trimmed.match(/[\d]+(?:[.,]\d+)?/);
+  if (numericMatch) {
+    return numericMatch[0].replace(',', '.');
+  }
+
+  return trimmed;
+};
+
 const getDoseSortWeight = (option: DoseOption): number => {
   if (option.value === 'no-preference') {
     return Number.NEGATIVE_INFINITY;
@@ -455,7 +469,7 @@ export default function MedicationChoiceScreen({
     const doseOptions = getDoseOptionsForMedication(medicationName, pharmacy);
     if (doseOptions.length === 0) {
       setSelectedDose('no-preference');
-      updateAnswer('selected_dose', 'no-preference');
+      updateAnswer('selected_dose', formatDoseForSubmission('no-preference'));
       return;
     }
 
@@ -464,31 +478,31 @@ export default function MedicationChoiceScreen({
     if (availableDoses.length === 0) {
       const defaultOption = doseOptions[0];
       setSelectedDose(defaultOption.value);
-      updateAnswer('selected_dose', defaultOption.value);
+      updateAnswer('selected_dose', formatDoseForSubmission(defaultOption.value));
       return;
     }
 
     if (availableDoses.length === 1) {
       const onlyDose = availableDoses[0];
       setSelectedDose(onlyDose.value);
-      updateAnswer('selected_dose', onlyDose.value);
+      updateAnswer('selected_dose', formatDoseForSubmission(onlyDose.value));
       return;
     }
 
     if (!hasGLP1Experience) {
       const starterDose = availableDoses[0];
       setSelectedDose(starterDose.value);
-      updateAnswer('selected_dose', starterDose.value);
+      updateAnswer('selected_dose', formatDoseForSubmission(starterDose.value));
       return;
     }
 
     setSelectedDose('');
-    updateAnswer('selected_dose', '');
+    updateAnswer('selected_dose', formatDoseForSubmission(''));
   };
 
   const handleDoseSelect = (doseValue: string) => {
     setSelectedDose(doseValue);
-    updateAnswer('selected_dose', doseValue);
+    updateAnswer('selected_dose', formatDoseForSubmission(doseValue));
   };
 
   const renderContent = () => {

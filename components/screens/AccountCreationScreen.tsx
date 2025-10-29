@@ -5,10 +5,29 @@ import { Elements, PaymentElement, AddressElement, useStripe, useElements } from
 import NavigationButtons from '../common/NavigationButtons';
 import { Eye, EyeOff, CreditCard, Lock } from 'lucide-react';
 import { ScreenProps } from './common';
+import RegionDropdown, { US_STATES } from '../common/RegionDropdown';
 
 // Initialize Stripe - Replace with your actual publishable key to enable real payments
 const STRIPE_PUBLISHABLE_KEY: string | null = null;
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
+
+const normalizeStateCode = (raw: unknown): string => {
+  if (typeof raw !== 'string') return '';
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  if (/^[A-Za-z]{2}$/.test(trimmed)) {
+    return trimmed.toUpperCase();
+  }
+  const normalized = trimmed.toLowerCase();
+  const match = US_STATES.find(
+    (state) =>
+      state.code.toLowerCase() === normalized || state.name.toLowerCase() === normalized
+  );
+  if (match) {
+    return match.code;
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+};
 
 // Mock payment form when Stripe is not configured
 function MockPaymentForm({
@@ -22,17 +41,29 @@ function MockPaymentForm({
   onComplete: (accountData: any) => void;
   onBack: () => void;
 }) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const getString = (value: unknown, fallback: string = ''): string => (typeof value === 'string' ? value : fallback);
+  const [firstName, setFirstName] = useState(() => getString(answers.account_firstName ?? answers.first_name));
+  const [lastName, setLastName] = useState(() => getString(answers.account_lastName ?? answers.last_name));
+  const [email, setEmail] = useState(() => getString(answers.account_email ?? answers.email));
+  const [isEmailEditable, setIsEmailEditable] = useState(false);
+  const [phone, setPhone] = useState(() => getString(answers.account_phone ?? answers.phone));
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [zipCode, setZipCode] = useState('');
+  const [address, setAddress] = useState(() => getString(answers.account_address ?? answers.address_line1 ?? answers.shipping_address));
+  const [city, setCity] = useState(() => getString(answers.account_city ?? answers.city ?? answers.shipping_city));
+  const [state, setState] = useState(() =>
+    normalizeStateCode(
+      getString(
+        answers.account_state ??
+          answers.state ??
+          answers.shipping_state ??
+          answers.home_state
+      )
+    )
+  );
+  const [zipCode, setZipCode] = useState(() => getString(answers.account_zipCode ?? answers.account_zipcode ?? answers.zip_code ?? answers.shipping_zip));
   const [cardNumber, setCardNumber] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
@@ -42,7 +73,14 @@ function MockPaymentForm({
 
     if (!firstName.trim()) newErrors.firstName = 'First name is required';
     if (!lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!email.trim()) newErrors.email = 'Email is required';
+    const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
+    const phoneDigits = trimmedPhone.replace(/[^0-9]/g, '');
+
+    if (!trimmedEmail) newErrors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) newErrors.email = 'Enter a valid email';
+    if (!trimmedPhone) newErrors.phone = 'Phone number is required';
+    else if (phoneDigits.length < 10 || phoneDigits.length > 15) newErrors.phone = 'Enter a valid phone number';
     if (!password) newErrors.password = 'Password is required';
     else if (password.length < 8) newErrors.password = 'Password must be at least 8 characters';
     if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
@@ -66,21 +104,25 @@ function MockPaymentForm({
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
 
+      const sanitizedEmail = email.trim();
+      const sanitizedPhone = phone.trim();
+
       const accountData = {
-        firstName,
-        lastName,
-        email,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: sanitizedEmail,
+        phone: sanitizedPhone,
         password,
-        address,
-        city,
-        state,
-        zipCode,
+        address: address.trim(),
+        city: city.trim(),
+        state: normalizeStateCode(state),
+        zipCode: zipCode.trim(),
       };
 
       onComplete(accountData);
-      setIsProcessing(false);
     } catch (err) {
       setErrors({ general: 'An error occurred. Please try again.' });
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -147,20 +189,57 @@ function MockPaymentForm({
         </div>
 
         <div>
-          <label className="block text-sm text-neutral-700 mb-2">
-            Email *
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm text-neutral-700">
+              Email *
+            </label>
+            {!isEmailEditable && (
+              <button
+                type="button"
+                onClick={() => setIsEmailEditable(true)}
+                className="text-xs font-medium text-[#1a7f72] hover:text-[#145b50]"
+              >
+                Edit
+              </button>
+            )}
+          </div>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={!isEmailEditable}
             className={`w-full px-4 py-3 rounded-xl border-2 ${
               errors.email ? 'border-red-500' : 'border-neutral-200'
-            } focus:border-[#1a7f72] focus:outline-none transition-colors`}
+            } focus:border-[#1a7f72] focus:outline-none transition-colors disabled:bg-neutral-100 disabled:text-neutral-500 disabled:cursor-not-allowed`}
             placeholder="john.doe@example.com"
+            autoComplete="email"
           />
           {errors.email && (
             <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+          )}
+          {!isEmailEditable && (
+            <p className="text-xs text-neutral-500 mt-1">
+              We prefilled the email you shared earlier. Tap edit if you need to update it.
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm text-neutral-700 mb-2">
+            Phone Number *
+          </label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className={`w-full px-4 py-3 rounded-xl border-2 ${
+              errors.phone ? 'border-red-500' : 'border-neutral-200'
+            } focus:border-[#1a7f72] focus:outline-none transition-colors`}
+            placeholder="(555) 123-4567"
+            autoComplete="tel"
+          />
+          {errors.phone && (
+            <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
           )}
         </div>
 
@@ -264,15 +343,17 @@ function MockPaymentForm({
             <label className="block text-sm text-neutral-700 mb-2">
               State *
             </label>
-            <input
-              type="text"
+            <RegionDropdown
               value={state}
-              onChange={(e) => setState(e.target.value.toUpperCase())}
-              className={`w-full px-4 py-3 rounded-xl border-2 ${
-                errors.state ? 'border-red-500' : 'border-neutral-200'
-              } focus:border-[#1a7f72] focus:outline-none transition-colors`}
-              placeholder="NY"
-              maxLength={2}
+              onChange={(nextState) => {
+                setState(nextState);
+                setErrors((prev) => {
+                  if (!prev.state) return prev;
+                  const { state: _stateError, ...rest } = prev;
+                  return rest;
+                });
+              }}
+              placeholder="Select your state"
             />
             {errors.state && (
               <p className="text-sm text-red-500 mt-1">{errors.state}</p>
@@ -409,9 +490,30 @@ export default function AccountCreationScreen({ screen, answers, updateAnswer, o
               // Save account data to answers
               Object.entries(accountData).forEach(([key, value]) => {
                 updateAnswer(`account_${key}`, value);
+                if (key === 'email' || key === 'phone') {
+                  updateAnswer(key, value);
+                }
+                if (key === 'state') {
+                  const stateCode = normalizeStateCode(value);
+                  updateAnswer('state', stateCode);
+                  updateAnswer('home_state', stateCode);
+                  updateAnswer('shipping_state', stateCode);
+                }
+                if (key === 'city') {
+                  updateAnswer('city', value);
+                  updateAnswer('shipping_city', value);
+                }
+                if (key === 'address') {
+                  updateAnswer('address_line1', value);
+                  updateAnswer('shipping_address', value);
+                }
+                if (key === 'zipCode') {
+                  updateAnswer('zip_code', value);
+                  updateAnswer('shipping_zip', value);
+                }
               });
               // Submit the form
-              onSubmit();
+              onSubmit(accountData);
             }}
             onBack={onBack}
           />
@@ -420,4 +522,3 @@ export default function AccountCreationScreen({ screen, answers, updateAnswer, o
     </div>
   );
 }
-

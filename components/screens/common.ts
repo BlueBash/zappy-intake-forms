@@ -5,7 +5,7 @@ export interface ScreenProps {
   screen: Screen;
   answers: Record<string, any>;
   updateAnswer: (id: string, value: any) => void;
-  onSubmit: () => void;
+  onSubmit: (payload?: any) => void;
   showBack: boolean;
   onBack: () => void;
   headerSize?: string;

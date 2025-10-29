@@ -7,13 +7,69 @@ import Input from '../ui/Input';
 import NavigationButtons from '../common/NavigationButtons';
 import { TextScreen as TextScreenType } from '../../types';
 
+const padDatePart = (value: number) => value.toString().padStart(2, '0');
+
+const formatDateToISO = (date: Date) => {
+  const year = date.getFullYear();
+  const month = padDatePart(date.getMonth() + 1);
+  const day = padDatePart(date.getDate());
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateToDisplay = (date: Date) => {
+  const month = padDatePart(date.getMonth() + 1);
+  const day = padDatePart(date.getDate());
+  const year = date.getFullYear();
+  return `${month}/${day}/${year}`;
+};
+
+const parseDateString = (value: string): Date | null => {
+  if (!value) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    const parsed = new Date(year, month - 1, day);
+    if (parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day) {
+      return parsed;
+    }
+    return null;
+  }
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+    const [month, day, year] = value.split('/').map(Number);
+    const parsed = new Date(year, month - 1, day);
+    if (parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const getYearsAgoDate = (years: number) => {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - years);
+  return date;
+};
+
+const MINIMUM_SUPPORTED_AGE = 18;
+
 const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, headerSize }) => {
   const { id, title, help_text, placeholder, required, validation, mask, min_today, multiline } = screen;
-  const value = answers[id] || '';
+  const storedValue = answers[id] || '';
   const [error, setError] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isDobField = id === 'demographics.dob';
+  const storedDobDate = isDobField ? parseDateString(storedValue) : null;
+  const dobInputValue = isDobField && storedDobDate ? formatDateToISO(storedDobDate) : '';
+  const effectiveMinAge = isDobField ? Math.max(validation?.min_age ?? 0, MINIMUM_SUPPORTED_AGE) : validation?.min_age;
+  const dobMax = isDobField ? formatDateToISO(getYearsAgoDate(effectiveMinAge ?? MINIMUM_SUPPORTED_AGE)) : undefined;
+  const dobMin =
+    isDobField && validation?.max_age !== undefined
+      ? formatDateToISO(getYearsAgoDate(validation.max_age))
+      : undefined;
+  const value = storedValue;
   
   useEffect(() => {
     if (multiline) {
@@ -23,7 +79,32 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
     }
   }, [multiline]);
 
+  const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isoValue = e.target.value;
+    if (!isoValue) {
+      updateAnswer(id, '');
+      if (error) {
+        validate('');
+      }
+      return;
+    }
+
+    const parsed = parseDateString(isoValue);
+    if (parsed) {
+      const displayValue = formatDateToDisplay(parsed);
+      updateAnswer(id, displayValue);
+      if (error) {
+        validate(displayValue);
+      }
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (isDobField && e.target instanceof HTMLInputElement) {
+      handleDobChange(e);
+      return;
+    }
+
     let inputValue = e.target.value;
     
     if (mask === '##-##-####' || mask === '##/##/####') {
@@ -68,9 +149,8 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
     }
 
     // Date-based validations
-    if (mask === '##/##/####' || mask === '##-##-####') {
-      const separator = mask.includes('/') ? '/' : '-';
-      const parts = currentValue.split(separator);
+    if (mask === '##/##/####' || mask === '##-##-####' || isDobField) {
+      const parts = currentValue.includes('/') ? currentValue.split('/') : currentValue.split('-');
       
       if (parts.length === 3 && parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
         const [month, day, year] = parts.map(Number);
@@ -99,21 +179,22 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
         }
 
         // Age validation
-        if (validation?.min_age !== undefined || validation?.max_age !== undefined) {
+        if (validation?.min_age !== undefined || validation?.max_age !== undefined || isDobField) {
           let age = today.getFullYear() - inputDate.getFullYear();
           const m = today.getMonth() - inputDate.getMonth();
           if (m < 0 || (m === 0 && today.getDate() < inputDate.getDate())) {
             age--;
           }
-          if (validation.min_age !== undefined && age < validation.min_age) {
+          const minimumAllowedAge = isDobField ? Math.max(validation?.min_age ?? 0, MINIMUM_SUPPORTED_AGE) : validation?.min_age;
+          if (minimumAllowedAge !== undefined && age < minimumAllowedAge) {
             setError(
               isDobField
-                ? `We’re only able to continue with patients who are at least ${validation.min_age} years old.`
+                ? `We’re only able to continue with patients who are at least ${minimumAllowedAge} years old.`
                 : (validation.error || 'Value is below the minimum allowed.')
             );
             return false;
           }
-          if (validation.max_age !== undefined && age > validation.max_age) {
+          if (validation?.max_age !== undefined && age > validation.max_age) {
             setError(
               isDobField
                 ? `We’re only able to support patients up to ${validation.max_age} years old.`
@@ -211,12 +292,16 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
               <Input
                 ref={inputRef}
                 id={id}
-                value={value}
+                value={isDobField ? dobInputValue : value}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder={placeholder}
                 error={error}
-                maxLength={mask === '##/##/####' || mask === '##-##-####' ? 10 : undefined}
+                maxLength={(!isDobField && (mask === '##/##/####' || mask === '##-##-####')) ? 10 : undefined}
+                type={isDobField ? 'date' : undefined}
+                max={isDobField ? dobMax : undefined}
+                min={isDobField ? dobMin : undefined}
+                required={required}
               />
             )}
             <NavigationButtons 

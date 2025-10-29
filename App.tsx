@@ -115,6 +115,18 @@ interface LeadSyncContext {
   formRequestId?: string;
 }
 
+type AccountSubmissionData = {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  [key: string]: unknown;
+};
+
 const extractFormRequestId = (response: unknown): string | undefined => {
   if (!response || typeof response !== 'object') {
     return undefined;
@@ -170,6 +182,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
   const lastEmailSyncedRef = useRef<string | null>(null);
   const previousScreenIdRef = useRef<string | null>(null);
   const formSubmittedRef = useRef(false);
+  const latestAccountDataRef = useRef<AccountSubmissionData | null>(null);
   const sessionIdRef = useRef<string>(() => {
     // Generate or retrieve session ID for saving progress before email is captured
     const stored = typeof window !== 'undefined' ? localStorage.getItem('zappy_session_id') : null;
@@ -386,43 +399,156 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     previousScreenIdRef.current = currentScreen.id;
   }, [currentScreen.id, direction, answers.email, syncLead]);
 
-  const handleReviewSubmit = async () => {
+  const handleReviewSubmit = async (accountData?: AccountSubmissionData) => {
     if (isSubmitting) return;
     try {
       setSubmitError(null);
       setIsSubmitting(true);
 
+      if (accountData && typeof accountData === 'object') {
+        latestAccountDataRef.current = accountData;
+      }
+
+      const mergedAccountData = latestAccountDataRef.current;
       const responses = JSON.parse(JSON.stringify(answers));
+      const normalizeString = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
+
+      let normalizedAccountEntries: Record<string, string> = {};
+
+      if (mergedAccountData) {
+        normalizedAccountEntries = Object.entries(mergedAccountData).reduce<Record<string, string>>((acc, [key, value]) => {
+          const normalized = normalizeString(value);
+          if (!normalized) {
+            return acc;
+          }
+          acc[key] = normalized;
+          const accountKey = `account_${key}`;
+          responses[accountKey] = key === 'state' ? normalized.toUpperCase() : normalized;
+          return acc;
+        }, {});
+
+        if (normalizedAccountEntries.email) {
+          const loweredEmail = normalizedAccountEntries.email.toLowerCase();
+          responses.account_email = loweredEmail;
+          responses.email = loweredEmail;
+        }
+
+        if (normalizedAccountEntries.password) {
+          responses.account_password = normalizedAccountEntries.password;
+        }
+
+        if (normalizedAccountEntries.address) {
+          responses.account_address = normalizedAccountEntries.address;
+          if (!normalizeString(responses.address_line1)) {
+            responses.address_line1 = normalizedAccountEntries.address;
+          }
+        }
+
+        if (normalizedAccountEntries.city) {
+          responses.account_city = normalizedAccountEntries.city;
+        }
+
+        if (normalizedAccountEntries.state) {
+          const upperState = normalizedAccountEntries.state.toUpperCase();
+          responses.account_state = upperState;
+          normalizedAccountEntries.state = upperState;
+        }
+
+        if (normalizedAccountEntries.zipCode) {
+          responses.account_zipCode = normalizedAccountEntries.zipCode;
+        }
+      }
+
+      const resolvedFirstName =
+        normalizeString(responses.account_firstName) ||
+        normalizeString(responses.account_first_name) ||
+        normalizeString(responses.first_name) ||
+        normalizedAccountEntries.firstName;
+      if (resolvedFirstName) {
+        responses.account_firstName = resolvedFirstName;
+        responses.first_name = resolvedFirstName;
+      }
+
+      const resolvedLastName =
+        normalizeString(responses.account_lastName) ||
+        normalizeString(responses.account_last_name) ||
+        normalizeString(responses.last_name) ||
+        normalizedAccountEntries.lastName;
+      if (resolvedLastName) {
+        responses.account_lastName = resolvedLastName;
+        responses.last_name = resolvedLastName;
+      }
+
+      const resolvedPhone =
+        normalizeString(responses.phone) ||
+        normalizeString(responses.account_phone) ||
+        normalizedAccountEntries.phone;
+      if (resolvedPhone) {
+        responses.account_phone = resolvedPhone;
+        responses.phone = resolvedPhone;
+      }
 
       const existingAddress = responses.address || {};
-      const normalizeString = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
-      const street =
-        normalizeString(responses.address_line1) ||
-        normalizeString(responses.shipping_address) ||
-        normalizeString(existingAddress.street);
-      const unit =
-        normalizeString(responses.address_line2) ||
-        normalizeString(existingAddress.unit) ||
-        normalizeString(existingAddress.address_line2);
-      const locality =
-        normalizeString(responses.city) ||
-        normalizeString(responses.shipping_city) ||
-        normalizeString(existingAddress.locality) ||
-        normalizeString(existingAddress.city);
-      const region =
-        normalizeString(responses.state) ||
-        normalizeString(responses.shipping_state) ||
-        normalizeString(existingAddress.region);
-      const postalCode =
-        normalizeString(responses.zip_code) ||
-        normalizeString(responses.shipping_zip) ||
-        normalizeString(existingAddress.postalCode) ||
-        normalizeString(existingAddress.postal_code);
-      const country = (
-        normalizeString(responses.country) ||
-        normalizeString(existingAddress.country) ||
-        'US'
-      ).toUpperCase();
+      const pickAddressValue = (...values: unknown[]): string => {
+        for (const value of values) {
+          const normalized = normalizeString(value);
+          if (normalized) {
+            return normalized;
+          }
+        }
+        return '';
+      };
+      const street = pickAddressValue(
+        responses.address_line1,
+        responses.shipping_address,
+        existingAddress.street,
+        existingAddress.address_line1,
+        responses.account_address,
+        responses.account_address_line1,
+        normalizedAccountEntries.address
+      );
+      const unit = pickAddressValue(
+        responses.address_line2,
+        existingAddress.unit,
+        existingAddress.address_line2,
+        responses.account_address_line2
+      );
+      const locality = pickAddressValue(
+        responses.city,
+        responses.shipping_city,
+        existingAddress.locality,
+        existingAddress.city,
+        responses.account_city,
+        responses.home_city,
+        normalizedAccountEntries.city
+      );
+      const region = pickAddressValue(
+        responses.state,
+        responses.shipping_state,
+        existingAddress.region,
+        existingAddress.state,
+        responses.home_state,
+        responses.account_state,
+        normalizedAccountEntries.state
+      );
+      const postalCode = pickAddressValue(
+        responses.zip_code,
+        responses.shipping_zip,
+        existingAddress.postalCode,
+        existingAddress.postal_code,
+        existingAddress.zip_code,
+        responses.account_zipCode,
+        responses.account_zipcode,
+        responses.home_zip,
+        normalizedAccountEntries.zipCode
+      );
+      const countryRaw = pickAddressValue(
+        responses.country,
+        existingAddress.country,
+        responses.account_country,
+        responses.home_country
+      );
+      const country = (countryRaw || 'US').toUpperCase();
       const isDefault = typeof existingAddress.default === 'boolean' ? existingAddress.default : false;
 
       responses.address = {
@@ -441,6 +567,31 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
 
       if (responses.notification_consent === undefined || responses.notification_consent === null || responses.notification_consent === '') {
         responses.notification_consent = 'false';
+      }
+
+      const discountData = (responses.discount_data ?? answers['discount_data']) as
+        | { id?: string; code?: string; amount?: number; percentage?: number; description?: string | null }
+        | null
+        | undefined;
+      const existingDiscountId =
+        typeof responses.discount_id === 'string'
+          ? responses.discount_id
+          : typeof answers['discount_id'] === 'string'
+          ? answers['discount_id']
+          : '';
+      const resolvedDiscountId = existingDiscountId || (discountData?.id ?? '');
+      responses.discount_id = resolvedDiscountId || '';
+      if (!responses.discount_code && discountData?.code) {
+        responses.discount_code = discountData.code;
+      }
+      if ((responses.discount_amount === undefined || responses.discount_amount === null) && typeof discountData?.amount === 'number') {
+        responses.discount_amount = discountData.amount;
+      }
+      if ((responses.discount_percentage === undefined || responses.discount_percentage === null) && typeof discountData?.percentage === 'number') {
+        responses.discount_percentage = discountData.percentage;
+      }
+      if (!responses.discount_description && typeof discountData?.description === 'string') {
+        responses.discount_description = discountData.description;
       }
 
       responses.selected_plan_details = responses.selected_plan_details || answers['selected_plan_details'] || null;
@@ -502,6 +653,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
           console.warn('[Consultation] Unable to clear lead id from session storage', storageError);
         }
         setLeadId(null);
+        latestAccountDataRef.current = null;
       }
 
       if (shouldRedirectToPayment && paymentUrl) {
