@@ -468,9 +468,19 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
 
       const submissionResponse :any = await apiClient.submitConsultation(payload);
       const formRequestId = extractFormRequestId(submissionResponse);
-      console.log('submissionResponse', submissionResponse);
-      const paymentUrl = `/payment.html?client_secret=${submissionResponse?.payment_intent?.client_secret}&payment_intent=${submissionResponse?.payment_intent?.id}&amount=${submissionResponse?.payment_intent?.amount}&invoice_id=${submissionResponse?.invoice?.id}&currency=${submissionResponse?.payment_intent?.currency}`;
-      console.log('paymentUrl', paymentUrl);
+
+      const invoice = submissionResponse?.invoice;
+      const paymentIntent = submissionResponse?.payment_intent;
+      const paymentIntentId = paymentIntent?.id ?? paymentIntent?.payment_intent_id ?? paymentIntent?.paymentIntentId;
+      const paymentClientSecret = paymentIntent?.client_secret ?? paymentIntent?.clientSecret;
+      const paymentAmount = paymentIntent?.amount;
+      const paymentCurrency = paymentIntent?.currency;
+      const invoiceId = invoice?.id ?? invoice?.invoice_id ?? invoice?.invoiceId;
+
+      const shouldRedirectToPayment = Boolean(invoice && paymentIntent && paymentIntentId && paymentClientSecret);
+      const paymentUrl = shouldRedirectToPayment
+        ? `/payment.html?client_secret=${encodeURIComponent(paymentClientSecret)}&payment_intent=${encodeURIComponent(paymentIntentId)}${paymentAmount ? `&amount=${encodeURIComponent(paymentAmount)}` : ''}${invoiceId ? `&invoice_id=${encodeURIComponent(invoiceId)}` : ''}${paymentCurrency ? `&currency=${encodeURIComponent(paymentCurrency)}` : ''}`
+        : null;
       
       try {
         await syncLead({
@@ -494,8 +504,12 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         setLeadId(null);
       }
 
-      // Redirect to payment page
-      window.location.href = paymentUrl;
+      if (shouldRedirectToPayment && paymentUrl) {
+        window.location.href = paymentUrl;
+        return;
+      }
+
+      goToNext();
     } catch (error) {
       console.error(error);
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit form');
