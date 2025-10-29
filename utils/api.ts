@@ -7,9 +7,58 @@ export interface Discount {
   description?: string;
 }
 
+export interface ConsultationMedicationDetails {
+  id: string;
+  name?: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  image_document_id?: string | null;
+  image_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  [key: string]: unknown;
+}
+
+export interface ConsultationMedicationPackage {
+  id: string;
+  invoice_amount?: number;
+  invoice_amount_starter?: number | null;
+  name?: string;
+  pharmacy_id?: string;
+  pharmacy_name?: string;
+  plan?: string;
+  service_type?: string;
+  [key: string]: unknown;
+}
+
+export interface ConsultationMedicationPharmacy {
+  id: string;
+  name: string;
+  dose_options?: Array<string | number | null> | null;
+  doseOptions?: Array<string | number | null> | null;
+  [key: string]: unknown;
+}
+
+export interface ConsultationMedicationEntry {
+  medication: ConsultationMedicationDetails;
+  packages?: ConsultationMedicationPackage[];
+  pharmacies?: ConsultationMedicationPharmacy[];
+}
+
+export interface MedicationsResponse {
+  medications: MedicationOption[];
+  rawMedications: ConsultationMedicationEntry[];
+  service_type?: string;
+  state?: string;
+}
+
 export interface MedicationOption {
   medication: string;
   pharmacies: string[];
+  details?: ConsultationMedicationDetails;
+  packages?: ConsultationMedicationPackage[];
+  pharmacyOptions?: ConsultationMedicationPharmacy[];
 }
 
 export interface PackagePlan {
@@ -17,6 +66,7 @@ export interface PackagePlan {
   created_at?: string;
   updated_at?: string;
   discount?: any;
+  discount_amount?: number | null;
   discount_tag?: string;
   invoice_amount?: number;
   invoice_amount_starter?: number | null;
@@ -24,6 +74,8 @@ export interface PackagePlan {
   is_active?: boolean;
   medication?: string;
   medication_id?: string;
+  medication_description?: string | null;
+  medication_subtitle?: string | null;
   name?: string;
   payment_plan_start_after?: number | null;
   pharmacy?: string;
@@ -32,14 +84,21 @@ export interface PackagePlan {
   service_type?: string;
   // Legacy camelCase fields for backward compatibility
   invoiceAmount?: number;
+  per_month_price?: number | null;
+  image_url?: string | null;
+  image_document_id?: string | null;
   features?: string[];
+  offers?: string[];
+  tags?: string[];
   popular?: boolean;
 }
 
 interface PackagesResponse extends Array<PackagePlan> {}
 
-interface MedicationsResponse {
-  medications: MedicationOption[];
+interface ConsultationMedicationsResponse {
+  medications?: ConsultationMedicationEntry[];
+  service_type?: string;
+  state?: string;
 }
 
 interface DiscountResponse {
@@ -190,11 +249,42 @@ export const apiClient = {
       pharmacy_name: pharmacyName,
     }),
 
-  getMedications: (state: string, serviceType: string) =>
-    get<MedicationsResponse>('/consultations/medications', {
+  getMedications: async (state: string, serviceType: string): Promise<MedicationsResponse> => {
+    const data = await get<ConsultationMedicationsResponse>('/consultations/medications', {
       state,
       service_type: serviceType,
-    }),
+    });
+
+    const medications =
+      (data?.medications || []).map((entry) => {
+        const medicationDetails = entry?.medication || ({} as ConsultationMedicationDetails);
+        const displayName =
+          medicationDetails.title ||
+          medicationDetails.name ||
+          medicationDetails.subtitle ||
+          medicationDetails.id ||
+          'Medication';
+
+        const pharmacyOptions = entry?.pharmacies || [];
+
+        return {
+          medication: displayName,
+          pharmacies: pharmacyOptions
+            .map((pharmacy) => pharmacy?.name)
+            .filter((name): name is string => Boolean(name && name.trim())),
+          details: medicationDetails,
+          packages: entry?.packages || [],
+          pharmacyOptions,
+        } as MedicationOption;
+      }) || [];
+
+    return {
+      medications,
+      rawMedications: data?.medications || [],
+      service_type: data?.service_type,
+      state: data?.state,
+    } as MedicationsResponse;
+  },
 
   applyDiscount: (discountCode: string) =>
     get<DiscountResponse>('/consultations/apply-discount', {

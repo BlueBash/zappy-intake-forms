@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useCallback, useMemo, useState } from 'react';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
 import PlanSelectionOnly from '../common/PlanSelectionOnly';
@@ -14,19 +15,56 @@ const formatCurrency = (value?: number) => {
   }).format(value);
 };
 
+const isMonthToMonthLabel = (label: string): boolean => /month\s*to\s*month/i.test(label);
+
+const parsePlanDuration = (plan: PackagePlan | null | undefined): number | null => {
+  if (!plan) return null;
+
+  if (typeof plan.payment_plan_start_after === 'number' && Number.isFinite(plan.payment_plan_start_after)) {
+    return plan.payment_plan_start_after;
+  }
+
+  const source = `${plan.plan || ''} ${plan.name || ''}`;
+  const match = source.match(/(\d+(?:\.\d+)?)/);
+  if (match) {
+    const value = Number(match[1]);
+    if (!Number.isNaN(value)) {
+      return value;
+    }
+  }
+  return null;
+};
+
+const requiresPlanGoal = (plan: PackagePlan | null | undefined): boolean => {
+  if (!plan) return false;
+  const combinedLabel = `${plan.plan || ''} ${plan.name || ''}`;
+  if (combinedLabel && isMonthToMonthLabel(combinedLabel)) {
+    return false;
+  }
+  const duration = parsePlanDuration(plan);
+  return !!(duration && duration > 1);
+};
+
 export default function PlanSelectionScreen({ screen, answers, updateAnswer, onSubmit, showBack, onBack, defaultCondition }: ScreenProps) {
   const title = 'headline' in screen ? screen.headline : (screen as any).title;
   const helpText = 'body' in screen ? screen.body : (screen as any).help_text;
 
   const selectedMedication = answers['selected_medication'] || answers['medication_choice'] || '';
   const selectedMedicationName = answers['selected_medication_name'] || selectedMedication || '';
+  const selectedMedicationKey = selectedMedicationName || selectedMedication || '';
   const selectedPlanId = answers['selected_plan_id'] || '';
   const stateCode = answers['home_state'] || answers['shipping_state'] || answers['state'] || '';
   const serviceType = typeof (screen as any)?.service_type === 'string' 
     ? (screen as any).service_type 
     : defaultCondition || 'Weight Loss';
   const pharmacyPreferences = (answers['medication_pharmacy_preferences'] as Record<string, string[]>) || {};
-  const selectedPharmacyId = pharmacyPreferences[selectedMedication]?.[0] || '';
+  const preferenceKey = selectedMedicationKey || selectedMedication;
+  const preferenceList = pharmacyPreferences[preferenceKey] || pharmacyPreferences[selectedMedication] || [];
+  const selectedPharmacyId =
+    answers['selected_pharmacy_id'] ||
+    answers['selected_pharmacy'] ||
+    preferenceList[0] ||
+    '';
   
   // Map pharmacy ID to name for API
   const pharmacyMap: Record<string, string> = {
@@ -36,16 +74,34 @@ export default function PlanSelectionScreen({ screen, answers, updateAnswer, onS
     'wells': 'Wells',
     'no-preference': ''
   };
-  const selectedPharmacyName = pharmacyMap[selectedPharmacyId] || selectedPharmacyId;
+  const selectedPharmacyName = answers['selected_pharmacy_name'] || pharmacyMap[selectedPharmacyId] || '';
   
   // Map medication ID to full name for API
   const medicationMap: Record<string, string> = {
     'semaglutide': 'Semaglutide',
     'tirzepatide': 'Tirzepatide'
   };
-  const selectedMedicationForAPI = medicationMap[selectedMedication] || selectedMedication;
+  const selectedMedicationForAPI =
+    selectedMedicationName ||
+    medicationMap[selectedMedication] ||
+    selectedMedication;
 
-  const handlePlanSelect = (planId: string, plan: PackagePlan | null) => {
+  const [selectedPlanDetails, setSelectedPlanDetails] = useState<PackagePlan | null>(() => {
+    const details = answers['selected_plan_details'];
+    return details && typeof details === 'object' ? (details as PackagePlan) : null;
+  });
+  const [selectedPlanGoal, setSelectedPlanGoal] = useState<string>(() => {
+    const goalAnswer = answers['selected_plan_goal'] || answers['dose_strategy'];
+    return typeof goalAnswer === 'string' ? goalAnswer : '';
+  });
+
+  const handlePlanGoalSelect = useCallback((goal: string) => {
+    setSelectedPlanGoal(goal);
+    updateAnswer('selected_plan_goal', goal);
+    updateAnswer('dose_strategy', goal);
+  }, [updateAnswer]);
+
+  const handlePlanSelect = useCallback((planId: string, plan: PackagePlan | null) => {
     updateAnswer('selected_plan_id', planId);
     updateAnswer('selected_plan', planId);
     if (plan) {
@@ -65,7 +121,16 @@ export default function PlanSelectionScreen({ screen, answers, updateAnswer, onS
       updateAnswer('selected_plan_pharmacy', '');
       updateAnswer('selected_plan_details', null);
     }
-  };
+    setSelectedPlanDetails(plan);
+    if (!requiresPlanGoal(plan)) {
+      setSelectedPlanGoal('');
+      updateAnswer('selected_plan_goal', '');
+      updateAnswer('dose_strategy', '');
+    }
+  }, [updateAnswer]);
+
+  const goalRequired = useMemo(() => requiresPlanGoal(selectedPlanDetails), [selectedPlanDetails]);
+  const canContinue = Boolean(selectedPlanId && (!goalRequired || selectedPlanGoal));
 
   return (
     <motion.div
@@ -91,14 +156,22 @@ export default function PlanSelectionScreen({ screen, answers, updateAnswer, onS
             state={stateCode}
             serviceType={serviceType}
             pharmacyName={selectedPharmacyName}
+            selectedPlanGoal={selectedPlanGoal}
+            onPlanGoalChange={handlePlanGoalSelect}
+            shouldShowGoalForPlan={requiresPlanGoal}
           />
+          {goalRequired && !selectedPlanGoal && (
+            <p className="mt-3 text-sm font-medium text-red-500">
+              Please choose how you want to manage your dose for this program.
+            </p>
+          )}
         </div>
 
         <NavigationButtons
           showBack={showBack}
           onBack={onBack}
           onNext={onSubmit}
-          isNextDisabled={!selectedPlanId}
+          isNextDisabled={!canContinue}
         />
       </ScreenLayout>
     </motion.div>
