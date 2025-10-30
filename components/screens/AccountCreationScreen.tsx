@@ -65,8 +65,16 @@ function MockPaymentForm({
   );
   const [zipCode, setZipCode] = useState(() => getString(answers.account_zipCode ?? answers.account_zipcode ?? answers.zip_code ?? answers.shipping_zip));
   const [cardNumber, setCardNumber] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Check if user already has contact info from email capture
+  const hasExistingContactInfo = Boolean(
+    answers.email && 
+    answers.password &&
+    (answers.account_firstName || answers.first_name)
+  );
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -89,6 +97,7 @@ function MockPaymentForm({
     if (!state.trim()) newErrors.state = 'State is required';
     if (!zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
     if (!cardNumber.trim()) newErrors.cardNumber = 'Card number is required';
+    if (!agreedToTerms) newErrors.terms = 'You must agree to the terms to continue';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -130,6 +139,11 @@ function MockPaymentForm({
   const selectedMedication = answers['selected_medication'] || 'Medication';
   const planName = selectedPlan?.name || answers['selected_plan_name'] || 'Selected Plan';
   const planPrice = selectedPlan?.invoice_amount || answers['selected_plan_price'] || 299;
+  
+  // Determine CTA text based on whether user already has contact info
+  const ctaText = hasExistingContactInfo 
+    ? 'Save and request profile update' 
+    : 'Complete Purchase';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -402,10 +416,10 @@ function MockPaymentForm({
         {/* Pricing Summary */}
         <div className="space-y-2">
           <div className="flex justify-between items-baseline">
-            <span className="text-base text-neutral-700">Total if prescribed</span>
+            <span className="text-base text-neutral-700">Total if prescribed (per month)</span>
             <div className="flex items-center gap-2">
               <span className="text-base text-neutral-400 line-through">${(planPrice * 1.67).toFixed(0)}</span>
-              <span className="text-2xl text-neutral-900">${planPrice}</span>
+              <span className="text-2xl text-neutral-900">${planPrice}<span className="text-sm text-neutral-500">/mo</span></span>
             </div>
           </div>
           <div className="flex justify-between items-baseline">
@@ -475,6 +489,72 @@ function MockPaymentForm({
         </div>
       </div>
 
+      {/* Consent Checkbox */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={(e) => {
+              setAgreedToTerms(e.target.checked);
+              if (errors.terms) {
+                setErrors(prev => {
+                  const { terms, ...rest } = prev;
+                  return rest;
+                });
+              }
+            }}
+            className="mt-1 w-5 h-5 rounded border-2 border-neutral-300 text-[#1a7f72] focus:ring-2 focus:ring-[#1a7f72] focus:ring-offset-2 transition-colors cursor-pointer"
+          />
+          <span className={`text-sm leading-relaxed ${errors.terms ? 'text-red-600' : 'text-neutral-700'}`}>
+            By creating an account, I agree to the{' '}
+            <a 
+              href="https://zappyhealth.com/terms" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[#1a7f72] font-semibold hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Terms of Service
+            </a>
+            ,{' '}
+            <a 
+              href="https://zappyhealth.com/privacy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[#1a7f72] font-semibold hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Privacy Policy
+            </a>
+            ,{' '}
+            <a 
+              href="https://zappyhealth.com/telehealth" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[#1a7f72] font-semibold hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Telehealth Consent
+            </a>
+            , and{' '}
+            <a 
+              href="https://zappyhealth.com/hipaa" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[#1a7f72] font-semibold hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              HIPAA Authorization
+            </a>
+            . I understand prescriptions are at provider discretion.
+          </span>
+        </label>
+        {errors.terms && (
+          <p className="text-sm text-red-600 mt-2 ml-8">{errors.terms}</p>
+        )}
+      </div>
+
       {errors.general && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <p className="text-sm text-red-700">{errors.general}</p>
@@ -484,10 +564,13 @@ function MockPaymentForm({
       <NavigationButtons
         showBack={true}
         onBack={onBack}
-        onNext={handleSubmit}
+        onNext={() => {
+          const fakeEvent = { preventDefault: () => {} } as React.FormEvent<HTMLFormElement>;
+          handleSubmit(fakeEvent);
+        }}
         isNextDisabled={isProcessing}
         isNextLoading={isProcessing}
-        nextLabel={isProcessing ? 'Processing...' : 'Complete Purchase'}
+        nextLabel={isProcessing ? 'Processing...' : ctaText}
         layout="grouped"
       />
 

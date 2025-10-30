@@ -30,6 +30,7 @@ import AccountCreationScreen from './components/screens/AccountCreationScreen';
 import MedicationPreferenceInitialScreen from './components/screens/MedicationPreferenceInitialScreen';
 import MedicationPreferenceScreen from './components/screens/MedicationPreferenceScreen';
 import WeightLossGraphScreen from './components/screens/WeightLossGraphScreen';
+import EmailCaptureScreen from './components/screens/EmailCaptureScreen';
 import { buildMedicationHistorySummary } from './utils/medicationHistory';
 import AutocompleteScreen from './components/screens/AutocompleteScreen';
 
@@ -761,6 +762,10 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
 
     if (screen.id === 'logistics.discount_code') {
       return <DiscountCodeScreen key={screen.id} {...commonProps} />;
+    }
+
+    if (screen.id === 'capture.email') {
+      return <EmailCaptureScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 
     switch (screen.type) {
