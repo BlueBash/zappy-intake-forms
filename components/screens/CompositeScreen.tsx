@@ -728,6 +728,11 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           };
           const selectedValues = value || [];
           const showOtherInput = multiSelectField.other_text_id && selectedValues.includes('other');
+          
+          // Detect "none" option for mutual exclusivity
+          const noneOption = multiSelectField.options.find(opt => opt.value === 'none');
+          const exclusiveValue = noneOption ? 'none' : undefined;
+          
           return (
             <div>
               <CheckboxGroup
@@ -737,6 +742,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                 options={multiSelectField.options}
                 selectedValues={selectedValues}
                 onChange={handleMultiSelectChange}
+                exclusiveValue={exclusiveValue}
               />
               {showOtherInput && (
                 <div className="mt-3">

@@ -203,7 +203,7 @@ const formConfig: FormConfig = {
       phase: "qualify",
       variant: "weight_loss_graph",
       title: "Your potential transformation",
-      subtitle: "You could shed 18 lbs from your starting weight",
+      subtitle: "Based on clinical data, you could achieve significant weight loss",
       message:
         "Individual results may vary. Graph shows typical patient journey based on clinical trials.",
       next: "capture.email",
@@ -300,17 +300,19 @@ const formConfig: FormConfig = {
       id: "eating_substance",
       type: "composite",
       phase: "qualify",
-      title: "Eating & Substance Use",
+      title: "Have you ever been diagnosed with an eating disorder?",
+      help_text: "We need to ask a couple of questions about eating and substance use",
       fields: [
         {
           id: "eating_relationship",
           type: "single_select",
-          label: "Have you ever been diagnosed with an eating disorder?",
+          label: "",
           options: [
             { value: "no", label: "No" },
             { value: "yes", label: "Yes" },
           ],
           required: true,
+          auto_advance: true,
         },
         {
           id: "eating_disorder_type",
