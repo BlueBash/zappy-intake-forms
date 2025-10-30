@@ -206,10 +206,6 @@ const formConfig: FormConfig = {
       subtitle: "You could shed 18 lbs from your starting weight",
       message:
         "Individual results may vary. Graph shows typical patient journey based on clinical trials.",
-      stat_number: "20%",
-      stat_text: "average weight loss",
-      stat_subtitle: "months to goal",
-      stat_highlight: "GLP-1 medication",
       next: "capture.email",
     },
     {
@@ -274,7 +270,7 @@ const formConfig: FormConfig = {
       phase: "qualify",
       title: "Do any of these apply to you?",
       options: [
-        { value: "none", label: "None of these" },
+        { value: "none", label: "None of these apply to me" },
         { value: "depression", label: "Depression" },
         { value: "anxiety", label: "Anxiety disorder" },
         { value: "bipolar", label: "Bipolar disorder" },
@@ -387,7 +383,7 @@ const formConfig: FormConfig = {
           type: "multi_select",
           label: "Used any of these in the past 6 months?",
           options: [
-            { value: "none", label: "None of these" },
+            { value: "none", label: "None of these apply to me" },
             { value: "cannabis", label: "Cannabis or marijuana" },
             { value: "cocaine", label: "Cocaine" },
             { value: "opioids", label: "Non-prescribed opioids" },
@@ -493,7 +489,7 @@ const formConfig: FormConfig = {
           label: "Do any of these apply to you?",
           help_text: "We need to ask about your medical history",
           options: [
-            { value: "none", label: "None of these" },
+            { value: "none", label: "None of these apply to me" },
             {
               value: "thyroid_cancer",
               label: "Medullary thyroid cancer (personal or family)",
@@ -566,7 +562,7 @@ const formConfig: FormConfig = {
           label: "Have you been diagnosed with any of these?",
           help_text: "Important safety questions about GLP-1 medications",
           options: [
-            { value: "none", label: "None of these" },
+            { value: "none", label: "None of these apply to me" },
             {
               value: "diabetic_retinopathy",
               label: "Diabetic retinopathy (eye damage from diabetes)",

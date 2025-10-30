@@ -31,32 +31,6 @@ const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType 
     }, 600);
   };
 
-  // Determine contextual "none" label based on screen
-  const getExclusiveLabel = () => {
-    const titleLower = title.toLowerCase();
-    if (titleLower.includes('medication') || titleLower.includes('taking')) {
-      return "I don't take any of these medications";
-    }
-    if (titleLower.includes('condition') || titleLower.includes('medical') || titleLower.includes('diagnosed')) {
-      return "I don't have any of these conditions";
-    }
-    if (titleLower.includes('goal') || titleLower.includes('important')) {
-      return "None of these apply to me";
-    }
-    if (titleLower.includes('challenge') || titleLower.includes('obstacle')) {
-      return "I don't face these challenges";
-    }
-    if (titleLower.includes('substance') || titleLower.includes('used')) {
-      return "I haven't used any of these";
-    }
-    return "None of these apply to me";
-  };
-
-  // Check if this screen should NOT have a "none of these apply" option
-  const shouldHideExclusiveOption = () => {
-    return id === 'goal_motivations' || id === 'goal_challenges';
-  };
-
   useEffect(() => {
     return () => {
       if (autoAdvanceTimeoutRef.current) {
@@ -90,8 +64,7 @@ const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType 
             options={options}
             selectedValues={selectedValues}
             onChange={handleChange}
-            exclusiveValue={shouldHideExclusiveOption() ? undefined : "none"}
-            exclusiveLabel={shouldHideExclusiveOption() ? undefined : getExclusiveLabel()}
+            exclusiveValue="none"
             exclusiveMessage="We cleared your other selections so we can record 'None of these.'"
             onExclusiveSelect={handleExclusiveSelect}
             variant={variant}

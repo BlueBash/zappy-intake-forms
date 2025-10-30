@@ -59,17 +59,13 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
     allOptions.push({ value: exclusiveValue, label: exclusiveLabel });
   }
 
-  // Sort options: exclusive option last for pills, first for default
+  // Sort options: exclusive option always first
   const sortedOptions = [...allOptions];
   if (exclusiveValue) {
     const exclusiveIndex = sortedOptions.findIndex(opt => opt.value === exclusiveValue);
     if (exclusiveIndex >= 0) {
       const [exclusiveOption] = sortedOptions.splice(exclusiveIndex, 1);
-      if (variant === 'pills') {
-        sortedOptions.push(exclusiveOption); // Last for pills
-      } else {
-        sortedOptions.unshift(exclusiveOption); // First for default
-      }
+      sortedOptions.unshift(exclusiveOption); // Always first
     }
   }
 
