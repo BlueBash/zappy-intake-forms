@@ -253,21 +253,21 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
             transition={{ delay: 0.2, duration: 0.4 }}
             className="mb-8"
           >
-            <div className="bg-gradient-to-r from-[#0D9488]/8 via-[#FF7A59]/8 to-[#0D9488]/8 border-2 border-[#FF7A59]/20 rounded-2xl px-6 py-4 flex items-center gap-3 shadow-sm">
+            <div className="bg-gradient-to-r from-[#00A896]/8 via-[#FF6B6B]/8 to-[#00A896]/8 border-2 border-[#FF6B6B]/20 rounded-2xl px-6 py-4 flex items-center gap-3 shadow-sm">
               
               {/* ✅ ANIMATED CHECKMARK */}
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.4, type: 'spring', stiffness: 200, damping: 15 }}
-                className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FF7A59] to-[#0D9488] flex items-center justify-center flex-shrink-0 shadow-md"
+                className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#00A896] flex items-center justify-center flex-shrink-0 shadow-md"
               >
                 <Check className="w-4 h-4 text-white" strokeWidth={3} />
               </motion.div>
               
               {/* 📝 PROMOTIONAL TEXT */}
               <p className="text-neutral-700">
-                <span className="bg-gradient-to-r from-[#0D9488] to-[#FF7A59] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#00A896] to-[#FF6B6B] bg-clip-text text-transparent">
                   Promo Applied:
                 </span> Free Online Consultation
               </p>
@@ -286,7 +286,7 @@ const TextScreen: React.FC<ScreenProps & { screen: TextScreenType }> = ({ screen
                 onBlur={handleBlur}
                 placeholder={placeholder}
                 rows={5}
-                className="block w-full rounded-xl transition-colors py-[18px] px-5 text-[1.0625rem] text-stone-900 border-2 border-stone-300 focus:border-primary focus:outline-none"
+                className="block w-full rounded-xl transition-colors py-[18px] px-5 text-[1.0625rem] text-[#2D3436] border-2 border-[#E8E8E8] focus:border-[#00A896] focus:outline-none"
               />
             ) : (
               <Input

@@ -134,12 +134,12 @@ function MockPaymentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Demo Notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+      <div className="bg-[var(--warm-background)] border border-[var(--light-gray)] rounded-xl p-4">
         <div className="flex items-start gap-3">
-          <Lock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <Lock className="w-5 h-5 text-[var(--teal)] flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-blue-900 font-medium mb-1">Demo Mode</p>
-            <p className="text-xs text-blue-700">
+            <p className="text-sm text-[var(--black)] font-medium mb-1">Demo Mode</p>
+            <p className="text-xs text-[var(--gray)]">
               This is a demo payment form. No actual payment will be processed.
             </p>
           </div>
@@ -381,50 +381,97 @@ function MockPaymentForm({
         </div>
       </div>
 
-      {/* Payment Information */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-        <h3 className="text-lg text-neutral-900 mb-4">Payment Information</h3>
-        
-        {/* Order Summary */}
-        <div className="bg-neutral-50 rounded-xl p-4 mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-neutral-600">Medication</span>
-            <span className="text-sm text-neutral-900 capitalize">{selectedMedication}</span>
+      {/* Pricing Summary & Payment */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
+        {/* Plan Features */}
+        <div className="space-y-3 pb-4 border-b border-neutral-200">
+          <div className="flex items-center gap-2 text-sm text-neutral-700">
+            <svg className="w-5 h-5 text-[#1a7f72]" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+            </svg>
+            No insurance required
           </div>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-neutral-600">Plan</span>
-            <span className="text-sm text-neutral-900">{planName}</span>
-          </div>
-          <div className="border-t border-neutral-200 my-3"></div>
-          <div className="flex justify-between items-center">
-            <span className="text-neutral-900">Total</span>
-            <span className="text-xl text-[#1a7f72]">
-              ${planPrice}/month
-            </span>
+          <div className="flex items-center gap-2 text-sm text-neutral-700">
+            <svg className="w-5 h-5 text-[#1a7f72]" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+            </svg>
+            Adjust medication anytime with a provider
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm text-neutral-700 mb-2">
-            <CreditCard className="inline w-4 h-4 mr-1" />
-            Card Number * (Demo)
-          </label>
-          <input
-            type="text"
-            value={cardNumber}
-            onChange={(e) => setCardNumber(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl border-2 ${
-              errors.cardNumber ? 'border-red-500' : 'border-neutral-200'
-            } focus:border-[#1a7f72] focus:outline-none transition-colors`}
-            placeholder="4242 4242 4242 4242"
-            maxLength={19}
-          />
-          {errors.cardNumber && (
-            <p className="text-sm text-red-500 mt-1">{errors.cardNumber}</p>
-          )}
-          <p className="text-xs text-neutral-500 mt-1">
-            Use any test card number (e.g., 4242 4242 4242 4242)
+        {/* Pricing Summary */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-baseline">
+            <span className="text-base text-neutral-700">Total if prescribed</span>
+            <div className="flex items-center gap-2">
+              <span className="text-base text-neutral-400 line-through">${(planPrice * 1.67).toFixed(0)}</span>
+              <span className="text-2xl text-neutral-900">${planPrice}</span>
+            </div>
+          </div>
+          <div className="flex justify-between items-baseline">
+            <span className="text-base text-neutral-700">Due today:</span>
+            <span className="text-2xl text-neutral-900">$0</span>
+          </div>
+        </div>
+
+        {/* Discount Code Section */}
+        <details className="group">
+          <summary className="flex items-center justify-between cursor-pointer list-none py-3 border-t border-neutral-200">
+            <span className="text-base text-neutral-900">Discounts</span>
+            <svg className="w-5 h-5 text-neutral-500 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </summary>
+          <div className="pt-3 pb-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Discount code"
+                className="flex-1 px-4 py-2.5 rounded-xl border-2 border-neutral-200 focus:border-[#1a7f72] focus:outline-none transition-colors text-sm"
+              />
+              <button
+                type="button"
+                className="px-6 py-2.5 bg-neutral-200 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-300 transition-colors"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </details>
+
+        {/* Payment Method Section */}
+        <div className="pt-4 border-t border-neutral-200">
+          <h3 className="text-base text-neutral-900 mb-4">Select payment method</h3>
+          <p className="text-sm text-neutral-600 mb-4">
+            You'll be charged once prescribed. You won't be charged if a provider determines that Amble's weight loss program isn't right for you.
           </p>
+          
+          <div>
+            <label className="block text-sm text-neutral-700 mb-2">
+              <CreditCard className="inline w-4 h-4 mr-1" />
+              Card Number * (Demo)
+            </label>
+            <input
+              type="text"
+              value={cardNumber}
+              onChange={(e) => setCardNumber(e.target.value)}
+              className={`w-full px-4 py-3 rounded-xl border-2 ${
+                errors.cardNumber ? 'border-red-500' : 'border-neutral-200'
+              } focus:border-[#1a7f72] focus:outline-none transition-colors`}
+              placeholder="4242 4242 4242 4242"
+              maxLength={19}
+            />
+            {errors.cardNumber && (
+              <p className="text-sm text-red-500 mt-1">{errors.cardNumber}</p>
+            )}
+            <p className="text-xs text-neutral-500 mt-2">
+              Use any test card number (e.g., 4242 4242 4242 4242)
+            </p>
+            
+            <div className="mt-4 text-xs text-neutral-500 text-center">
+              🔒 256-BIT TLS SECURITY
+            </div>
+          </div>
         </div>
       </div>
 

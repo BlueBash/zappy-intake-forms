@@ -81,7 +81,6 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const selectedRegion = US_STATES.find((state) => state.code === value);
-  const displayValue = isOpen ? searchTerm : selectedRegion?.name || '';
 
   const normalizedTerm = searchTerm.trim().toLowerCase();
 
@@ -116,8 +115,7 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
 
   const selectRegion = (region: StateOption) => {
     onChange(region.code);
-    setIsOpen(false);
-    setSearchTerm('');
+    setSearchTerm(''); // Clear search after selection
     setHighlightedIndex(-1);
   };
 
@@ -181,53 +179,51 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
   };
 
   return (
-    <div ref={dropdownRef} className="relative">
+    <div ref={dropdownRef} className="space-y-3">
       <input
         ref={inputRef}
         type="text"
         name={name}
-        value={displayValue}
-        placeholder={placeholder}
+        value={searchTerm}
+        placeholder="Search states..."
         onChange={handleInputChange}
-        onClick={handleInputClick}
         onKeyDown={handleKeyDown}
         disabled={disabled}
-        className="w-full py-[18px] px-5 text-[1.0625rem] border-2 border-stone-300 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-stone-100"
+        className="w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-white shadow-sm border-neutral-200 focus:border-[#00A896] focus:ring-4 focus:ring-[#00A896]/8 outline-none disabled:bg-neutral-100 text-neutral-900"
         autoComplete="off"
       />
 
-      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-        <svg
-          className={`w-4 h-4 text-stone-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
-
-      {isOpen && !disabled && (
-        <div className="absolute z-10 w-full mt-1 bg-white border-2 border-stone-300 rounded-xl shadow-lg max-h-60 overflow-y-auto" style={{ boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)' }}>
+      {/* Always show the list */}
+      {!disabled && (
+        <div className="w-full bg-white border-2 border-neutral-200 rounded-xl max-h-60 overflow-y-auto">
           {filteredRegions.length > 0 ? (
-            filteredRegions.map((region, index) => (
-              <button
-                type="button"
-                key={region.code}
-                onClick={() => selectRegion(region)}
-                className={`w-full text-left px-4 py-3 transition-colors flex items-center justify-between ${
-                  index === highlightedIndex
-                    ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-stone-100'
-                }`}
-                onMouseEnter={() => setHighlightedIndex(index)}
-              >
-                <span className="font-medium text-stone-700">{region.name}</span>
-                <span className="text-sm text-stone-500">{region.code}</span>
-              </button>
-            ))
+            filteredRegions.map((region, index) => {
+              const isSelected = value === region.code;
+              return (
+                <button
+                  type="button"
+                  key={region.code}
+                  onClick={() => selectRegion(region)}
+                  className={`w-full text-left px-4 py-3 transition-colors flex items-center justify-between ${
+                    isSelected
+                      ? 'bg-[#E0F5F3] text-[#00A896] border-[#00A896]'
+                      : index === highlightedIndex
+                      ? 'bg-[#E0F5F3] text-[#00A896]'
+                      : 'hover:bg-stone-100'
+                  }`}
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                >
+                  <span className={`font-medium ${isSelected ? 'text-[#00A896]' : 'text-[#2D3436]'}`}>
+                    {region.name}
+                  </span>
+                  <span className={`text-sm ${isSelected ? 'text-[#00A896]' : 'text-[#666666]'}`}>
+                    {region.code}
+                  </span>
+                </button>
+              );
+            })
           ) : (
-            <div className="px-4 py-3 text-sm text-stone-500 text-center">
+            <div className="px-4 py-3 text-sm text-neutral-600 text-center">
               No matching states
             </div>
           )}

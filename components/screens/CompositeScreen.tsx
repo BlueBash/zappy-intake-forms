@@ -403,21 +403,45 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
 
         const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             if (isDobField) {
-              const isoValue = e.target.value;
-              if (!isoValue) {
+              const inputValue = e.target.value;
+              if (!inputValue) {
                 updateAnswer(field.id, '');
                 if (errors[field.id]) {
                   setErrors(prev => ({ ...prev, [field.id]: undefined }));
                 }
                 return;
               }
-              const parsed = parseDateString(isoValue);
-              if (parsed) {
-                const displayValue = formatDateToDisplay(parsed);
-                updateAnswer(field.id, displayValue);
-                if (errors[field.id]) {
-                  setErrors(prev => ({ ...prev, [field.id]: undefined }));
+              
+              // For date input type (ISO format)
+              if (inputValue.includes('-')) {
+                const parsed = parseDateString(inputValue);
+                if (parsed) {
+                  const displayValue = formatDateToDisplay(parsed);
+                  updateAnswer(field.id, displayValue);
+                  if (errors[field.id]) {
+                    setErrors(prev => ({ ...prev, [field.id]: undefined }));
+                  }
                 }
+                return;
+              }
+              
+              // For text input: auto-format mmddyyyy to mm/dd/yyyy
+              const digitsOnly = inputValue.replace(/\D/g, '');
+              let formatted = '';
+              
+              if (digitsOnly.length <= 2) {
+                formatted = digitsOnly;
+              } else if (digitsOnly.length <= 4) {
+                formatted = digitsOnly.slice(0, 2) + '/' + digitsOnly.slice(2);
+              } else if (digitsOnly.length <= 8) {
+                formatted = digitsOnly.slice(0, 2) + '/' + digitsOnly.slice(2, 4) + '/' + digitsOnly.slice(4, 8);
+              } else {
+                formatted = digitsOnly.slice(0, 2) + '/' + digitsOnly.slice(2, 4) + '/' + digitsOnly.slice(4, 8);
+              }
+              
+              updateAnswer(field.id, formatted);
+              if (errors[field.id]) {
+                setErrors(prev => ({ ...prev, [field.id]: undefined }));
               }
               return;
             }
@@ -430,9 +454,25 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         };
 
         return textField.multiline ? (
-          <div>
-            {field.label && <label htmlFor={field.id} className="block text-base font-bold mb-2 text-stone-800 tracking-tight">{field.label}</label>}
-            {field.help_text && <p className="text-sm -mt-2 mb-3 text-stone-600">{field.help_text}</p>}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {field.label && (
+              <label htmlFor={field.id} className="block mb-2 text-neutral-800">
+                {field.label}
+                {field.required && <span className="text-[#FF7A59] ml-1">*</span>}
+              </label>
+            )}
+            {field.help_text && (
+              <p className="text-sm text-neutral-600 mb-3 flex items-start gap-2">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#0D9488]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {field.help_text}
+              </p>
+            )}
             <textarea
               id={field.id}
               value={value || ''}
@@ -440,29 +480,101 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
               onBlur={() => handleBlur(field.id)}
               placeholder={field.placeholder}
               rows={textField.rows || 4}
-              className={`block w-full rounded-lg transition-all duration-200 py-[18px] px-5 text-[1.0625rem] text-stone-900 border-2 ${errors[field.id] ? 'border-red-500' : 'border-stone-200'} focus:border-primary focus:outline-none`}
+              className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-white resize-none ${
+                errors[field.id]
+                  ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100'
+                  : 'border-gray-200 focus:border-[#0D9488] focus:ring-4 focus:ring-[#0D9488]/10'
+              } outline-none`}
             />
-            {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
-          </div>
+            {errors[field.id] && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 text-sm text-red-500 flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {errors[field.id]}
+              </motion.p>
+            )}
+          </motion.div>
         ) : (
           <Input
             id={field.id}
-            type={isDobField ? 'date' : field.type}
+            type={field.type}
+            inputMode={isDobField ? 'numeric' : undefined}
             label={field.label}
             help_text={field.help_text}
-            placeholder={field.placeholder}
-            value={isDobField ? dobInputValue : storedValue || ''}
+            placeholder={isDobField ? 'MM/DD/YYYY' : field.placeholder}
+            value={storedValue || ''}
             onChange={handleChange}
             onBlur={() => handleBlur(field.id)}
             error={errors[field.id]}
-            max={isDobField ? dobMaxDate : undefined}
-            min={isDobField ? dobMinDate : undefined}
-            maxLength={!isDobField && isPhoneMask ? 14 : undefined}
+            maxLength={isDobField ? 10 : (!isDobField && isPhoneMask ? 14 : undefined)}
             required={textField.required}
           />
         );
       }
-      case 'number':
+      case 'number': {
+        // Special handling for height fields - render them side by side
+        if (field.id === 'height_ft') {
+          const heightInField = fields.find(f => !Array.isArray(f) && f.id === 'height_in') as Field;
+          if (heightInField) {
+            const heightInValue = answers['height_in'];
+            return (
+              <div>
+                <label className="block text-base mb-3 text-[#2D3436]">
+                  Height
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Input
+                      id={field.id}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="5"
+                      suffix="ft"
+                      value={value || ''}
+                      onChange={(e) => {
+                          if (/^\d*\.?\d*$/.test(e.target.value)) {
+                              updateAnswer(field.id, e.target.value);
+                          }
+                      }}
+                      onBlur={() => handleBlur(field.id)}
+                      error={errors[field.id]}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      id="height_in"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="10"
+                      suffix="in"
+                      value={heightInValue || ''}
+                      onChange={(e) => {
+                          if (/^\d*\.?\d*$/.test(e.target.value)) {
+                              updateAnswer('height_in', e.target.value);
+                          }
+                      }}
+                      onBlur={() => handleBlur('height_in')}
+                      error={errors['height_in']}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          }
+        }
+        // Skip rendering height_in separately if it's already handled with height_ft
+        if (field.id === 'height_in') {
+          const heightFtField = fields.find(f => !Array.isArray(f) && f.id === 'height_ft') as Field;
+          if (heightFtField) {
+            return null; // Already rendered with height_ft
+          }
+        }
+        
         return (
           <Input
             id={field.id}
@@ -482,17 +594,18 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
             error={errors[field.id]}
           />
         );
+      }
       case 'single_select': {
         if (field.id === 'state') {
           return (
             <div>
               {field.label && (
-                <label className="block text-base font-bold mb-2 text-stone-800 tracking-tight">
+                <label className="block text-base mb-3 text-[#2D3436]">
                   {field.label}
                 </label>
               )}
               {field.help_text && (
-                <p className="text-sm -mt-2 mb-3 text-stone-600">{field.help_text}</p>
+                <p className="text-sm mb-3 text-neutral-600">{field.help_text}</p>
               )}
               <RegionDropdown
                 value={value || ''}
@@ -536,12 +649,12 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         return (
             <div>
                 {field.label && (
-                    <label className="block text-base font-bold mb-2 text-stone-800 tracking-tight">
+                    <label className="block text-base mb-3 text-[#2D3436]">
                         {field.label}
                     </label>
                 )}
                 {field.help_text && (
-                    <p className="text-sm -mt-2 mb-3 text-stone-600">
+                    <p className="text-sm -mt-2 mb-3 text-neutral-600">
                         {field.help_text}
                     </p>
                 )}
@@ -554,24 +667,24 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                   const warningType = warning.type || 'error';
                   const styles = {
                     error: {
-                      container: 'bg-red-50 border-red-200',
-                      icon: 'text-red-500',
-                      title: 'text-red-900',
+                      container: 'bg-[#FFF5F3] border-[#E8E8E8]',
+                      icon: 'text-[#FF6B6B]',
+                      title: 'text-[#2D3436]',
                       message: 'text-red-700',
                       iconPath: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
                     },
                     warning: {
-                      container: 'bg-amber-50 border-amber-200',
-                      icon: 'text-amber-500',
-                      title: 'text-amber-900',
-                      message: 'text-amber-700',
+                      container: 'bg-[#FFF5F3] border-[#E8E8E8]',
+                      icon: 'text-[#FF6B6B]',
+                      title: 'text-[#2D3436]',
+                      message: 'text-[#666666]',
                       iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
                     },
                     info: {
-                      container: 'bg-blue-50 border-blue-200',
-                      icon: 'text-blue-500',
-                      title: 'text-blue-900',
-                      message: 'text-blue-700',
+                      container: 'bg-[#fef8f2] border-[#E8E8E8]',
+                      icon: 'text-[#00A896]',
+                      title: 'text-[#2D3436]',
+                      message: 'text-[#666666]',
                       iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
                     }
                   };
@@ -589,7 +702,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                     </div>
                   );
                 })}
-                {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
+                {errors[field.id] && <p className="mt-2 text-sm font-medium text-[#FF6B6B]">{errors[field.id]}</p>}
             </div>
         )
       }
@@ -624,7 +737,6 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                 options={multiSelectField.options}
                 selectedValues={selectedValues}
                 onChange={handleMultiSelectChange}
-                exclusiveValue="none"
               />
               {showOtherInput && (
                 <div className="mt-3">
@@ -643,24 +755,24 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                   const warningType = warning.type || 'error';
                   const styles = {
                     error: {
-                      container: 'bg-red-50 border-red-200',
-                      icon: 'text-red-500',
-                      title: 'text-red-900',
+                      container: 'bg-[#FFF5F3] border-[#E8E8E8]',
+                      icon: 'text-[#FF6B6B]',
+                      title: 'text-[#2D3436]',
                       message: 'text-red-700',
                       iconPath: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
                     },
                     warning: {
-                      container: 'bg-amber-50 border-amber-200',
-                      icon: 'text-amber-500',
-                      title: 'text-amber-900',
-                      message: 'text-amber-700',
+                      container: 'bg-[#FFF5F3] border-[#E8E8E8]',
+                      icon: 'text-[#FF6B6B]',
+                      title: 'text-[#2D3436]',
+                      message: 'text-[#666666]',
                       iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
                     },
                     info: {
-                      container: 'bg-blue-50 border-blue-200',
-                      icon: 'text-blue-500',
-                      title: 'text-blue-900',
-                      message: 'text-blue-700',
+                      container: 'bg-[#fef8f2] border-[#E8E8E8]',
+                      icon: 'text-[#00A896]',
+                      title: 'text-[#2D3436]',
+                      message: 'text-[#666666]',
                       iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
                     }
                   };
@@ -678,7 +790,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                     </div>
                   );
                 })}
-              {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
+              {errors[field.id] && <p className="mt-2 text-sm font-medium text-[#FF6B6B]">{errors[field.id]}</p>}
             </div>
           )
       }
@@ -719,10 +831,10 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
 
         return (
           <div
-            className="p-6 border-2 border-stone-100 rounded-2xl space-y-6 bg-stone-50/75 my-4 cursor-pointer"
+            className="p-6 border-2 border-[#E8E8E8] rounded-2xl space-y-6 bg-[#fef8f2] my-4 cursor-pointer"
             onClick={handleGroupClick}
           >
-            <h3 className="font-bold text-lg text-stone-800 tracking-tight">{groupField.label}</h3>
+            <h3 className="font-bold text-lg text-neutral-900 tracking-tight">{groupField.label}</h3>
             {groupField.fields.map((subFieldOrGroup, index) => {
               if (Array.isArray(subFieldOrGroup)) {
                 return (
@@ -743,7 +855,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         return (
           <div 
             className={`p-5 bg-white rounded-2xl shadow-sm cursor-pointer transition-all ${
-              value ? 'border-2 border-primary' : 'border-2 border-stone-200 hover:border-primary/50'
+              value ? 'border-2 border-[#00A896]' : 'border-2 border-neutral-200 hover:border-[#00A896]/50'
             }`}
             onClick={() => updateAnswer(consentField.id, !value)}
           >
@@ -753,7 +865,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
               checked={!!value}
               onChange={(e) => updateAnswer(consentField.id, e.target.checked)}
             />
-            {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
+            {errors[field.id] && <p className="mt-2 text-sm font-medium text-[#FF6B6B]">{errors[field.id]}</p>}
           </div>
         );
       }
@@ -762,7 +874,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         return (
           <div 
             className={`p-5 bg-white rounded-2xl shadow-sm cursor-pointer transition-all ${
-              value ? 'border-2 border-primary' : 'border-2 border-stone-200 hover:border-primary/50'
+              value ? 'border-2 border-[#00A896]' : 'border-2 border-neutral-200 hover:border-[#00A896]/50'
             }`}
             onClick={(event) => {
               const target = event.target as HTMLElement | null;
@@ -781,7 +893,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                 updateAnswer(checkboxField.id, e.target.checked);
               }}
             />
-            {errors[field.id] && <p className="mt-2 text-sm font-medium text-red-500">{errors[field.id]}</p>}
+            {errors[field.id] && <p className="mt-2 text-sm font-medium text-[#FF6B6B]">{errors[field.id]}</p>}
           </div>
         );
       }
@@ -808,7 +920,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         {fields.map((fieldOrGroup, index) => {
           if (Array.isArray(fieldOrGroup)) {
             return (
-              <div key={`group-${index}`} className="grid grid-cols-2 gap-4">
+              <div key={`group-${index}`} className="space-y-6">
                 {fieldOrGroup.map(field => {
                   const fieldContent = renderField(field);
                   return (
@@ -851,7 +963,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
       </div>
 
       {footer_note && (
-        <p className="text-sm text-center mt-8 p-4 rounded-lg text-secondary bg-primary-50">
+        <p className="text-sm text-center mt-8 p-4 rounded-lg text-neutral-600 bg-[#E0F5F3]">
             {footer_note}
         </p>
       )}
@@ -877,7 +989,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="mt-8 text-center"
           >
-            <div className="inline-block bg-emerald-50 text-emerald-800 font-semibold px-5 py-2.5 rounded-full text-sm tracking-wide">
+            <div className="inline-block bg-[#E0F5F3] text-[#00A896] font-semibold px-5 py-2.5 rounded-full text-sm tracking-wide">
               {post_screen_note}
             </div>
           </motion.div>

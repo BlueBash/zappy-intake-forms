@@ -81,7 +81,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
         transition={reducedMotion ? { duration: 0.01 } : { duration: 0.4 }}
         className="min-h-screen flex items-center justify-center p-6 md:p-8 bg-gradient-to-br from-[#FDFBF7] via-white to-[#F8FCF9]"
       >
-        <div className="w-full max-w-5xl">
+        <div className="w-full max-w-2xl">
           {/* Header */}
           <motion.div
             initial={reducedMotion ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
@@ -93,15 +93,15 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
               initial={reducedMotion ? { scale: 1, opacity: 1 } : { scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={reducedMotion ? { duration: 0.01 } : { duration: 0.3 }}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#0D9488]/10 to-[#14B8A6]/10 px-4 py-2 rounded-full mb-6"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#00A896]/10 to-[#E0F5F3]/10 px-4 py-2 rounded-full mb-6"
             >
-              <CheckCircle2 className="w-4 h-4 text-[#0D9488]" />
-              <span className="text-sm text-[#0D9488]">Trusted by thousands on their wellness journey</span>
+              <CheckCircle2 className="w-4 h-4 text-[#00A896]" />
+              <span className="text-sm text-[#00A896]">Trusted by thousands on their wellness journey</span>
             </motion.div>
             
             <h2 className="text-4xl md:text-6xl mb-3">
               <span className="text-neutral-900">Why choose </span>
-              <span className="bg-gradient-to-r from-[#0D9488] to-[#14B8A6] bg-clip-text text-transparent">our program</span>
+              <span className="bg-gradient-to-r from-[#00A896] to-[#E0F5F3] bg-clip-text text-transparent">our program</span>
             </h2>
           </motion.div>
 
@@ -125,12 +125,12 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   {/* Card */}
                   <div className="relative bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-100 hover:shadow-[0_20px_60px_rgb(0,0,0,0.08)] transition-all duration-500 h-full">
                     {/* Gradient accent on hover */}
-                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#0D9488]/0 to-[#14B8A6]/0 group-hover:from-[#0D9488]/5 group-hover:to-[#14B8A6]/5 transition-all duration-500" />
+                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#00A896]/0 to-[#E0F5F3]/0 group-hover:from-[#00A896]/5 group-hover:to-[#E0F5F3]/5 transition-all duration-500" />
                     
                     <div className="relative">
                       {/* Icon Container */}
                       <div className="mb-6">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0D9488] to-[#14B8A6] shadow-lg group-hover:scale-110 transition-transform duration-500">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#00A896] to-[#E0F5F3] shadow-lg group-hover:scale-110 transition-transform duration-500">
                           <IconComponent className="w-8 h-8 text-white" strokeWidth={1.5} />
                         </div>
                       </div>
@@ -160,7 +160,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
               onClick={onSubmit}
               whileHover={reducedMotion ? {} : { scale: 1.01 }}
               whileTap={reducedMotion ? {} : { scale: 0.98 }}
-              className="group bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white px-10 py-5 rounded-full flex items-center gap-3 shadow-[0_10px_40px_rgba(13,148,136,0.3)] hover:shadow-[0_20px_60px_rgba(13,148,136,0.4)] transition-all"
+              className="group bg-[#00A896] hover:bg-[#0F766E] text-white px-10 py-5 rounded-full flex items-center gap-3 shadow-[0_10px_40px_rgba(13,148,136,0.3)] hover:shadow-[0_20px_60px_rgba(13,148,136,0.4)] transition-all"
               style={{
                 transitionDuration: 'var(--timing-normal)',
                 transitionTimingFunction: 'var(--easing-elegant)'
@@ -185,7 +185,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
         transition={reducedMotion ? { duration: 0.01 } : { duration: 0.4 }}
         className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#FDFBF7] to-white"
       >
-        <div className="w-full max-w-3xl">
+        <div className="w-full max-w-2xl">
           <motion.div
             initial={reducedMotion ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -210,7 +210,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                 transition={reducedMotion ? { duration: 0.01 } : { delay: 0.1 + index * 0.05, duration: 0.3 }}
                 className="flex gap-6 items-start"
               >
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D9488] to-[#14B8A6] flex items-center justify-center text-white text-xl shadow-lg">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#00A896] to-[#E0F5F3] flex items-center justify-center text-white text-xl shadow-lg">
                   {item.step}
                 </div>
                 <div className="flex-1 pt-2">
@@ -254,7 +254,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
         transition={reducedMotion ? { duration: 0.01 } : { duration: 0.4 }}
         className="min-h-screen flex items-center justify-center p-6 md:p-8 bg-gradient-to-br from-[#FDFBF7] via-white to-[#F0FDF4]"
       >
-        <div className="w-full max-w-5xl">
+        <div className="w-full max-w-2xl">
           {/* Main Content Card */}
           <motion.div
             initial={reducedMotion ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
@@ -263,8 +263,8 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
             className="relative"
           >
             {/* Decorative background elements */}
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-[#0D9488]/10 to-[#14B8A6]/5 rounded-full blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-tr from-[#FF7A59]/10 to-[#FF7A59]/5 rounded-full blur-3xl" />
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-[#00A896]/10 to-[#E0F5F3]/5 rounded-full blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-tr from-[#FF6B6B]/10 to-[#FF6B6B]/5 rounded-full blur-3xl" />
             
             <div className="relative bg-white rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.08)] border border-neutral-100 overflow-hidden">
               <div className="p-12 md:p-16">
@@ -273,7 +273,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   initial={reducedMotion ? { scale: 1, rotate: 0 } : { scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={reducedMotion ? { duration: 0.01 } : { delay: 0.15, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                  className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#0D9488] to-[#14B8A6] shadow-lg mb-8"
+                  className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#00A896] to-[#E0F5F3] shadow-lg mb-8"
                 >
                   <TrendingUp className="w-10 h-10 text-white" strokeWidth={2.5} />
                 </motion.div>
@@ -286,7 +286,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   className="mb-8"
                 >
                   <div className="flex items-baseline gap-3 mb-4">
-                    <span className="text-8xl md:text-9xl bg-gradient-to-r from-[#0D9488] to-[#14B8A6] bg-clip-text text-transparent">
+                    <span className="text-8xl md:text-9xl bg-gradient-to-r from-[#00A896] to-[#E0F5F3] bg-clip-text text-transparent">
                       {screen.stat_number || '3×'}
                     </span>
                   </div>
@@ -295,11 +295,6 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                     {screen.stat_text || 'better long-term results with medical supervision'}
                   </h2>
                   
-                  {screen.stat_subtitle && (
-                    <p className="text-xl text-neutral-600 leading-relaxed">
-                      {screen.stat_subtitle}
-                    </p>
-                  )}
                 </motion.div>
 
                 {/* Supporting Stats Grid */}
@@ -311,7 +306,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center">
-                      <Users className="w-6 h-6 text-[#0D9488]" />
+                      <Users className="w-6 h-6 text-[#00A896]" />
                     </div>
                     <div>
                       <div className="text-2xl text-neutral-900 mb-1">82%</div>
@@ -321,7 +316,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center">
-                      <Award className="w-6 h-6 text-[#FF7A59]" />
+                      <Award className="w-6 h-6 text-[#FF6B6B]" />
                     </div>
                     <div>
                       <div className="text-2xl text-neutral-900 mb-1">94%</div>
@@ -341,7 +336,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                     onClick={onSubmit}
                     whileHover={reducedMotion ? {} : { scale: 1.01 }}
                     whileTap={reducedMotion ? {} : { scale: 0.98 }}
-                    className="group bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white px-10 py-5 rounded-full flex items-center gap-3 shadow-[0_10px_40px_rgba(13,148,136,0.3)] hover:shadow-[0_20px_60px_rgba(13,148,136,0.4)] transition-all"
+                    className="group bg-[#00A896] hover:bg-[#0F766E] text-white px-10 py-5 rounded-full flex items-center gap-3 shadow-[0_10px_40px_rgba(13,148,136,0.3)] hover:shadow-[0_20px_60px_rgba(13,148,136,0.4)] transition-all"
                     style={{
                       transitionDuration: 'var(--timing-normal)',
                       transitionTimingFunction: 'var(--easing-elegant)'
@@ -379,15 +374,15 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
         transition={{ duration: 0.6 }}
         className="min-h-screen flex items-center justify-center p-6 md:p-8 bg-gradient-to-br from-[#FDFBF7] via-white to-[#EFF6FF]"
       >
-        <div className="w-full max-w-5xl">
+        <div className="w-full max-w-2xl">
           <motion.div
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6, type: "spring", stiffness: 100 }}
             className="relative"
           >
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-[#0D9488]/5 rounded-full blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-tr from-[#0D9488]/10 to-blue-500/5 rounded-full blur-3xl" />
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-[#00A896]/5 rounded-full blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-tr from-[#00A896]/10 to-blue-500/5 rounded-full blur-3xl" />
             
             <div className="relative bg-white rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.08)] border border-neutral-100 overflow-hidden">
               <div className="p-12 md:p-16">
@@ -395,7 +390,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ delay: 0.4, duration: 0.6, type: "spring", stiffness: 120 }}
-                  className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-[#0D9488] shadow-lg mb-8"
+                  className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-[#00A896] shadow-lg mb-8"
                 >
                   <FlaskConical className="w-10 h-10 text-white" strokeWidth={2.5} />
                 </motion.div>
@@ -407,7 +402,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   className="mb-8"
                 >
                   <div className="flex items-baseline gap-3 mb-4">
-                    <span className="text-8xl md:text-9xl bg-gradient-to-r from-blue-600 to-[#0D9488] bg-clip-text text-transparent">
+                    <span className="text-8xl md:text-9xl bg-gradient-to-r from-blue-600 to-[#00A896] bg-clip-text text-transparent">
                       {screen.stat_number || '50+'}
                     </span>
                   </div>
@@ -416,11 +411,6 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                     {screen.stat_text || 'clinical studies validate our approach'}
                   </h2>
                   
-                  {screen.stat_subtitle && (
-                    <p className="text-xl text-neutral-600 leading-relaxed">
-                      {screen.stat_subtitle}
-                    </p>
-                  )}
                 </motion.div>
 
                 <motion.div
@@ -431,7 +421,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center">
-                      <Brain className="w-6 h-6 text-blue-600" />
+                      <Brain className="w-6 h-6 text-[var(--teal)]" />
                     </div>
                     <div>
                       <div className="text-2xl text-neutral-900 mb-1">Peer-reviewed</div>
@@ -441,7 +431,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center">
-                      <Shield className="w-6 h-6 text-[#0D9488]" />
+                      <Shield className="w-6 h-6 text-[#00A896]" />
                     </div>
                     <div>
                       <div className="text-2xl text-neutral-900 mb-1">FDA-approved</div>
@@ -460,7 +450,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                     onClick={onSubmit}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="group bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white px-10 py-5 rounded-full flex items-center gap-3 shadow-[0_10px_40px_rgba(13,148,136,0.3)] hover:shadow-[0_20px_60px_rgba(13,148,136,0.4)] transition-all duration-300"
+                    className="group bg-[#00A896] hover:bg-[#0F766E] text-white px-10 py-5 rounded-full flex items-center gap-3 shadow-[0_10px_40px_rgba(13,148,136,0.3)] hover:shadow-[0_20px_60px_rgba(13,148,136,0.4)] transition-all duration-300"
                   >
                     <span className="font-semibold text-lg">Continue</span>
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -486,102 +476,97 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
   // WEIGHT_LOSS_GRAPH VARIANT - Show treatment impact with graph
   if (variant === 'weight_loss_graph') {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.6 }}
-        className="min-h-screen flex items-center justify-center p-6 md:p-8 bg-gradient-to-br from-[#FDFBF7] via-white to-[#FFF5F3]"
-      >
-        <div className="w-full max-w-6xl">
-          {/* Header */}
+      <div className="min-h-screen bg-[#fef8f2] flex items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-4xl">
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-center mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center"
           >
-            {screen.title && (
-              <h2 className="text-4xl md:text-5xl text-neutral-900 mb-4">
-                {screen.title}
-              </h2>
-            )}
+            {/* Title */}
+            <motion.h1
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="text-3xl sm:text-4xl md:text-5xl mb-4 sm:mb-6 text-neutral-900"
+            >
+              {screen.title || 'Your potential transformation'}
+            </motion.h1>
+
+            {/* Subtitle */}
             {screen.subtitle && (
-              <p className="text-lg md:text-xl text-neutral-600 max-w-2xl mx-auto">
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="text-lg sm:text-xl text-neutral-600 mb-8 sm:mb-12 max-w-2xl mx-auto"
+              >
                 {screen.subtitle}
-              </p>
+              </motion.p>
             )}
-          </motion.div>
 
-          {/* Graph */}
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="mb-8"
-          >
-            <WeightLossGraph companyName={screen.stat_highlight || 'ZAPPY'} />
-          </motion.div>
-
-          {/* Supporting Message */}
-          {screen.message && (
+            {/* Graph */}
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 2.2, duration: 0.5 }}
-              className="text-center mb-10 max-w-2xl mx-auto"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="mb-8 sm:mb-12"
             >
-              <p className="text-base md:text-lg text-neutral-700 leading-relaxed">
-                {screen.message}
-              </p>
+              <WeightLossGraph companyName={screen.stat_highlight || 'Zappy'} />
             </motion.div>
-          )}
 
-          {/* Stats Row */}
-          {screen.stat_number && screen.stat_text && (
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 2.4, duration: 0.5 }}
-              className="flex flex-wrap justify-center gap-8 mb-12"
-            >
-              <div className="text-center">
-                <div className="text-5xl md:text-6xl bg-gradient-to-r from-[#FF6B4A] to-[#FF8A6B] bg-clip-text text-transparent mb-2">
+            {/* Supporting Message */}
+            {screen.message && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                className="text-base sm:text-lg text-neutral-600 mb-8 sm:mb-10 max-w-2xl mx-auto"
+              >
+                {screen.message}
+              </motion.p>
+            )}
+
+            {/* Stats */}
+            {screen.stat_number && screen.stat_text && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+                className="mb-8 sm:mb-12"
+              >
+                <div className="text-4xl sm:text-5xl text-[#FF6B6B] font-bold mb-2">
                   {screen.stat_number}
                 </div>
-                <div className="text-sm text-neutral-600">{screen.stat_text}</div>
-              </div>
-              {screen.stat_subtitle && (
-                <div className="text-center">
-                  <div className="text-5xl md:text-6xl text-neutral-900 mb-2">
-                    12
-                  </div>
-                  <div className="text-sm text-neutral-600">{screen.stat_subtitle}</div>
-                </div>
-              )}
-            </motion.div>
-          )}
+                <div className="text-sm sm:text-base text-neutral-600">{screen.stat_text}</div>
+                {screen.stat_subtitle && (
+                  <div className="text-sm text-neutral-500 mt-1">{screen.stat_subtitle}</div>
+                )}
+              </motion.div>
+            )}
 
-          {/* CTA Button */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 2.6, duration: 0.5 }}
-            className="flex justify-center"
-          >
+            {/* Continue Button */}
             <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
               onClick={onSubmit}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="group bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white px-10 py-5 rounded-full flex items-center gap-3 shadow-[0_10px_40px_rgba(13,148,136,0.3)] hover:shadow-[0_20px_60px_rgba(13,148,136,0.4)] transition-all duration-300"
+              className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#FF6B6B] to-[#FF8A6B] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-lg"
             >
-              <span className="font-semibold text-lg">Continue</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+              <span>Continue</span>
+              <svg
+                className="w-5 h-5 transition-transform group-hover:translate-x-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
             </motion.button>
           </motion.div>
-
         </div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -595,15 +580,15 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
         transition={{ duration: 0.6 }}
         className="min-h-screen flex items-center justify-center p-6 md:p-8 bg-gradient-to-br from-[#FDFBF7] via-white to-[#FEF3F2]"
       >
-        <div className="w-full max-w-5xl">
+        <div className="w-full max-w-2xl">
           <motion.div
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6, type: "spring", stiffness: 100 }}
             className="relative"
           >
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-[#FF7A59]/10 to-[#0D9488]/5 rounded-full blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-tr from-[#0D9488]/10 to-[#FF7A59]/5 rounded-full blur-3xl" />
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-[#FF6B6B]/10 to-[#00A896]/5 rounded-full blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-tr from-[#00A896]/10 to-[#FF6B6B]/5 rounded-full blur-3xl" />
             
             <div className="relative bg-white rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.08)] border border-neutral-100 overflow-hidden">
               <div className="p-12 md:p-16">
@@ -614,7 +599,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   className="mb-8"
                 >
                   <div className="flex items-baseline gap-3 mb-4">
-                    <span className="text-8xl md:text-9xl bg-gradient-to-r from-[#FF7A59] to-[#0D9488] bg-clip-text text-transparent">
+                    <span className="text-8xl md:text-9xl bg-gradient-to-r from-[#FF6B6B] to-[#00A896] bg-clip-text text-transparent">
                       {screen.stat_number || '100%'}
                     </span>
                   </div>
@@ -623,11 +608,6 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                     {screen.stat_text || 'personalized to your unique health profile'}
                   </h2>
                   
-                  {screen.stat_subtitle && (
-                    <p className="text-xl text-neutral-600 leading-relaxed">
-                      {screen.stat_subtitle}
-                    </p>
-                  )}
                 </motion.div>
 
                 <motion.div
@@ -638,7 +618,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center">
-                      <Target className="w-6 h-6 text-[#FF7A59]" />
+                      <Target className="w-6 h-6 text-[#FF6B6B]" />
                     </div>
                     <div>
                       <div className="text-2xl text-neutral-900 mb-1">Custom dosing</div>
@@ -648,7 +628,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                   
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center">
-                      <Heart className="w-6 h-6 text-[#0D9488]" />
+                      <Heart className="w-6 h-6 text-[#00A896]" />
                     </div>
                     <div>
                       <div className="text-2xl text-neutral-900 mb-1">Ongoing support</div>
@@ -667,7 +647,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                     onClick={onSubmit}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="group bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white px-10 py-5 rounded-full flex items-center gap-3 shadow-[0_10px_40px_rgba(13,148,136,0.3)] hover:shadow-[0_20px_60px_rgba(13,148,136,0.4)] transition-all duration-300"
+                    className="group bg-[#00A896] hover:bg-[#0F766E] text-white px-10 py-5 rounded-full flex items-center gap-3 shadow-[0_10px_40px_rgba(13,148,136,0.3)] hover:shadow-[0_20px_60px_rgba(13,148,136,0.4)] transition-all duration-300"
                   >
                     <span className="font-semibold text-lg">Continue</span>
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -697,10 +677,10 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
-      className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#FDFBF7] via-[#FEF9F3] to-[#FDF6EF]"
-    >
-      <div className="w-full max-w-3xl">
-        <motion.div
+        className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#FDFBF7] via-[#FEF9F3] to-[#FDF6EF]"
+      >
+        <div className="w-full max-w-2xl">
+          <motion.div
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
@@ -714,7 +694,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
               transition={{ delay: 0.3, duration: 0.5 }}
               className="mb-12"
             >
-              <div className="text-[#FF7A59] font-serif text-2xl">
+              <div className="text-[#FF6B6B] font-serif text-2xl">
                 {screen.title}
               </div>
             </motion.div>
@@ -727,10 +707,10 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
             transition={{ delay: 0.4, duration: 0.5 }}
             className="mb-16 space-y-6"
           >
-            <p className="text-4xl md:text-5xl text-[#C8A882] leading-snug">
+            <p className="text-4xl md:text-5xl text-neutral-600 leading-snug">
               {screen.message || "We're building your personalized plan."}
             </p>
-            <p className="text-4xl md:text-5xl text-[#C8A882] leading-snug">
+            <p className="text-4xl md:text-5xl text-neutral-600 leading-snug">
               Our medical team will review your profile to find the treatment option that matches your goals.
             </p>
           </motion.div>

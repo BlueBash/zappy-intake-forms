@@ -6,6 +6,7 @@ import NavigationButtons from '../common/NavigationButtons';
 import RegionDropdown from '../common/RegionDropdown';
 import Select from '../ui/Select';
 import Button from '../ui/Button';
+import SingleSelectButtonGroup from '../common/SingleSelectButtonGroup';
 import { SingleSelectScreen as SingleSelectScreenType } from '../../types';
 
 const DROPDOWN_THRESHOLD = 15;
@@ -54,40 +55,6 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
     }
   };
 
-  if (screen.id === 'home_state') {
-    const stateValue = selectedValue || '';
-    const handleStateChange = (code: string) => {
-      syncAnswer(code);
-    };
-
-    return (
-      <ScreenLayout title={title} helpText={help_text} showLoginLink={showLoginLink}>
-        <div className="space-y-4">
-          <RegionDropdown
-            value={stateValue}
-            onChange={handleStateChange}
-            placeholder="Select your state"
-          />
-          {isStateRestricted && (
-            <div
-              className="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-600 shadow-inner shadow-rose-100/60"
-              role="alert"
-              aria-live="assertive"
-            >
-              Unfortunately, we are not able to service patients in Alabama. Redirecting you to ZappyHealth.com…
-            </div>
-          )}
-        </div>
-        <NavigationButtons
-          showBack={showBack}
-          onBack={onBack}
-          onNext={onSubmit}
-          isNextDisabled={!stateValue || isStateRestricted}
-        />
-      </ScreenLayout>
-    );
-  }
-
   const handleButtonSelect = (value: string) => {
     syncAnswer(value);
     if (auto_advance) {
@@ -101,8 +68,50 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
   };
   
   const isComplete = !required || (selectedValue !== undefined && selectedValue !== '');
-
   const renderAsDropdown = options.length > DROPDOWN_THRESHOLD;
+
+  if (screen.id === 'home_state') {
+    const stateValue = selectedValue || '';
+
+    return (
+      <ScreenLayout title={title} helpText={help_text} showLoginLink={showLoginLink}>
+        {renderAsDropdown ? (
+          <div className="mb-8">
+            <RegionDropdown
+              value={stateValue}
+              onChange={(code: string) => syncAnswer(code)}
+              placeholder="Select your state"
+            />
+          </div>
+        ) : (
+          <div className="mb-14">
+            <SingleSelectButtonGroup
+              options={options}
+              selectedValue={selectedValue}
+              onSelect={handleButtonSelect}
+            />
+          </div>
+        )}
+        
+        {isStateRestricted && (
+          <div
+            className="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-600 shadow-inner shadow-rose-100/60 mb-8"
+            role="alert"
+            aria-live="assertive"
+          >
+            Unfortunately, we are not able to service patients in Alabama. Redirecting you to ZappyHealth.com…
+          </div>
+        )}
+        
+        <NavigationButtons
+          showBack={showBack}
+          onBack={onBack}
+          onNext={onSubmit}
+          isNextDisabled={!stateValue || isStateRestricted}
+        />
+      </ScreenLayout>
+    );
+  }
 
   // For dropdowns, we never auto_advance and always show nav buttons.
   const showNavButtons = !auto_advance || renderAsDropdown;
@@ -119,87 +128,23 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
           required={required}
         />
       ) : (
-        <div className="space-y-3 mb-14">
-          {options.map((option, index) => {
-            const isSelected = selectedValue === option.value;
-            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            
-            return (
-                <motion.button
-                key={option.value}
-                onClick={() => handleButtonSelect(option.value)}
-                initial={hasAnimated || reducedMotion ? false : { opacity: 0, x: 20 }}
-                animate={{
-                  opacity: 1,
-                  x: 0,
-                  scale: isSelected ? 0.98 : 1,
-                }}
-                whileHover={reducedMotion ? {} : {
-                  scale: isSelected ? 0.98 : 1.01
-                }}
-                whileTap={reducedMotion ? {} : {
-                  scale: 0.97
-                }}
-                transition={reducedMotion ? { duration: 0.01 } : {
-                  duration: 0.45,
-                  ease: [0.25, 0.1, 0.25, 1],
-                  delay: hasAnimated ? 0 : index * 0.1
-                }}
-                className={`w-full flex items-center justify-between p-5 border-2 rounded-xl text-base focus:outline-none transition-colors duration-200 ${
-                  isSelected
-                    ? 'border-primary bg-primary/5 text-primary'
-                    : 'bg-white border-gray-200 hover:border-primary/30 hover:bg-gray-50 text-neutral-600'
-                }`}
-                style={{
-                  transitionDuration: 'var(--timing-normal)',
-                  transitionTimingFunction: 'var(--easing-elegant)'
-                }}
-              >
-                <span className="text-left flex-1">{option.label}</span>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                  isSelected
-                    ? 'bg-primary'
-                    : 'border-2 border-gray-300'
-                }`}
-                style={{
-                  transitionDuration: 'var(--timing-normal)',
-                  transitionTimingFunction: 'var(--easing-elegant)'
-                }}>
-                  {isSelected && (
-                    <motion.svg
-                      initial={reducedMotion ? { opacity: 1 } : { pathLength: 0, opacity: 0 }}
-                      animate={{ pathLength: 1, opacity: 1 }}
-                      transition={reducedMotion ? { duration: 0.01 } : {
-                        pathLength: { type: 'spring', stiffness: 180, damping: 25 },
-                        opacity: { duration: 0.25 }
-                      }}
-                      className="w-4 h-4 text-white"
-                      fill="none"
-                      strokeWidth="3"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <motion.path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </motion.svg>
-                  )}
-                </div>
-              </motion.button>
-            );
-          })}
-        </div>
+        <SingleSelectButtonGroup
+          options={options}
+          selectedValue={selectedValue || ''}
+          onSelect={handleButtonSelect}
+        />
       )}
       
-      {showNavButtons && (
+      {showNavButtons ? (
         <NavigationButtons
           showBack={showBack}
           onBack={onBack}
           onNext={onSubmit}
           isNextDisabled={!isComplete}
         />
+      ) : (
+        // Maintain consistent spacing for auto-advance screens
+        <div className="mt-12 h-[52px]" />
       )}
 
       {!showNavButtons && showBackOnly && (
@@ -208,6 +153,7 @@ const SingleSelectScreen: React.FC<ScreenProps & { screen: SingleSelectScreenTyp
             variant="ghost"
             onClick={onBack}
             aria-label="Go back to the previous question"
+            className="text-[#666666] hover:text-[#00A896]"
           >
             Back
           </Button>

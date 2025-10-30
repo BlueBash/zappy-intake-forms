@@ -5,35 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hybrid Intake Form</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
-              sans: ['"Nunito Sans"', 'sans-serif'],
+              sans: ['ui-sans-serif', 'system-ui', 'sans-serif', '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
             },
             colors: {
               primary: {
-                DEFAULT: '#0D9488',
-                light: '#14B8A6',
-                dark: '#0F766E',
+                DEFAULT: '#00A896',
+                light: '#E0F5F3',
+                dark: '#008B7A',
               },
               accent: {
-                DEFAULT: '#FF7A59',
-                warm: '#FF7A59',
+                DEFAULT: '#FF6B6B',
+                warm: '#E55555',
               },
               background: {
-                DEFAULT: '#FDFBF7',
-                gradient: 'linear-gradient(to bottom right, #FDFBF7, #FEF9F3, #FDF6EF)',
+                DEFAULT: '#fef8f2',
+                gradient: 'linear-gradient(to bottom right, #fef8f2, #FEF9F3, #FDF6EF)',
               },
               neutral: {
-                400: '#a3a3a3',
-                500: '#737373',
-                600: '#525252',
-                700: '#1a1a1a',
+                400: '#666666',
+                500: '#666666',
+                600: '#2D3436',
+                700: '#2D3436',
               },
             },
             boxShadow: {
@@ -57,15 +54,15 @@
     </script>
     <style>
       :root {
-        --primary: #0D9488;
-        --primary-light: #14B8A6;
-        --primary-dark: #0F766E;
-        --accent-warm: #FF7A59;
-        --background: #FDFBF7;
-        --foreground: #1a1a1a;
+        --primary: #00A896;
+        --primary-light: #E0F5F3;
+        --primary-dark: #008B7A;
+        --accent-warm: #FF6B6B;
+        --background: #fef8f2;
+        --foreground: #2D3436;
         --card: #ffffff;
-        --muted-foreground: #525252;
-        --border: rgba(0, 0, 0, 0.08);
+        --muted-foreground: #666666;
+        --border: #E8E8E8;
         --radius: 0.75rem;
       }
       
@@ -74,11 +71,11 @@
       }
       
       body {
-        font-family: 'Nunito Sans', sans-serif;
+        font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
         font-size: 16px;
         font-weight: 400;
         line-height: 1.5;
-        background: linear-gradient(to bottom right, #FDFBF7, #FEF9F3, #FDF6EF);
+        background: #fef8f2;
         min-height: 100vh;
       }
       
@@ -98,7 +95,7 @@
       }
       
       *:focus-visible {
-        outline: 2px solid #0D9488 !important;
+        outline: 2px solid #00A896 !important;
         outline-offset: 2px;
         border-radius: 0.375rem;
       }
@@ -112,9 +109,9 @@
       select:focus,
       textarea:focus,
       button:focus-visible {
-        outline: 2px solid #0D9488 !important;
+        outline: 2px solid #00A896 !important;
         outline-offset: 2px !important;
-        border-color: #0D9488 !important;
+        border-color: #00A896 !important;
       }
     </style>
   <script type="importmap">

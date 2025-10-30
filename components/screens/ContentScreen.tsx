@@ -88,7 +88,7 @@ const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ 
     return <span>{label}</span>;
   };
 
-  const statusBorderClass = status ? `border-l-4 pl-8 ${status === 'warning' ? 'border-amber-400' : 'border-emerald-500'}` : '';
+  const statusBorderClass = status ? `border-l-4 pl-8 ${status === 'warning' ? 'border-[var(--coral)]' : 'border-[var(--teal)]'}` : '';
   const isInspirePhase = screen.phase === 'inspire';
 
   return (
@@ -167,12 +167,12 @@ const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ 
             transition={{ delay: isCelebration ? 0.5 : 0, duration: isCelebration ? 0.4 : 0 }}
             className="mb-8 sm:mb-10"
           >
-            <SmoothText text={interpolatedBody} className="text-base sm:text-lg mb-8 sm:mb-10 max-w-lg text-neutral-700 leading-relaxed" />
+            <SmoothText text={interpolatedBody} className="text-base sm:text-lg mb-8 sm:mb-10 text-neutral-700 leading-relaxed" />
           </motion.div>
         )}
         
         {consent_items && (
-          <div className="w-full max-w-[672px] space-y-3 mb-8 text-left">
+          <div className="w-full space-y-3 mb-8 text-left">
             {consent_items.map(item => (
               <div
                 key={item.id}

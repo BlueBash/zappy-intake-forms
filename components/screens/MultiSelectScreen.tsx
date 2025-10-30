@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { AlertCircle } from 'lucide-react';
 import { ScreenProps } from './common';
 import ScreenLayout from '../common/ScreenLayout';
@@ -6,6 +7,8 @@ import CheckboxGroup from '../common/CheckboxGroup';
 import Input from '../ui/Input';
 import NavigationButtons from '../common/NavigationButtons';
 import { MultiSelectScreen as MultiSelectScreenType } from '../../types';
+
+const PILL_THRESHOLD = 6; // Switch to pills when more than 6 options
 
 const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, showLoginLink }) => {
   const { id, title, help_text, options = [], required, other_text_id, other_text_placeholder } = screen;
@@ -49,6 +52,11 @@ const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType 
     return "None of these apply to me";
   };
 
+  // Check if this screen should NOT have a "none of these apply" option
+  const shouldHideExclusiveOption = () => {
+    return id === 'goal_motivations' || id === 'goal_challenges';
+  };
+
   useEffect(() => {
     return () => {
       if (autoAdvanceTimeoutRef.current) {
@@ -64,48 +72,64 @@ const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType 
     selectedValues.includes(warning.show_if_value)
   ) || [];
 
+  // Determine variant based on number of options
+  const variant = options.length > PILL_THRESHOLD ? 'pills' : 'default';
+
   return (
-    <ScreenLayout title={title} helpText={help_text} showLoginLink={showLoginLink}>
-      <div className="text-left mb-8">
-        <CheckboxGroup
-          id={id}
-          label={screen.label ?? ''}
-          options={options}
-          selectedValues={selectedValues}
-          onChange={handleChange}
-          exclusiveValue="none"
-          exclusiveLabel={getExclusiveLabel()}
-          exclusiveMessage="We cleared your other selections so we can record 'None of these.'"
-          onExclusiveSelect={handleExclusiveSelect}
-        />
-        {other_text_id && selectedValues.includes('other') && (
-          <div className="mt-3">
-            <Input
-              id={other_text_id}
-              placeholder={other_text_placeholder ?? "Please specify"}
-              value={answers[other_text_id] || ''}
-              onChange={(e) => updateAnswer(other_text_id, e.target.value)}
-              autoFocus
-            />
-          </div>
-        )}
-        {activeWarnings.map((warning, index) => (
-          <div key={index} className="mt-4 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-red-900">{warning.title || 'Important'}</p>
-              <p className="text-sm text-red-700 mt-1">{warning.message}</p>
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <ScreenLayout title={title} helpText={help_text} showLoginLink={showLoginLink}>
+        <div className="mb-8">
+          <CheckboxGroup
+            id={id}
+            label={screen.label ?? ''}
+            options={options}
+            selectedValues={selectedValues}
+            onChange={handleChange}
+            exclusiveValue={shouldHideExclusiveOption() ? undefined : "none"}
+            exclusiveLabel={shouldHideExclusiveOption() ? undefined : getExclusiveLabel()}
+            exclusiveMessage="We cleared your other selections so we can record 'None of these.'"
+            onExclusiveSelect={handleExclusiveSelect}
+            variant={variant}
+          />
+          {other_text_id && selectedValues.includes('other') && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4"
+            >
+              <Input
+                id={other_text_id}
+                placeholder={other_text_placeholder ?? "Please specify"}
+                value={answers[other_text_id] || ''}
+                onChange={(e) => updateAnswer(other_text_id, e.target.value)}
+                autoFocus
+              />
+            </motion.div>
+          )}
+          {activeWarnings.map((warning, index) => (
+            <div key={index} className="mt-4 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-900">{warning.title || 'Important'}</p>
+                <p className="text-sm text-red-700 mt-1">{warning.message}</p>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <NavigationButtons
-        showBack={showBack}
-        onBack={onBack}
-        onNext={onSubmit}
-        isNextDisabled={!isComplete}
-      />
-    </ScreenLayout>
+          ))}
+        </div>
+        <NavigationButtons
+          showBack={showBack}
+          onBack={onBack}
+          onNext={onSubmit}
+          isNextDisabled={!isComplete}
+        />
+      </ScreenLayout>
+    </motion.div>
   );
 };
 

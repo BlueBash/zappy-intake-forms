@@ -1,49 +1,80 @@
-import React from 'react';
+import { motion } from 'framer-motion';
+import { ReactNode } from 'react';
+import ScreenHeader from './ScreenHeader';
 
 interface ScreenLayoutProps {
   title?: string;
   helpText?: string;
-  children: React.ReactNode;
-  showLoginLink?: boolean;
-  headerSize?: 'small' | 'default';
+  headerSize?: string;
+  children: ReactNode;
+  showHeader?: boolean;
+  showLoginLink?: boolean; // For compatibility
+  progress?: number; // Progress percentage 0-100
+  currentStep?: number; // Current step number
+  totalSteps?: number; // Total steps
+  sectionLabel?: string; // Section name (e.g., "Medical History")
+  sectionStep?: number; // Current step within section
+  sectionTotal?: number; // Total steps in section
+  showBack?: boolean; // Show back arrow
+  onBack?: () => void; // Back handler
 }
 
-const ScreenLayout: React.FC<ScreenLayoutProps> = ({ title, helpText, children, showLoginLink = false, headerSize = 'default' }) => {
+export default function ScreenLayout({ 
+  title, 
+  helpText, 
+  headerSize, 
+  children, 
+  showHeader = true,
+  progress,
+  currentStep,
+  totalSteps,
+  sectionLabel,
+  sectionStep,
+  sectionTotal,
+  showBack,
+  onBack
+}: ScreenLayoutProps) {
+  const titleSize = headerSize === 'large' ? 'text-3xl sm:text-4xl md:text-5xl' : 'text-2xl sm:text-3xl md:text-4xl';
+  
   return (
-    <div className="w-full flex flex-col items-center min-h-screen pt-12 md:pt-16 pb-8">
-      <div className="w-full max-w-4xl">
-        {title && (
-          <h2
-            className="text-2xl md:text-3xl font-semibold mb-4 text-neutral-800 leading-tight tracking-tight px-6 md:px-8 text-center"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            {title}
-          </h2>
+    <div className="w-full">
+      <div className="w-full">
+        {/* Progress Bar */}
+        {(progress !== undefined || (currentStep !== undefined && totalSteps !== undefined)) && (
+          <ScreenHeader
+            onBack={onBack}
+            sectionLabel={sectionLabel}
+            currentStep={sectionStep}
+            totalSteps={sectionTotal}
+            progressPercentage={progress ?? ((currentStep! / totalSteps!) * 100)}
+          />
         )}
-        {helpText && (
-          <p className="text-base mb-8 max-w-2xl mx-auto text-neutral-600 leading-relaxed px-6 md:px-8 text-center">
-            {helpText}
-          </p>
-        )}
-        <div className="w-full max-w-[672px] mx-auto px-6 md:px-8">
-          {children}
-        </div>
-      </div>
-      {showLoginLink && (
-        <div className="mt-8 text-center">
-          <p className="text-sm text-stone-500">
-            Already have an account?{' '}
-            <a 
-              href="/login" 
-              className="text-primary hover:text-primary-600 font-medium hover:underline transition-colors"
+        
+        {showHeader && title && (
+          <div className="mb-6 text-center">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`${titleSize} text-[#2D3436] mb-3 sm:mb-4 leading-tight tracking-tight`}
+              style={{ letterSpacing: '-0.02em' }}
             >
-              Log in
-            </a>
-          </p>
-        </div>
-      )}
+              {title}
+            </motion.h1>
+            {helpText && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="text-base sm:text-lg text-neutral-600"
+                style={{ lineHeight: '1.65' }}
+              >
+                {helpText}
+              </motion.p>
+            )}
+          </div>
+        )}
+        <div className="w-full">{children}</div>
+      </div>
     </div>
   );
-};
-
-export default ScreenLayout;
+}

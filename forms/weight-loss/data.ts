@@ -152,11 +152,19 @@ const formConfig: FormConfig = {
           id: "highest_weight",
           type: "number",
           label: "What was your highest weight? (lb)",
-          help_text: "Your best estimate is fine",
           required: true,
           suffix: "lbs",
           min: 80,
           max: 600,
+          validation: {
+            min: 80,
+            max: 600,
+            error: "Enter weight between 80-600 lbs",
+            greater_than_field: {
+              field: "weight",
+              error: "Highest weight must be greater than or equal to current weight"
+            }
+          }
         },
         {
           id: "goal_weight",
@@ -166,6 +174,15 @@ const formConfig: FormConfig = {
           suffix: "lbs",
           min: 80,
           max: 600,
+          validation: {
+            min: 80,
+            max: 600,
+            error: "Enter weight between 80-600 lbs",
+            less_than_field: {
+              field: "weight",
+              error: "Goal weight must be less than current weight"
+            }
+          }
         },
       ],
       // "buttons": [
@@ -235,8 +252,6 @@ const formConfig: FormConfig = {
       type: "single_select",
       phase: "qualify",
       title: "How would you describe your ethnicity?",
-      help_text:
-        "Optional—helps us understand medication effects across different backgrounds",
       auto_advance: true,
       options: [
         { value: "asian", label: "Asian" },
@@ -258,7 +273,6 @@ const formConfig: FormConfig = {
       type: "multi_select",
       phase: "qualify",
       title: "Do any of these apply to you?",
-      help_text: "We ask everyone this to provide the best care",
       options: [
         { value: "none", label: "None of these" },
         { value: "depression", label: "Depression" },
@@ -291,8 +305,6 @@ const formConfig: FormConfig = {
       type: "composite",
       phase: "qualify",
       title: "Eating & Substance Use",
-      help_text:
-        "We need to ask a couple of questions about eating and substance use",
       fields: [
         {
           id: "eating_relationship",

@@ -236,13 +236,12 @@ const ImageWithFallback = ({
 const deriveMedicationIdentity = (entry: ConsultationMedicationEntry) => {
   const details = entry?.medication || {};
   const name =
-    (typeof details.title === 'string' && details.title.trim()) ||
-    (typeof details.name === 'string' && details.name.trim()) ||
-    (typeof details.subtitle === 'string' && details.subtitle.trim()) ||
+    (typeof (details as any).title === 'string' && (details as any).title.trim()) ||
+    (typeof (details as any).name === 'string' && (details as any).name.trim()) ||
     'Medication';
-  const id = (typeof details.id === 'string' && details.id.trim()) || name;
-  const description = (typeof details.description === 'string' && details.description.trim()) || '';
-  const imageUrl = (typeof details.image_url === 'string' && details.image_url.trim()) || null;
+  const id = (typeof (details as any).id === 'string' && (details as any).id.trim()) || name;
+  const description = (typeof (details as any).description === 'string' && (details as any).description.trim()) || '';
+  const imageUrl = (typeof (details as any).image_url === 'string' && (details as any).image_url.trim()) || null;
 
   return { id, name, description, imageUrl, details };
 };
@@ -517,7 +516,7 @@ export default function MedicationChoiceScreen({
     if (loading) {
       return (
         <div className="py-12 text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#0D9488]/20 border-t-[#0D9488]" />
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#00A896]/20 border-t-[#00A896]" />
           <p className="mt-4 text-neutral-600">Loading medication options...</p>
         </div>
       );
@@ -565,10 +564,10 @@ export default function MedicationChoiceScreen({
                 onClick={() => handleMedicationClick(entry)}
                 className={`w-full p-4 text-left ${
                   isExpanded
-                    ? 'rounded-t-xl border-2 border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 via-[#FF7A59]/5 to-[#14B8A6]/5 shadow-md'
+                    ? 'rounded-t-xl border-2 border-[#00A896] bg-gradient-to-r from-[#00A896]/5 via-[#FF6B6B]/5 to-[#00A896]/5 shadow-md'
                     : isMedicationSelected
-                    ? 'rounded-xl border-2 border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 via-[#FF7A59]/5 to-[#14B8A6]/5 shadow-md'
-                    : 'rounded-xl border-2 border-gray-200 bg-white hover:border-[#FF7A59]/30 hover:shadow-md hover:scale-[1.01]'
+                    ? 'rounded-xl border-2 border-[#00A896] bg-gradient-to-r from-[#00A896]/5 via-[#FF6B6B]/5 to-[#00A896]/5 shadow-md'
+                    : 'rounded-xl border-2 border-gray-200 bg-white hover:border-[#FF6B6B]/30 hover:shadow-md hover:scale-[1.01]'
                 }`}
                 style={{ transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
               >
@@ -585,7 +584,7 @@ export default function MedicationChoiceScreen({
                     <div className="mb-1 flex items-center gap-2">
                       <span
                         className={`leading-relaxed ${
-                          isMedicationSelected || isExpanded ? 'text-[#0D9488]' : 'text-neutral-700'
+                          isMedicationSelected || isExpanded ? 'text-[#00A896]' : 'text-neutral-700'
                         }`}
                       >
                         {medicationName}
@@ -602,7 +601,7 @@ export default function MedicationChoiceScreen({
                     className="flex-shrink-0"
                   >
                     <ChevronDown
-                      className={`h-5 w-5 ${isMedicationSelected || isExpanded ? 'text-[#0D9488]' : 'text-gray-400'}`}
+                      className={`h-5 w-5 ${isMedicationSelected || isExpanded ? 'text-[#00A896]' : 'text-gray-400'}`}
                     />
                   </motion.div>
                 </div>
@@ -617,7 +616,7 @@ export default function MedicationChoiceScreen({
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                     className="overflow-hidden"
                   >
-                    <div className="space-y-5 rounded-b-xl border-2 border-t-0 border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 via-[#FF7A59]/5 to-[#14B8A6]/5 px-6 pb-6 pt-4">
+                    <div className="space-y-5 rounded-b-xl border-2 border-t-0 border-[#00A896] bg-gradient-to-r from-[#00A896]/5 via-[#FF6B6B]/5 to-[#00A896]/5 px-6 pb-6 pt-4">
                       <div className="space-y-3">
                         <p className="text-sm text-neutral-700">Choose your preferred pharmacy</p>
                         {pharmacies.length > 0 ? (
@@ -634,8 +633,8 @@ export default function MedicationChoiceScreen({
                                   whileTap={{ scale: 0.97 }}
                                   className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 transition-all duration-200 touch-manipulation ${
                                     isPharmacySelected
-                                      ? 'bg-[#0D9488] text-white shadow-md'
-                                      : 'bg-white text-neutral-700 border-2 border-gray-200 hover:border-[#0D9488]/30'
+                                      ? 'bg-[#00A896] text-white shadow-md'
+                                      : 'bg-white text-neutral-700 border-2 border-gray-200 hover:border-[#00A896]/30'
                                   }`}
                                 >
                                   {isPharmacySelected && <Check className="h-4 w-4" strokeWidth={3} />}
@@ -663,12 +662,12 @@ export default function MedicationChoiceScreen({
                             {!hasGLP1Experience && doseOptions.some((option) => option.value !== 'no-preference') ? (
                               <>
                                 <p className="text-sm text-neutral-700">Starter dose</p>
-                                <div className="rounded-xl border border-[#0D9488]/20 bg-gradient-to-r from-[#0D9488]/5 via-[#FF7A59]/5 to-[#14B8A6]/5 p-4">
+                                <div className="rounded-xl border border-[#00A896]/20 bg-gradient-to-r from-[#00A896]/5 via-[#FF6B6B]/5 to-[#00A896]/5 p-4">
                                   <p className="mb-3 text-sm text-neutral-600">
                                     Since you&apos;re new to GLP-1 medications, we&apos;ll start with the lowest dose to
                                     help your body adjust gradually.
                                   </p>
-                                  <div className="inline-flex w-fit items-center gap-2 rounded-full bg-[#0D9488] px-4 py-2.5 text-white shadow-md">
+                                  <div className="inline-flex w-fit items-center gap-2 rounded-full bg-[#00A896] px-4 py-2.5 text-white shadow-md">
                                     <Check className="h-4 w-4" strokeWidth={3} />
                                     <span className="text-sm">
                                       {
@@ -696,8 +695,8 @@ export default function MedicationChoiceScreen({
                                         whileTap={{ scale: 0.97 }}
                                         className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 transition-all duration-200 touch-manipulation ${
                                           isDoseSelected
-                                            ? 'bg-[#0D9488] text-white shadow-md'
-                                            : 'bg-white text-neutral-700 border-2 border-gray-200 hover:border-[#0D9488]/30'
+                                            ? 'bg-[#00A896] text-white shadow-md'
+                                            : 'bg-white text-neutral-700 border-2 border-gray-200 hover:border-[#00A896]/30'
                                         }`}
                                       >
                                         {isDoseSelected && <Check className="h-4 w-4" strokeWidth={3} />}
@@ -712,38 +711,6 @@ export default function MedicationChoiceScreen({
                           </motion.div>
                         )}
                       </AnimatePresence>
-
-                      {packages.length > 0 && (
-                        <div className="space-y-3">
-                          <p className="text-sm text-neutral-700">Preview available programs</p>
-                          <div className="space-y-2">
-                            {packages.map((medicationPackage) => {
-                              const price = formatCurrency(medicationPackage.invoice_amount);
-                              return (
-                                <div
-                                  key={medicationPackage.id}
-                                  className="rounded-xl border border-white/60 bg-white/60 p-4 shadow-sm backdrop-blur"
-                                >
-                                  <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-medium text-neutral-800">
-                                        {medicationPackage.name || medicationPackage.plan || 'Medication program'}
-                                      </p>
-                                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600">
-                                        {medicationPackage.plan && <span>Plan: {medicationPackage.plan}</span>}
-                                        {medicationPackage.pharmacy_name && (
-                                          <span>Pharmacy: {medicationPackage.pharmacy_name}</span>
-                                        )}
-                                      </div>
-                                    </div>
-                                    {price && <span className="text-sm font-semibold text-[#0D9488]">{price}</span>}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </motion.div>
                 )}
@@ -754,32 +721,30 @@ export default function MedicationChoiceScreen({
       </div>
     );
   };
-
+  
   return (
-    <div className="flex min-h-screen w-full justify-center bg-[#fef8f2] p-4 pt-5 sm:p-6 sm:pt-7">
-      <div className="w-full max-w-2xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="mb-10 text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-3 text-2xl leading-snug tracking-tight text-neutral-900 sm:mb-4 sm:text-3xl md:text-4xl"
-              style={{ letterSpacing: '-0.02em' }}
-            >
-              Choose your medication
-            </motion.h1>
-          </div>
+    <div className="min-h-screen bg-[#fef8f2] p-4 sm:p-6">
+      <div className="mx-auto max-w-2xl">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#2D3436] mb-2">
+            Choose Your Medication
+          </h1>
+          <p className="text-[#666666]">
+            Select the medication and pharmacy that works best for you.
+          </p>
+        </div>
 
-          {renderContent()}
+        {/* Content */}
+        {renderContent()}
 
-          <NavigationButtons
-            showBack={showBack}
-            onBack={onBack}
-            onNext={onSubmit}
-            isNextDisabled={!canContinue}
-            layout="grouped"
-          />
-        </motion.div>
+        {/* Navigation */}
+        <NavigationButtons
+          onBack={onBack}
+          onNext={() => onSubmit()}
+          showBack={showBack}
+          isNextDisabled={!selectedMedicationId || !selectedPharmacyId}
+        />
       </div>
     </div>
   );
