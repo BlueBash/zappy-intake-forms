@@ -6,7 +6,7 @@ interface ScreenLayoutProps {
   title?: string;
   helpText?: string;
   headerSize?: string;
-  children: ReactNode;
+  children?: ReactNode;
   showHeader?: boolean;
   showLoginLink?: boolean; // For compatibility
   progress?: number; // Progress percentage 0-100

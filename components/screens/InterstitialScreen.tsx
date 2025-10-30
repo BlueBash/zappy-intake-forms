@@ -7,7 +7,7 @@ interface InterstitialScreenProps {
   screen: {
     id: string;
     type: 'interstitial';
-    variant?: 'stat' | 'motivation' | 'testimonial' | 'trust' | 'process' | 'stat_success' | 'stat_science' | 'stat_personalized' | 'weight_loss_graph';
+    variant?: 'stat' | 'motivation' | 'testimonial' | 'trust' | 'process' | 'stat_success' | 'stat_science' | 'stat_personalized' | 'weight_loss_graph' | 'progress_encouragement';
     
     // For stat variant
     stat_number?: string;
@@ -667,6 +667,75 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
           </motion.div>
         </div>
       </motion.div>
+    );
+  }
+
+  // PROGRESS ENCOURAGEMENT VARIANT - Mid-assessment motivation
+  if (variant === 'progress_encouragement') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#FDFBF7] via-white to-[#F8FCF9] flex items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center"
+          >
+            {/* Icon */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.5, type: 'spring', stiffness: 200 }}
+              className="mb-6"
+            >
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-[#00A896] rounded-full shadow-lg shadow-[#00A896]/30">
+                <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </motion.div>
+
+            {/* Title */}
+            <motion.h2
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              className="text-3xl sm:text-4xl mb-4 text-neutral-900"
+            >
+              {screen.title || "You're making great progress!"}
+            </motion.h2>
+
+            {/* Description */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="text-lg sm:text-xl text-neutral-600 mb-8 max-w-xl mx-auto"
+            >
+              {screen.subtitle || "Just a few more questions to ensure we can support you safely. You're halfway there!"}
+            </motion.p>
+
+            {/* Continue Button */}
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              onClick={onSubmit}
+              className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#FF6B6B] hover:bg-[#FF5252] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-lg"
+            >
+              <span>Continue</span>
+              <svg
+                className="w-5 h-5 transition-transform group-hover:translate-x-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </motion.button>
+          </motion.div>
+        </div>
+      </div>
     );
   }
 

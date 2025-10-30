@@ -74,15 +74,15 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
     return (
       <div>
         {label && (
-          <Label className="mb-3 text-xl sm:text-2xl text-neutral-900">{label}</Label>
+          <Label className="text-xl sm:text-2xl text-neutral-900">{label}</Label>
         )}
         {help_text && (
-          <p className="text-sm leading-relaxed text-neutral-600 mb-4 flex items-start gap-2">
+          <p className="text-sm leading-relaxed text-neutral-600 mt-2 mb-4 flex items-start gap-2">
             <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#00A896]" />
             {help_text}
           </p>
         )}
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-2.5 mt-3">
           {sortedOptions.map((option, index) => {
             const isChecked = selectedValues.includes(option.value);
             const isExclusive = exclusiveValue === option.value;

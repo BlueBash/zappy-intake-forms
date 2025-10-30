@@ -342,7 +342,8 @@ select:focus,
 textarea:focus {
   outline: none !important;
   box-shadow: none !important;
-  border-radius: inherit;
+  border-radius: 12px;
+  /* border-radius: inherit; */
 }
 
 /* Remove browser chrome from date/time inputs */

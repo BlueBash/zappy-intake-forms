@@ -7,6 +7,7 @@ import type { ContentScreen } from '../../types';
 
 interface WeightLossGraphScreenProps {
   screen: ContentScreen;
+  answers: Record<string, any>;
   onSubmit: () => void;
   showBack: boolean;
   onBack: () => void;
@@ -14,10 +15,15 @@ interface WeightLossGraphScreenProps {
 
 const WeightLossGraphScreen: React.FC<WeightLossGraphScreenProps> = ({
   screen,
+  answers,
   onSubmit,
   showBack,
   onBack,
 }) => {
+  // Calculate potential weight loss (20% of starting weight)
+  const startingWeight = parseInt(answers.highest_weight || answers.weight || '200');
+  const potentialWeightLoss = Math.round(startingWeight * 0.2);
+  
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -27,7 +33,11 @@ const WeightLossGraphScreen: React.FC<WeightLossGraphScreenProps> = ({
     >
       <ScreenLayout
         title={(screen as any).title || screen.headline || 'Your potential transformation'}
-        helpText={(screen as any).subtitle || screen.body}
+        helpText={
+          <span>
+            You could shed <span className="font-bold text-[#FF6B6B]">{potentialWeightLoss} lbs</span> from your starting weight
+          </span>
+        }
       >
         <div className="space-y-8">
           <motion.div

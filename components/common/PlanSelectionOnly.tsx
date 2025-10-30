@@ -203,11 +203,11 @@ export default function PlanSelectionOnly({
                   <div className="relative">
                     <PlanImage src={imageUrl} alt={planName} />
                     {primaryTags.length > 0 && (
-                      <div className="absolute -bottom-2 left-1 right-1 flex flex-wrap gap-1">
+                      <div className="absolute flex flex-wrap gap-1">
                         {primaryTags.map((tagLabel, tagIndex) => (
                           <span
                             key={`${plan.id}-tag-${tagIndex}`}
-                            className="inline-flex items-center rounded-full bg-[#00A896]/10 border border-[#00A896]/30 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#00A896] shadow-sm backdrop-blur"
+                            className="mt-3 inline-flex items-center rounded-full bg-[#00A896]/10 border border-[#00A896]/30 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#00A896] shadow-sm backdrop-blur"
                           >
                             <Tag className="w-3 h-3 mr-1" />
                             {tagLabel}

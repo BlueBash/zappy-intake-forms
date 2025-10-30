@@ -630,9 +630,14 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         responses.condition = resolvedCondition;
       }
 
+      console.log('answers', answers);
+
+      const clientRecordId = answers['client_record_id'] ?? (typeof window !== 'undefined' ? window.sessionStorage.getItem('client_record_id') : null);
+
       const payload = {
         condition: responses.condition,
         responses,
+        client_record_id: clientRecordId || undefined,
         // intake_form: activeFormConfig,
         // timestamp: new Date().toISOString(),
       };

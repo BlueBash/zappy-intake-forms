@@ -115,6 +115,7 @@ const formConfig: FormConfig = {
           id: "sex_birth",
           type: "single_select",
           label: "Sex assigned at birth",
+          labelClassName: "!text-sm !leading-none !font-medium !select-none !text-neutral-800",
           options: [
             { value: "male", label: "Male" },
             { value: "female", label: "Female" },
@@ -203,7 +204,7 @@ const formConfig: FormConfig = {
       phase: "qualify",
       variant: "weight_loss_graph",
       title: "Your potential transformation",
-      subtitle: "You could shed 18 lbs from your starting weight",
+      subtitle: "Based on clinical data, you could achieve significant weight loss",
       message:
         "Individual results may vary. Graph shows typical patient journey based on clinical trials.",
       next: "capture.email",
@@ -300,12 +301,13 @@ const formConfig: FormConfig = {
       id: "eating_substance",
       type: "composite",
       phase: "qualify",
-      title: "Eating & Substance Use",
+      title: "Have you ever been diagnosed with an eating disorder?",
+      help_text: "We need to ask a couple of questions about eating and substance use",
       fields: [
         {
           id: "eating_relationship",
           type: "single_select",
-          label: "Have you ever been diagnosed with an eating disorder?",
+          label: "",
           options: [
             { value: "no", label: "No" },
             { value: "yes", label: "Yes" },
@@ -856,7 +858,7 @@ const formConfig: FormConfig = {
       type: "terminal",
       phase: "treatment",
       status: "success",
-      title: "Welcome, Quia id quos dolore !",
+      title: "Welcome, ${first_name} ${last_name}!",
       body: "Your account has been created successfully. Check your email at ${email} to get started!:",
       next_steps: [
         {

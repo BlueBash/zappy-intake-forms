@@ -460,7 +460,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
             transition={{ duration: 0.3 }}
           >
             {field.label && (
-              <label htmlFor={field.id} className="block mb-2 text-neutral-800">
+              <label htmlFor={field.id} className="block mb-2 font-medium text-md text-neutral-800">
                 {field.label}
                 {field.required && <span className="text-[#FF7A59] ml-1">*</span>}
               </label>
@@ -524,7 +524,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
             const heightInValue = answers['height_in'];
             return (
               <div>
-                <label className="block text-base mb-3 text-[#2D3436]">
+                <label className="text-sm leading-none font-medium select-none mb-3 text-neutral-800">
                   Height
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -600,7 +600,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           return (
             <div>
               {field.label && (
-                <label className="block text-base mb-3 text-[#2D3436]">
+                <label className="block text-xl sm:text-2xl text-neutral-900 mb-3 font-medium">
                   {field.label}
                 </label>
               )}
@@ -649,7 +649,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
         return (
             <div>
                 {field.label && (
-                    <label className="block text-base mb-3 text-[#2D3436]">
+                    <label className={`block text-xl sm:text-2xl text-neutral-900 mb-3 font-medium ${field.labelClassName}`}>
                         {field.label}
                     </label>
                 )}
@@ -681,7 +681,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                       iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
                     },
                     info: {
-                      container: 'bg-[#fef8f2] border-[#E8E8E8]',
+                      container: 'bg-[#E0F5F3] border-[#E8E8E8]',
                       icon: 'text-[#00A896]',
                       title: 'text-[#2D3436]',
                       message: 'text-[#666666]',
@@ -728,6 +728,11 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           };
           const selectedValues = value || [];
           const showOtherInput = multiSelectField.other_text_id && selectedValues.includes('other');
+          
+          // Detect "none" option for mutual exclusivity
+          const noneOption = multiSelectField.options.find(opt => opt.value === 'none');
+          const exclusiveValue = noneOption ? 'none' : undefined;
+          
           return (
             <div>
               <CheckboxGroup
@@ -737,6 +742,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                 options={multiSelectField.options}
                 selectedValues={selectedValues}
                 onChange={handleMultiSelectChange}
+                exclusiveValue={exclusiveValue}
               />
               {showOtherInput && (
                 <div className="mt-3">
@@ -769,7 +775,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                       iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
                     },
                     info: {
-                      container: 'bg-[#fef8f2] border-[#E8E8E8]',
+                      container: 'bg-[#E0F5F3] border-[#E8E8E8]',
                       icon: 'text-[#00A896]',
                       title: 'text-[#2D3436]',
                       message: 'text-[#666666]',

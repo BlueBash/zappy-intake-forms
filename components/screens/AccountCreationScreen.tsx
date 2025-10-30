@@ -42,16 +42,24 @@ function MockPaymentForm({
   onBack: () => void;
 }) {
   const getString = (value: unknown, fallback: string = ''): string => (typeof value === 'string' ? value : fallback);
-  const [firstName, setFirstName] = useState(() => getString(answers.account_firstName ?? answers.first_name));
-  const [lastName, setLastName] = useState(() => getString(answers.account_lastName ?? answers.last_name));
-  const [email, setEmail] = useState(() => getString(answers.account_email ?? answers.email));
-  const [isEmailEditable, setIsEmailEditable] = useState(false);
+  
+  // Determine user state: new user who just created account vs existing customer
+  const hasJustCreatedAccount = Boolean(
+    answers.email && 
+    answers.password &&
+    (answers.first_name || answers.account_firstName)
+  );
+  
+  const isExistingCustomer = Boolean(
+    answers.email && 
+    !answers.password && // They signed in, not created new account
+    (answers.first_name || answers.account_firstName)
+  );
+
+  // State management - simplified based on what we actually need
   const [phone, setPhone] = useState(() => getString(answers.account_phone ?? answers.phone));
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [address, setAddress] = useState(() => getString(answers.account_address ?? answers.address_line1 ?? answers.shipping_address));
+  const [address2, setAddress2] = useState(() => getString(answers.account_address2 ?? answers.address_line2 ?? answers.shipping_address2));
   const [city, setCity] = useState(() => getString(answers.account_city ?? answers.city ?? answers.shipping_city));
   const [state, setState] = useState(() =>
     normalizeStateCode(
@@ -65,39 +73,28 @@ function MockPaymentForm({
   );
   const [zipCode, setZipCode] = useState(() => getString(answers.account_zipCode ?? answers.account_zipcode ?? answers.zip_code ?? answers.shipping_zip));
   const [cardNumber, setCardNumber] = useState('');
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Check if user already has contact info from email capture
-  const hasExistingContactInfo = Boolean(
-    answers.email && 
-    answers.password &&
-    (answers.account_firstName || answers.first_name)
-  );
+  // Get user info for display
+  const userEmail = getString(answers.email || answers.account_email);
+  const userName = getString(answers.first_name || answers.account_firstName);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!lastName.trim()) newErrors.lastName = 'Last name is required';
-    const trimmedEmail = email.trim();
     const trimmedPhone = phone.trim();
     const phoneDigits = trimmedPhone.replace(/[^0-9]/g, '');
 
-    if (!trimmedEmail) newErrors.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) newErrors.email = 'Enter a valid email';
+    // Simplified validation - only for fields we're actually collecting
     if (!trimmedPhone) newErrors.phone = 'Phone number is required';
     else if (phoneDigits.length < 10 || phoneDigits.length > 15) newErrors.phone = 'Enter a valid phone number';
-    if (!password) newErrors.password = 'Password is required';
-    else if (password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-    if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    
     if (!address.trim()) newErrors.address = 'Address is required';
     if (!city.trim()) newErrors.city = 'City is required';
     if (!state.trim()) newErrors.state = 'State is required';
     if (!zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
     if (!cardNumber.trim()) newErrors.cardNumber = 'Card number is required';
-    if (!agreedToTerms) newErrors.terms = 'You must agree to the terms to continue';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -113,16 +110,10 @@ function MockPaymentForm({
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      const sanitizedEmail = email.trim();
-      const sanitizedPhone = phone.trim();
-
       const accountData = {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: sanitizedEmail,
-        phone: sanitizedPhone,
-        password,
+        phone: phone.trim(),
         address: address.trim(),
+        address2: address2.trim(),
         city: city.trim(),
         state: normalizeStateCode(state),
         zipCode: zipCode.trim(),
@@ -140,104 +131,27 @@ function MockPaymentForm({
   const planName = selectedPlan?.name || answers['selected_plan_name'] || 'Selected Plan';
   const planPrice = selectedPlan?.invoice_amount || answers['selected_plan_price'] || 299;
   
-  // Determine CTA text based on whether user already has contact info
-  const ctaText = hasExistingContactInfo 
-    ? 'Save and request profile update' 
+  // Determine CTA text and title based on user state
+  const ctaText = isExistingCustomer 
+    ? 'Update & Continue' 
     : 'Complete Purchase';
+    
+  const formTitle = isExistingCustomer 
+    ? `Welcome back, ${userName}!`
+    : hasJustCreatedAccount 
+      ? 'Complete Your Profile'
+      : 'Create Your Account';
+      
+  const formSubtitle = isExistingCustomer
+    ? 'Please confirm your delivery information'
+    : 'Just a few more details for delivery and payment';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Demo Notice */}
-      <div className="bg-[var(--warm-background)] border border-[var(--light-gray)] rounded-xl p-4">
-        <div className="flex items-start gap-3">
-          <Lock className="w-5 h-5 text-[var(--teal)] flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm text-[var(--black)] font-medium mb-1">Demo Mode</p>
-            <p className="text-xs text-[var(--gray)]">
-              This is a demo payment form. No actual payment will be processed.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Name & Email */}
+      {/* Contact & Delivery */}
       <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-        <h3 className="text-lg text-neutral-900 mb-4">Personal Information</h3>
+        <h3 className="text-lg text-neutral-900 mb-4">Contact & Delivery</h3>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm text-neutral-700 mb-2">
-              First Name *
-            </label>
-            <input
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className={`w-full px-4 py-3 rounded-xl border-2 ${
-                errors.firstName ? 'border-red-500' : 'border-neutral-200'
-              } focus:border-[#1a7f72] focus:outline-none transition-colors`}
-              placeholder="John"
-            />
-            {errors.firstName && (
-              <p className="text-sm text-red-500 mt-1">{errors.firstName}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm text-neutral-700 mb-2">
-              Last Name *
-            </label>
-            <input
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className={`w-full px-4 py-3 rounded-xl border-2 ${
-                errors.lastName ? 'border-red-500' : 'border-neutral-200'
-              } focus:border-[#1a7f72] focus:outline-none transition-colors`}
-              placeholder="Doe"
-            />
-            {errors.lastName && (
-              <p className="text-sm text-red-500 mt-1">{errors.lastName}</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm text-neutral-700">
-              Email *
-            </label>
-            {!isEmailEditable && (
-              <button
-                type="button"
-                onClick={() => setIsEmailEditable(true)}
-                className="text-xs font-medium text-[#1a7f72] hover:text-[#145b50]"
-              >
-                Edit
-              </button>
-            )}
-          </div>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={!isEmailEditable}
-            className={`w-full px-4 py-3 rounded-xl border-2 ${
-              errors.email ? 'border-red-500' : 'border-neutral-200'
-            } focus:border-[#1a7f72] focus:outline-none transition-colors disabled:bg-neutral-100 disabled:text-neutral-500 disabled:cursor-not-allowed`}
-            placeholder="john.doe@example.com"
-            autoComplete="email"
-          />
-          {errors.email && (
-            <p className="text-sm text-red-500 mt-1">{errors.email}</p>
-          )}
-          {!isEmailEditable && (
-            <p className="text-xs text-neutral-500 mt-1">
-              We prefilled the email you shared earlier. Tap edit if you need to update it.
-            </p>
-          )}
-        </div>
-
         <div>
           <label className="block text-sm text-neutral-700 mb-2">
             Phone Number *
@@ -256,65 +170,6 @@ function MockPaymentForm({
             <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
           )}
         </div>
-
-        <div>
-          <label className="block text-sm text-neutral-700 mb-2">
-            Password *
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${
-                errors.password ? 'border-red-500' : 'border-neutral-200'
-              } focus:border-[#1a7f72] focus:outline-none transition-colors`}
-              placeholder="At least 8 characters"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700"
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-          {errors.password && (
-            <p className="text-sm text-red-500 mt-1">{errors.password}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm text-neutral-700 mb-2">
-            Confirm Password *
-          </label>
-          <div className="relative">
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${
-                errors.confirmPassword ? 'border-red-500' : 'border-neutral-200'
-              } focus:border-[#1a7f72] focus:outline-none transition-colors`}
-              placeholder="Re-enter password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700"
-            >
-              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-          {errors.confirmPassword && (
-            <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>
-          )}
-        </div>
-      </div>
-
-      {/* Shipping Address */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-        <h3 className="text-lg text-neutral-900 mb-4">Shipping Address</h3>
         
         <div>
           <label className="block text-sm text-neutral-700 mb-2">
@@ -332,6 +187,19 @@ function MockPaymentForm({
           {errors.address && (
             <p className="text-sm text-red-500 mt-1">{errors.address}</p>
           )}
+        </div>
+
+        <div>
+          <label className="block text-sm text-neutral-700 mb-2">
+            Apartment, Suite, etc. (Optional)
+          </label>
+          <input
+            type="text"
+            value={address2}
+            onChange={(e) => setAddress2(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border-2 border-neutral-200 focus:border-[#1a7f72] focus:outline-none transition-colors"
+            placeholder="Apt 4B"
+          />
         </div>
 
         <div className="grid grid-cols-3 gap-4">
@@ -489,72 +357,6 @@ function MockPaymentForm({
         </div>
       </div>
 
-      {/* Consent Checkbox */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <label className="flex items-start gap-3 cursor-pointer group">
-          <input
-            type="checkbox"
-            checked={agreedToTerms}
-            onChange={(e) => {
-              setAgreedToTerms(e.target.checked);
-              if (errors.terms) {
-                setErrors(prev => {
-                  const { terms, ...rest } = prev;
-                  return rest;
-                });
-              }
-            }}
-            className="mt-1 w-5 h-5 rounded border-2 border-neutral-300 text-[#1a7f72] focus:ring-2 focus:ring-[#1a7f72] focus:ring-offset-2 transition-colors cursor-pointer"
-          />
-          <span className={`text-sm leading-relaxed ${errors.terms ? 'text-red-600' : 'text-neutral-700'}`}>
-            By creating an account, I agree to the{' '}
-            <a 
-              href="https://zappyhealth.com/terms" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-[#1a7f72] font-semibold hover:underline"
-              onClick={(e) => e.stopPropagation()}
-            >
-              Terms of Service
-            </a>
-            ,{' '}
-            <a 
-              href="https://zappyhealth.com/privacy" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-[#1a7f72] font-semibold hover:underline"
-              onClick={(e) => e.stopPropagation()}
-            >
-              Privacy Policy
-            </a>
-            ,{' '}
-            <a 
-              href="https://zappyhealth.com/telehealth" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-[#1a7f72] font-semibold hover:underline"
-              onClick={(e) => e.stopPropagation()}
-            >
-              Telehealth Consent
-            </a>
-            , and{' '}
-            <a 
-              href="https://zappyhealth.com/hipaa" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-[#1a7f72] font-semibold hover:underline"
-              onClick={(e) => e.stopPropagation()}
-            >
-              HIPAA Authorization
-            </a>
-            . I understand prescriptions are at provider discretion.
-          </span>
-        </label>
-        {errors.terms && (
-          <p className="text-sm text-red-600 mt-2 ml-8">{errors.terms}</p>
-        )}
-      </div>
-
       {errors.general && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <p className="text-sm text-red-700">{errors.general}</p>
@@ -636,6 +438,10 @@ export default function AccountCreationScreen({ screen, answers, updateAnswer, o
                 if (key === 'address') {
                   updateAnswer('address_line1', value);
                   updateAnswer('shipping_address', value);
+                }
+                if (key === 'address2') {
+                  updateAnswer('address_line2', value);
+                  updateAnswer('shipping_address2', value);
                 }
                 if (key === 'zipCode') {
                   updateAnswer('zip_code', value);

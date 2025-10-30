@@ -97,6 +97,7 @@ export interface BaseField {
   id: string;
   type: FieldType;
   label: string;
+  labelClassName?: string;
   placeholder?: string;
   help_text?: string;
   required?: boolean;

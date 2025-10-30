@@ -723,7 +723,7 @@ export default function MedicationChoiceScreen({
   };
   
   return (
-    <div className="min-h-screen bg-[#fef8f2] p-4 sm:p-6">
+    <div className="w-full min-h-screen bg-[#fef8f2] p-4 sm:p-6">
       <div className="mx-auto max-w-2xl">
         {/* Header */}
         <div className="mb-8">
