@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 
 interface RegionDropdownProps {
   value: string;
@@ -14,145 +14,128 @@ interface StateOption {
 }
 
 export const US_STATES: StateOption[] = [
-  { name: 'Alabama', code: 'AL' },
-  { name: 'Alaska', code: 'AK' },
-  { name: 'Arizona', code: 'AZ' },
-  { name: 'Arkansas', code: 'AR' },
-  { name: 'California', code: 'CA' },
-  { name: 'Colorado', code: 'CO' },
-  { name: 'Connecticut', code: 'CT' },
-  { name: 'Delaware', code: 'DE' },
-  { name: 'Florida', code: 'FL' },
-  { name: 'Georgia', code: 'GA' },
-  { name: 'Hawaii', code: 'HI' },
-  { name: 'Idaho', code: 'ID' },
-  { name: 'Illinois', code: 'IL' },
-  { name: 'Indiana', code: 'IN' },
-  { name: 'Iowa', code: 'IA' },
-  { name: 'Kansas', code: 'KS' },
-  { name: 'Kentucky', code: 'KY' },
-  { name: 'Louisiana', code: 'LA' },
-  { name: 'Maine', code: 'ME' },
-  { name: 'Maryland', code: 'MD' },
-  { name: 'Massachusetts', code: 'MA' },
-  { name: 'Michigan', code: 'MI' },
-  { name: 'Minnesota', code: 'MN' },
-  { name: 'Mississippi', code: 'MS' },
-  { name: 'Missouri', code: 'MO' },
-  { name: 'Montana', code: 'MT' },
-  { name: 'Nebraska', code: 'NE' },
-  { name: 'Nevada', code: 'NV' },
-  { name: 'New Hampshire', code: 'NH' },
-  { name: 'New Jersey', code: 'NJ' },
-  { name: 'New Mexico', code: 'NM' },
-  { name: 'New York', code: 'NY' },
-  { name: 'North Carolina', code: 'NC' },
-  { name: 'North Dakota', code: 'ND' },
-  { name: 'Ohio', code: 'OH' },
-  { name: 'Oklahoma', code: 'OK' },
-  { name: 'Oregon', code: 'OR' },
-  { name: 'Pennsylvania', code: 'PA' },
-  { name: 'Rhode Island', code: 'RI' },
-  { name: 'South Carolina', code: 'SC' },
-  { name: 'South Dakota', code: 'SD' },
-  { name: 'Tennessee', code: 'TN' },
-  { name: 'Texas', code: 'TX' },
-  { name: 'Utah', code: 'UT' },
-  { name: 'Vermont', code: 'VT' },
-  { name: 'Virginia', code: 'VA' },
-  { name: 'Washington', code: 'WA' },
-  { name: 'West Virginia', code: 'WV' },
-  { name: 'Wisconsin', code: 'WI' },
-  { name: 'Wyoming', code: 'WY' },
-  { name: 'District of Columbia', code: 'DC' },
+  { name: "Alabama", code: "AL" },
+  { name: "Alaska", code: "AK" },
+  { name: "Arizona", code: "AZ" },
+  { name: "Arkansas", code: "AR" },
+  { name: "California", code: "CA" },
+  { name: "Colorado", code: "CO" },
+  { name: "Connecticut", code: "CT" },
+  { name: "Delaware", code: "DE" },
+  { name: "Florida", code: "FL" },
+  { name: "Georgia", code: "GA" },
+  { name: "Hawaii", code: "HI" },
+  { name: "Idaho", code: "ID" },
+  { name: "Illinois", code: "IL" },
+  { name: "Indiana", code: "IN" },
+  { name: "Iowa", code: "IA" },
+  { name: "Kansas", code: "KS" },
+  { name: "Kentucky", code: "KY" },
+  { name: "Louisiana", code: "LA" },
+  { name: "Maine", code: "ME" },
+  { name: "Maryland", code: "MD" },
+  { name: "Massachusetts", code: "MA" },
+  { name: "Michigan", code: "MI" },
+  { name: "Minnesota", code: "MN" },
+  { name: "Mississippi", code: "MS" },
+  { name: "Missouri", code: "MO" },
+  { name: "Montana", code: "MT" },
+  { name: "Nebraska", code: "NE" },
+  { name: "Nevada", code: "NV" },
+  { name: "New Hampshire", code: "NH" },
+  { name: "New Jersey", code: "NJ" },
+  { name: "New Mexico", code: "NM" },
+  { name: "New York", code: "NY" },
+  { name: "North Carolina", code: "NC" },
+  { name: "North Dakota", code: "ND" },
+  { name: "Ohio", code: "OH" },
+  { name: "Oklahoma", code: "OK" },
+  { name: "Oregon", code: "OR" },
+  { name: "Pennsylvania", code: "PA" },
+  { name: "Rhode Island", code: "RI" },
+  { name: "South Carolina", code: "SC" },
+  { name: "South Dakota", code: "SD" },
+  { name: "Tennessee", code: "TN" },
+  { name: "Texas", code: "TX" },
+  { name: "Utah", code: "UT" },
+  { name: "Vermont", code: "VT" },
+  { name: "Virginia", code: "VA" },
+  { name: "Washington", code: "WA" },
+  { name: "West Virginia", code: "WV" },
+  { name: "Wisconsin", code: "WI" },
+  { name: "Wyoming", code: "WY" },
+  { name: "District of Columbia", code: "DC" },
 ];
 
 const RegionDropdown: React.FC<RegionDropdownProps> = ({
   value,
   onChange,
-  placeholder = 'Select state',
+  placeholder = "Select state",
   disabled = false,
   name,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const selectedRegion = US_STATES.find((state) => state.code === value);
-
   const normalizedTerm = searchTerm.trim().toLowerCase();
 
   // Always show all states, but sort matching ones to the top when searching
-  const filteredRegions = normalizedTerm
-    ? [
-        ...US_STATES.filter((state) => {
-          const name = state.name.toLowerCase();
-          const code = state.code.toLowerCase();
-          return name.startsWith(normalizedTerm) || code.startsWith(normalizedTerm);
-        }),
-        ...US_STATES.filter((state) => {
-          const name = state.name.toLowerCase();
-          const code = state.code.toLowerCase();
-          return !(name.startsWith(normalizedTerm) || code.startsWith(normalizedTerm));
-        }),
-      ]
-    : US_STATES;
+  const filteredRegions = US_STATES.filter((state) => {
+    const name = state.name.toLowerCase();
+    const code = state.code.toLowerCase();
+    return name.includes(normalizedTerm) || code.includes(normalizedTerm);
+  });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
-        setSearchTerm('');
-        setHighlightedIndex(-1);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const selectRegion = (region: StateOption) => {
     onChange(region.code);
-    setSearchTerm(''); // Clear search after selection
-    setHighlightedIndex(-1);
+    setSearchTerm(region.name);
+    setIsOpen(false);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (disabled) return;
-
-    if (!isOpen) {
-      if (event.key === 'Enter' || event.key === 'ArrowDown') {
-        event.preventDefault();
-        setIsOpen(true);
-        setHighlightedIndex(0);
-      }
-      return;
+    if (event.key === "Enter" || event.key === "ArrowDown") {
+      event.preventDefault();
+      setIsOpen(true);
     }
-
     switch (event.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         event.preventDefault();
         setHighlightedIndex((prev) =>
           prev < filteredRegions.length - 1 ? prev + 1 : 0
         );
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         event.preventDefault();
         setHighlightedIndex((prev) =>
           prev > 0 ? prev - 1 : filteredRegions.length - 1
         );
         break;
-      case 'Enter':
+      case "Enter":
         event.preventDefault();
         if (highlightedIndex >= 0 && filteredRegions[highlightedIndex]) {
           selectRegion(filteredRegions[highlightedIndex]);
         }
         break;
-      case 'Escape':
+      case "Escape":
         setIsOpen(false);
-        setSearchTerm('');
+        setSearchTerm("");
         setHighlightedIndex(-1);
         inputRef.current?.blur();
         break;
@@ -164,22 +147,14 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
     setSearchTerm(term);
-    setIsOpen(true);
-    setHighlightedIndex(-1);
 
     if (!term) {
-      onChange('');
+      onChange("");
     }
   };
 
-  const handleInputClick = () => {
-    if (disabled) return;
-    setIsOpen(true);
-    setHighlightedIndex(-1);
-  };
-
   return (
-    <div ref={dropdownRef} className="space-y-3">
+    <div ref={dropdownRef} className="space-y-3 relative">
       <input
         ref={inputRef}
         type="text"
@@ -188,45 +163,46 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
         placeholder="Search states..."
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
+        onFocus={() => setIsOpen(true)}
         disabled={disabled}
         className="w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-white shadow-sm border-neutral-200 focus:border-[#00A896] focus:ring-4 focus:ring-[#00A896]/8 outline-none disabled:bg-neutral-100 text-neutral-900"
-        autoComplete="off"
       />
 
       {/* Always show the list */}
-      {!disabled && (
-        <div className="w-full bg-white border-2 border-neutral-200 rounded-xl max-h-60 overflow-y-auto">
-          {filteredRegions.length > 0 ? (
-            filteredRegions.map((region, index) => {
-              const isSelected = value === region.code;
-              return (
-                <button
-                  type="button"
-                  key={region.code}
-                  onClick={() => selectRegion(region)}
-                  className={`w-full text-left px-4 py-3 transition-colors flex items-center justify-between ${
-                    isSelected
-                      ? 'bg-[#E0F5F3] text-[#00A896] border-[#00A896]'
-                      : index === highlightedIndex
-                      ? 'bg-[#E0F5F3] text-[#00A896]'
-                      : 'hover:bg-stone-100'
+      {isOpen && filteredRegions.length > 0 && (
+        <div className="absolute top-11 left-0 w-full bg-white border-2 border-neutral-200 rounded-xl max-h-60 overflow-y-auto">
+          {filteredRegions.map((region, index) => {
+            const isSelected = value === region.code;
+            return (
+              <button
+                type="button"
+                key={region.code}
+                onClick={() => selectRegion(region)}
+                className={`w-full text-left px-4 py-3 transition-colors flex items-center justify-between ${
+                  isSelected
+                    ? "bg-[#E0F5F3] text-[#00A896] border-[#00A896]"
+                    : index === highlightedIndex
+                    ? "bg-[#E0F5F3] text-[#00A896]"
+                    : "hover:bg-stone-100"
+                }`}
+              >
+                <span
+                  className={`font-medium ${
+                    isSelected ? "text-[#00A896]" : "text-[#2D3436]"
                   }`}
-                  onMouseEnter={() => setHighlightedIndex(index)}
                 >
-                  <span className={`font-medium ${isSelected ? 'text-[#00A896]' : 'text-[#2D3436]'}`}>
-                    {region.name}
-                  </span>
-                  <span className={`text-sm ${isSelected ? 'text-[#00A896]' : 'text-[#666666]'}`}>
-                    {region.code}
-                  </span>
-                </button>
-              );
-            })
-          ) : (
-            <div className="px-4 py-3 text-sm text-neutral-600 text-center">
-              No matching states
-            </div>
-          )}
+                  {region.name}
+                </span>
+                <span
+                  className={`text-sm ${
+                    isSelected ? "text-[#00A896]" : "text-[#666666]"
+                  }`}
+                >
+                  {region.code}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

@@ -314,6 +314,11 @@ export const apiClient = {
 
   getInvoicePaymentIntent: (invoiceId: string) =>
     post<InvoicePaymentIntentResponse>(`/stripe/invoices/${invoiceId}/payment-intent`, {}),
+
+  checkClientRecord: (email: string) =>
+    get<{ exists: boolean; message: string; short_code: string }>('/consultations/client-records/check', {
+      email,
+    }),
   
 };
 

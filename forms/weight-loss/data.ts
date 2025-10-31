@@ -204,7 +204,7 @@ const formConfig: FormConfig = {
       phase: "qualify",
       variant: "weight_loss_graph",
       title: "Your potential transformation",
-      subtitle: "Based on clinical data, you could achieve significant weight loss",
+      subtitle: "You could shed ${calc.weight_loss} lbs from your starting weight",
       message:
         "Individual results may vary. Graph shows typical patient journey based on clinical trials.",
       next: "capture.email",

@@ -39,19 +39,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-required={props.required}
             aria-invalid={!!error}
             aria-describedby={error ? errorId : undefined}
-            className={`
-              w-full px-5 sm:px-6 py-5 sm:py-[18px] rounded-xl sm:rounded-2xl border-2 transition-all duration-300 bg-white shadow-sm
-              ${hasTrailingAdornment ? 'pr-16' : ''}
-              ${error ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100' : 'border-[#E8E8E8] focus:border-[#0D9488] focus:ring-4 focus:ring-[#0D9488]/10'}
-              outline-none
-            `}
-            style={{
-              boxShadow: 'none',
-              WebkitAppearance: 'none',
-              MozAppearance: 'none',
-              appearance: 'none',
-            }}
             {...props}
+            style={{ transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
+            className={`
+               w-full px-5 sm:px-6 py-5 sm:py-[18px] rounded-xl sm:rounded-2xl border-2 transition-all duration-300 bg-white
+              ${hasTrailingAdornment ? 'pr-16' : ''}
+              ${error ? 'border-red-400 focus:border-red-500  focus:ring-red-100' : 'border-[#E8E8E8] bg-white hover:shadow-md shadow-sm'}
+            `}
           />
           {suffix && !isPasswordField && (
             <span className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none font-medium text-neutral-600 text-sm">

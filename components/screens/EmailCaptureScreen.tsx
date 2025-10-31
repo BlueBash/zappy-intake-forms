@@ -55,6 +55,7 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
   const [createClientError, setCreateClientError] = useState<string | null>(
     null
   );
+  const [checkingAccount, setCheckingAccount] = useState(false);
 
   const validateEmail = (value: string) => {
     // Stricter email validation with valid TLD check
@@ -93,32 +94,44 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
     setEmail(value);
     const isValid = validateEmail(value);
     setIsEmailValid(isValid);
-    console.log("isValid", isValid);
+    
+    // Reset states when email changes (no API call here)
+    setAccountExists(false);
+    setShowNameFields(false);
+    setShowPasswordField(false);
+    setIsSigningIn(false);
+    setManualSignIn(false);
     if (isValid) {
       updateAnswer("email", value);
-      // Simulate account detection after 500ms
-      setTimeout(() => {
-        checkIfAccountExists(value);
-      }, 500);
     }
   };
 
   const checkIfAccountExists = async (emailValue: string) => {
-    // TODO: Replace with actual API call
-    // For now, simulate checking if account exists
-    const exists = false; // Change to true to test account exists flow
-    setAccountExists(exists);
+    try {
+      setCheckingAccount(true);
+      const response = await apiClient.checkClientRecord(emailValue);
+      const exists = response?.exists || false;
+      setAccountExists(exists);
 
-    if (!exists) {
-      // New account - show name fields first, then password
+      if (!exists) {
+        // New account - show name fields first, then password
+        setTimeout(() => setShowNameFields(true), 300);
+        setIsSigningIn(false);
+        setShowPasswordField(false);
+      } else {
+        // Existing account detected - show sign-in mode
+        setTimeout(() => {
+          setShowPasswordField(true);
+          setIsSigningIn(true);
+        }, 300);
+      }
+    } catch (error: any) {
+      console.error('Error checking account:', error);
+      // On error, default to new account flow
+      setAccountExists(false);
       setTimeout(() => setShowNameFields(true), 300);
-    } else {
-      // Existing account detected - show sign-in mode
-      // Only set accountExists if this was detected, not manually triggered
-      setTimeout(() => {
-        setShowPasswordField(true);
-        setIsSigningIn(true);
-      }, 300);
+    } finally {
+      setCheckingAccount(false);
     }
   };
 
@@ -130,6 +143,12 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
       const loginResponse: any = await apiClient.login({ email, password });
       const clientRecordId = loginResponse?.client_record?.id;
       updateAnswer("email", email);
+      updateAnswer("first_name", loginResponse?.client_record.first_name);
+      updateAnswer("last_name", loginResponse?.client_record.last_name);
+      updateAnswer("account_firstName", loginResponse?.client_record.first_name);
+      updateAnswer("account_lastName", loginResponse?.client_record.last_name);
+      updateAnswer("account_email", email);
+      updateAnswer("account_password", password);
       if (clientRecordId) {
         updateAnswer("client_record_id", clientRecordId);
         try {
@@ -177,8 +196,11 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
   };
 
   const handleContinue = async () => {
-    if (!showPasswordField) {
-      // Just email validated, no password yet
+    // If we haven't determined account existence yet, trigger the check
+    if (!showPasswordField && !showNameFields) {
+      if (isEmailValid && !checkingAccount) {
+        await checkIfAccountExists(email);
+      }
       return;
     }
 
@@ -189,10 +211,12 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
       if (password.length >= 8 && firstName.trim() && lastName.trim()) {
         updateAnswer("email", email);
         updateAnswer("first_name", firstName.trim());
-        updateAnswer("account_firstName", firstName.trim());
         updateAnswer("last_name", lastName.trim());
-        updateAnswer("account_lastName", lastName.trim());
         updateAnswer("password", password);
+        updateAnswer("account_firstName", firstName.trim());
+        updateAnswer("account_lastName", lastName.trim());
+        updateAnswer("account_email", email);
+        updateAnswer("account_password", password);
         setCreateClientError(null);
         try {
           setCreateClientLoading(true);
@@ -254,12 +278,15 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
     }
   };
 
+  const preCheckStage = isEmailValid && !showPasswordField && !showNameFields;
   const isComplete = isSigningIn
-    ? isEmailValid && password.length >= 8
-    : isEmailValid &&
-      (!showPasswordField || password.length >= 8) &&
-      (!showNameFields || (firstName.trim() && lastName.trim())) &&
-      agreedToTerms;
+	? isEmailValid && password.length >= 8
+	: preCheckStage
+	  ? true
+	  : isEmailValid &&
+	    (password.length >= 8) &&
+	    (firstName.trim() && lastName.trim()) &&
+	    agreedToTerms;
 
   return (
     <ScreenLayout
@@ -295,7 +322,14 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
               }`}
               autoFocus
             />
-            {isEmailValid && (
+            {checkingAccount && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute inset-y-0 right-4 my-auto w-6 h-6 border-2 border-[#00A896] border-t-transparent rounded-full animate-spin"
+              />
+            )}
+            {isEmailValid && !checkingAccount && (
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
@@ -306,6 +340,7 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
               </motion.div>
             )}
           </div>
+          {/* Check email now handled by NavigationButtons */}
           {email && !isEmailValid && (
             <motion.p
               initial={{ opacity: 0, y: -5 }}
@@ -697,10 +732,17 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
             onNext={handleContinue}
             isNextDisabled={!isComplete}
             isNextLoading={
+              checkingAccount ||
               (isSigningIn && signInLoading) ||
               (!isSigningIn && createClientLoading)
             }
-            nextLabel={isSigningIn ? "Sign in" : "Continue"}
+            nextLabel={
+              !showPasswordField && !showNameFields
+                ? "Check email"
+                : isSigningIn
+                ? "Sign in"
+                : "Continue"
+            }
           />
         </div>
 

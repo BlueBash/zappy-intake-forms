@@ -1,9 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Shield, Lock, Package, CheckCircle2, TrendingUp, Users, Award, FlaskConical, Brain, Heart, Target } from 'lucide-react';
-import WeightLossGraph from '../ui/WeightLossGraph';
+import WeightLossGraph from './WeightLossGraphScreen';
+import { interpolateText } from '../../utils/stringInterpolator';
 
 interface InterstitialScreenProps {
+  answers?: Record<string, any>;
+  calculations?: Record<string, any>;
   screen: {
     id: string;
     type: 'interstitial';
@@ -55,7 +58,7 @@ const ImageWithFallback: React.FC<{ src: string; alt: string; className: string 
   return <img src={src} alt={alt} className={className} />;
 };
 
-export default function InterstitialScreen({ screen, onSubmit }: InterstitialScreenProps) {
+export default function InterstitialScreen({ screen, onSubmit, answers = {}, calculations = {} }: InterstitialScreenProps) {
   const variant = screen.variant || 'motivation';
   const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   
@@ -476,7 +479,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
   // WEIGHT_LOSS_GRAPH VARIANT - Show treatment impact with graph
   if (variant === 'weight_loss_graph') {
     return (
-      <div className="min-h-screen bg-[#fef8f2] flex items-center justify-center p-4 sm:p-6">
+      <div className="min-h-screen bg-[#fef8f2] flex items-start justify-center p-4 sm:p-6">
         <div className="w-full max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -502,7 +505,7 @@ export default function InterstitialScreen({ screen, onSubmit }: InterstitialScr
                 transition={{ delay: 0.3, duration: 0.6 }}
                 className="text-lg sm:text-xl text-neutral-600 mb-8 sm:mb-12 max-w-2xl mx-auto"
               >
-                {screen.subtitle}
+                {interpolateText(screen.subtitle, calculations, answers)}
               </motion.p>
             )}
 
