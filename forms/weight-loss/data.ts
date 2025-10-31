@@ -115,6 +115,7 @@ const formConfig: FormConfig = {
           id: "sex_birth",
           type: "single_select",
           label: "Sex assigned at birth",
+          labelClassName: "!text-sm !leading-none !font-medium !select-none !text-neutral-800",
           options: [
             { value: "male", label: "Male" },
             { value: "female", label: "Female" },
@@ -152,11 +153,19 @@ const formConfig: FormConfig = {
           id: "highest_weight",
           type: "number",
           label: "What was your highest weight? (lb)",
-          help_text: "Your best estimate is fine",
           required: true,
           suffix: "lbs",
           min: 80,
           max: 600,
+          validation: {
+            min: 80,
+            max: 600,
+            error: "Enter weight between 80-600 lbs",
+            greater_than_field: {
+              field: "weight",
+              error: "Highest weight must be greater than or equal to current weight"
+            }
+          }
         },
         {
           id: "goal_weight",
@@ -166,6 +175,15 @@ const formConfig: FormConfig = {
           suffix: "lbs",
           min: 80,
           max: 600,
+          validation: {
+            min: 80,
+            max: 600,
+            error: "Enter weight between 80-600 lbs",
+            less_than_field: {
+              field: "weight",
+              error: "Goal weight must be less than current weight"
+            }
+          }
         },
       ],
       // "buttons": [
@@ -186,13 +204,9 @@ const formConfig: FormConfig = {
       phase: "qualify",
       variant: "weight_loss_graph",
       title: "Your potential transformation",
-      subtitle: "You could shed 18 lbs from your starting weight",
+      subtitle: "Based on clinical data, you could achieve significant weight loss",
       message:
         "Individual results may vary. Graph shows typical patient journey based on clinical trials.",
-      stat_number: "20%",
-      stat_text: "average weight loss",
-      stat_subtitle: "months to goal",
-      stat_highlight: "GLP-1 medication",
       next: "capture.email",
     },
     {
@@ -235,8 +249,6 @@ const formConfig: FormConfig = {
       type: "single_select",
       phase: "qualify",
       title: "How would you describe your ethnicity?",
-      help_text:
-        "Optional—helps us understand medication effects across different backgrounds",
       auto_advance: true,
       options: [
         { value: "asian", label: "Asian" },
@@ -258,9 +270,8 @@ const formConfig: FormConfig = {
       type: "multi_select",
       phase: "qualify",
       title: "Do any of these apply to you?",
-      help_text: "We ask everyone this to provide the best care",
       options: [
-        { value: "none", label: "None of these" },
+        { value: "none", label: "None of these apply to me" },
         { value: "depression", label: "Depression" },
         { value: "anxiety", label: "Anxiety disorder" },
         { value: "bipolar", label: "Bipolar disorder" },
@@ -290,14 +301,13 @@ const formConfig: FormConfig = {
       id: "eating_substance",
       type: "composite",
       phase: "qualify",
-      title: "Eating & Substance Use",
-      help_text:
-        "We need to ask a couple of questions about eating and substance use",
+      title: "Have you ever been diagnosed with an eating disorder?",
+      help_text: "We need to ask a couple of questions about eating and substance use",
       fields: [
         {
           id: "eating_relationship",
           type: "single_select",
-          label: "Have you ever been diagnosed with an eating disorder?",
+          label: "",
           options: [
             { value: "no", label: "No" },
             { value: "yes", label: "Yes" },
@@ -375,7 +385,7 @@ const formConfig: FormConfig = {
           type: "multi_select",
           label: "Used any of these in the past 6 months?",
           options: [
-            { value: "none", label: "None of these" },
+            { value: "none", label: "None of these apply to me" },
             { value: "cannabis", label: "Cannabis or marijuana" },
             { value: "cocaine", label: "Cocaine" },
             { value: "opioids", label: "Non-prescribed opioids" },
@@ -481,7 +491,7 @@ const formConfig: FormConfig = {
           label: "Do any of these apply to you?",
           help_text: "We need to ask about your medical history",
           options: [
-            { value: "none", label: "None of these" },
+            { value: "none", label: "None of these apply to me" },
             {
               value: "thyroid_cancer",
               label: "Medullary thyroid cancer (personal or family)",
@@ -554,7 +564,7 @@ const formConfig: FormConfig = {
           label: "Have you been diagnosed with any of these?",
           help_text: "Important safety questions about GLP-1 medications",
           options: [
-            { value: "none", label: "None of these" },
+            { value: "none", label: "None of these apply to me" },
             {
               value: "diabetic_retinopathy",
               label: "Diabetic retinopathy (eye damage from diabetes)",
@@ -848,7 +858,7 @@ const formConfig: FormConfig = {
       type: "terminal",
       phase: "treatment",
       status: "success",
-      title: "Welcome, Quia id quos dolore !",
+      title: "Welcome, ${first_name} ${last_name}!",
       body: "Your account has been created successfully. Check your email at ${email} to get started!:",
       next_steps: [
         {

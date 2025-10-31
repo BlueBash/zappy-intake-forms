@@ -22,9 +22,9 @@ export const TouchButton: React.FC<TouchButtonProps> = ({
   
   const variantClasses = {
     outline: selected
-      ? 'bg-gradient-to-br from-[#0D9488] to-[#14B8A6] text-white border-2 border-[#0D9488] shadow-md'
-      : 'bg-white text-neutral-700 border-2 border-gray-200 hover:border-[#0D9488]/30',
-    primary: 'bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white hover:from-[#0F766E] hover:to-[#0D9488] shadow-md hover:shadow-lg',
+      ? 'bg-[#00A896] border-[#00A896] bg-[#E0F5F3] text-[#00A896] border-2 shadow-md'
+      : 'bg-white text-[#2D3436] border-2 border-[#E8E8E8] hover:border-[#00A896]/30',
+    primary: 'bg-[#FF6B6B] text-white hover:bg-[#FF5555] shadow-md hover:shadow-lg',
   };
 
   const sizeClasses = {

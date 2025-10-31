@@ -101,7 +101,7 @@ export default function PlanSelectionOnly({
   if (loading) {
     return (
       <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0D9488]"></div>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#00A896]"></div>
         <p className="mt-4 text-neutral-600">Loading plans...</p>
       </div>
     );
@@ -141,9 +141,9 @@ export default function PlanSelectionOnly({
         animate={{ opacity: 1, y: 0 }}
         className="relative overflow-hidden rounded-xl"
       >
-        <div className="relative h-48 sm:h-56 bg-gradient-to-br from-[#0D9488]/10 to-[#14B8A6]/10 flex items-center justify-center">
+        <div className="relative h-48 sm:h-56 bg-gradient-to-br from-[#00A896]/10 to-[#E0F5F3]/10 flex items-center justify-center">
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,_#0D9488_1px,_transparent_1px)] bg-[length:20px_20px]" />
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,_#00A896_1px,_transparent_1px)] bg-[length:20px_20px]" />
           <div className="relative z-10 text-center text-white px-6">
             <Package className="w-12 h-12 mx-auto mb-3 opacity-80" />
             <h3 className="text-xl font-semibold mb-1">Professional-Grade Medication</h3>
@@ -181,17 +181,17 @@ export default function PlanSelectionOnly({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => onSelect(plan.id, plan)}
-                className={`relative w-full p-5 rounded-xl border-2 transition-all duration-300 text-left overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40 focus:ring-offset-2 ${
+                className={`relative w-full p-5 rounded-xl border-2 transition-all duration-300 text-left overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#00A896]/40 focus:ring-offset-2 ${
                   isSelected
-                    ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 via-white to-[#14B8A6]/5 shadow-lg'
-                    : 'border-gray-200 bg-white hover:border-[#0D9488]/40 hover:shadow-md'
+                    ? 'border-[#00A896] bg-gradient-to-r from-[#00A896]/5 via-white to-[#E0F5F3]/5 shadow-lg'
+                    : 'border-gray-200 bg-white hover:border-[#00A896]/40 hover:shadow-md'
                 }`}
               >
                 {/* Discount Badges */}
                 {plan.discount_tag && (
                   <div className="absolute top-0 right-0 overflow-hidden">
                     <div className="relative">
-                      <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF7A59] to-[#FF9A7F] text-white text-xs flex items-center gap-1 shadow-md">
+                      <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9A7F] text-white text-xs flex items-center gap-1 shadow-md">
                         <Sparkles className="w-3 h-3 fill-current" />
                         <span>{plan.discount_tag}</span>
                       </div>
@@ -203,11 +203,11 @@ export default function PlanSelectionOnly({
                   <div className="relative">
                     <PlanImage src={imageUrl} alt={planName} />
                     {primaryTags.length > 0 && (
-                      <div className="absolute -bottom-2 left-1 right-1 flex flex-wrap gap-1">
+                      <div className="absolute flex flex-wrap gap-1">
                         {primaryTags.map((tagLabel, tagIndex) => (
                           <span
                             key={`${plan.id}-tag-${tagIndex}`}
-                            className="inline-flex items-center rounded-full bg-[#0D9488]/10 border border-[#0D9488]/30 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#0D9488] shadow-sm backdrop-blur"
+                            className="mt-3 inline-flex items-center rounded-full bg-[#00A896]/10 border border-[#00A896]/30 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#00A896] shadow-sm backdrop-blur"
                           >
                             <Tag className="w-3 h-3 mr-1" />
                             {tagLabel}
@@ -219,7 +219,7 @@ export default function PlanSelectionOnly({
 
                   <div className="flex-1">
                     <h4 className={`text-lg mb-1 transition-colors ${
-                      isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
+                      isSelected ? 'text-[#00A896]' : 'text-neutral-900'
                     }`}>
                       {planName}
                     </h4>
@@ -231,12 +231,12 @@ export default function PlanSelectionOnly({
                     {/* Billing & Pharmacy Details */}
                     <div className="space-y-1.5 mb-3">
                       <div className="flex items-center gap-2 text-xs text-neutral-600">
-                        <Calendar className="w-3.5 h-3.5 text-[#0D9488]" />
+                        <Calendar className="w-3.5 h-3.5 text-[#00A896]" />
                         <span>{billingFrequency}</span>
                       </div>
                       {pharmacy && (
                         <div className="flex items-center gap-2 text-xs text-neutral-600">
-                          <Package className="w-3.5 h-3.5 text-[#0D9488]" />
+                          <Package className="w-3.5 h-3.5 text-[#00A896]" />
                           <span>Pharmacy: {pharmacy}</span>
                         </div>
                       )}
@@ -244,9 +244,9 @@ export default function PlanSelectionOnly({
 
                     {/* Discount Badge */}
                     {plan.discount && plan.discount > 0 && (
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FF7A59]/10 to-[#FF9A7F]/10 border border-[#FF7A59]/20">
-                        <TrendingDown className="w-4 h-4 text-[#FF7A59]" />
-                        <span className="text-sm text-[#FF7A59]">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9A7F]/10 border border-[#FF6B6B]/20">
+                        <TrendingDown className="w-4 h-4 text-[#FF6B6B]" />
+                        <span className="text-sm text-[#FF6B6B]">
                           {plan.discount > 0 && plan.discount < 1 
                             ? `${Math.round(plan.discount * 100)}% off`
                             : formatCurrency(plan.discount)}
@@ -255,14 +255,14 @@ export default function PlanSelectionOnly({
                     )}
 
                     {discountAmount && discountAmount > 0 && (
-                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[#FF7A59]/10 px-3 py-1.5 text-xs text-[#FF7A59] border border-[#FF7A59]/20">
+                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[#FF6B6B]/10 px-3 py-1.5 text-xs text-[#FF6B6B] border border-[#FF6B6B]/20">
                         <TrendingDown className="w-3.5 h-3.5" />
                         <span>Save {formatCurrency(discountAmount)}</span>
                       </div>
                     )}
 
                     {isSelected && requiresGoal && (
-                      <div className="mt-4 pt-4 border-t border-[#0D9488]/10">
+                      <div className="mt-4 pt-4 border-t border-[#00A896]/10">
                         <p className="text-sm text-neutral-900 mb-2">Choose your program goal</p>
                         <p className="text-xs text-neutral-600 mb-3">
                           Maintenance keeps your dose steady. Escalation increases it over the program when clinically appropriate.
@@ -283,14 +283,14 @@ export default function PlanSelectionOnly({
                                 }}
                                 className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-all duration-200 ${
                                   optionSelected
-                                    ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5'
-                                    : 'border-stone-300 hover:border-[#0D9488]/50'
+                                    ? 'border-[#00A896] bg-gradient-to-r from-[#00A896]/5 to-[#E0F5F3]/5'
+                                    : 'border-stone-300 hover:border-[#00A896]/50'
                                 }`}
                               >
                                 <div
                                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
                                     optionSelected
-                                      ? 'border-[#0D9488] bg-gradient-to-br from-[#0D9488] to-[#14B8A6]'
+                                      ? 'border-[#00A896] bg-gradient-to-br from-[#00A896] to-[#E0F5F3]'
                                       : 'border-stone-300'
                                   }`}
                                 >
@@ -299,7 +299,7 @@ export default function PlanSelectionOnly({
                                 <div className="text-left flex-1">
                                   <span
                                     className={`text-sm block ${
-                                      optionSelected ? 'text-[#0D9488]' : 'text-neutral-900'
+                                      optionSelected ? 'text-[#00A896]' : 'text-neutral-900'
                                     }`}
                                   >
                                     {option.label}
@@ -317,8 +317,8 @@ export default function PlanSelectionOnly({
                       <div className="mt-4 space-y-1.5">
                         {displayFeatures.map((feature, idx) => (
                           <div key={`${plan.id}-feature-preview-${idx}`} className="flex items-start gap-2 text-sm text-neutral-600">
-                            <div className="w-4 h-4 rounded-full bg-[#0D9488]/10 flex items-center justify-center mt-0.5">
-                              <Check className="w-2.5 h-2.5 text-[#0D9488]" strokeWidth={3} />
+                            <div className="w-4 h-4 rounded-full bg-[#00A896]/10 flex items-center justify-center mt-0.5">
+                              <Check className="w-2.5 h-2.5 text-[#00A896]" strokeWidth={3} />
                             </div>
                             <span>{feature}</span>
                           </div>
@@ -330,7 +330,7 @@ export default function PlanSelectionOnly({
                   <div className="flex flex-col items-end gap-2 flex-shrink-0 min-w-[120px]">
                     <div className="text-right">
                       <div className={`text-2xl font-bold transition-colors ${
-                        isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
+                        isSelected ? 'text-[#00A896]' : 'text-neutral-900'
                       }`}>
                         {formatCurrency(price)}
                       </div>
@@ -349,7 +349,7 @@ export default function PlanSelectionOnly({
                         initial={{ scale: 0, rotate: -180 }}
                         animate={{ scale: 1, rotate: 0 }}
                         transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                        className="w-7 h-7 rounded-full bg-gradient-to-br from-[#0D9488] to-[#14B8A6] flex items-center justify-center shadow-md flex-shrink-0"
+                        className="w-7 h-7 rounded-full bg-gradient-to-br from-[#00A896] to-[#E0F5F3] flex items-center justify-center shadow-md flex-shrink-0"
                       >
                         <Check className="w-5 h-5 text-white" strokeWidth={3} />
                       </motion.div>
@@ -365,7 +365,7 @@ export default function PlanSelectionOnly({
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="overflow-hidden mt-4 pt-4 border-t border-[#0D9488]/10"
+                      className="overflow-hidden mt-4 pt-4 border-t border-[#00A896]/10"
                     >
                       <div className="space-y-4">
                         {extraTags.length > 0 && (
@@ -375,7 +375,7 @@ export default function PlanSelectionOnly({
                               {extraTags.map((tagLabel, tagIndex) => (
                                 <span
                                   key={`${plan.id}-tag-extra-${tagIndex}`}
-                                  className="inline-flex items-center gap-1 rounded-full bg-[#0D9488]/10 border border-[#0D9488]/20 px-2.5 py-1 text-xs font-medium text-[#0D9488]"
+                                  className="inline-flex items-center gap-1 rounded-full bg-[#00A896]/10 border border-[#00A896]/20 px-2.5 py-1 text-xs font-medium text-[#00A896]"
                                 >
                                   <Tag className="w-3.5 h-3.5" />
                                   {tagLabel}
@@ -387,7 +387,7 @@ export default function PlanSelectionOnly({
 
                         {features.length > 0 && (
                           <div className="space-y-2">
-                            <p className="text-sm font-medium text-[#0D9488] uppercase tracking-wide">What&apos;s included</p>
+                            <p className="text-sm font-medium text-[#00A896] uppercase tracking-wide">What&apos;s included</p>
                             {features.map((feature, idx) => (
                               <motion.div
                                 key={`${plan.id}-feature-${idx}`}
@@ -396,7 +396,7 @@ export default function PlanSelectionOnly({
                                 transition={{ delay: idx * 0.05 }}
                                 className="flex items-start gap-2 text-sm text-neutral-700"
                               >
-                                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[#0D9488] to-[#14B8A6] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[#00A896] to-[#E0F5F3] flex items-center justify-center flex-shrink-0 mt-0.5">
                                   <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
                                 </div>
                                 <span>{feature}</span>
@@ -407,7 +407,7 @@ export default function PlanSelectionOnly({
 
                         {offers.length > 0 && (
                           <div className="space-y-2">
-                            <p className="text-sm font-medium text-[#FF7A59] uppercase tracking-wide">Special perks</p>
+                            <p className="text-sm font-medium text-[#FF6B6B] uppercase tracking-wide">Special perks</p>
                             {offers.map((offer, idx) => (
                               <motion.div
                                 key={`${plan.id}-offer-${idx}`}
@@ -416,7 +416,7 @@ export default function PlanSelectionOnly({
                                 transition={{ delay: idx * 0.05 + 0.1 }}
                                 className="flex items-start gap-2 text-sm text-neutral-700"
                               >
-                                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[#FF7A59] to-[#FF9A7F] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FF9A7F] flex items-center justify-center flex-shrink-0 mt-0.5">
                                   <Sparkles className="w-2.5 h-2.5 text-white" />
                                 </div>
                                 <span>{offer}</span>

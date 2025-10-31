@@ -1,19 +1,21 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import React from 'react';
 import { Option } from '../../types';
-import Checkbox from '../ui/Checkbox';
+import { Info, Check, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Label } from '../ui/label';
 
 interface CheckboxGroupProps {
   id: string;
-  label: string;
+  label?: string;
   help_text?: string;
   options: Option[];
   selectedValues: string[];
-  onChange: (newValues: string[]) => void;
+  onChange: (values: string[]) => void;
   exclusiveValue?: string;
-  exclusiveMessage?: string;
   exclusiveLabel?: string;
+  exclusiveMessage?: string;
   onExclusiveSelect?: () => void;
+  variant?: 'default' | 'pills'; // New: pill variant for mobile
 }
 
 const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
@@ -24,233 +26,194 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
   selectedValues,
   onChange,
   exclusiveValue,
-  exclusiveMessage,
   exclusiveLabel,
   onExclusiveSelect,
+  variant = 'pills', // Default to pills for mobile optimization
 }) => {
-  const [clearedMessage, setClearedMessage] = useState<string | null>(null);
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const handleChange = (value: string, checked: boolean) => {
+    let newValues: string[];
 
-  useEffect(() => {
-    setHasAnimated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!clearedMessage) return;
-    const timer = window.setTimeout(() => setClearedMessage(null), 5000);
-    return () => window.clearTimeout(timer);
-  }, [clearedMessage]);
-
-  const exclusiveOptionValue = useMemo(() => {
-    if (exclusiveValue) return exclusiveValue;
-    const hasNone = options.some((option) => option.value === 'none');
-    return hasNone ? 'none' : undefined;
-  }, [exclusiveValue, options]);
-
-  const exclusiveOptionLabel = exclusiveOptionValue
-    ? options.find((option) => option.value === exclusiveOptionValue)?.label ?? exclusiveOptionValue
-    : undefined;
-
-  const exclusiveSelected = exclusiveOptionValue ? selectedValues.includes(exclusiveOptionValue) : false;
-
-  const handleToggle = (value: string) => {
-    if (exclusiveOptionValue && value === exclusiveOptionValue) {
-      const alreadySelected = selectedValues.includes(exclusiveOptionValue);
-      if (alreadySelected) {
-        const newValues = selectedValues.filter((v) => v !== exclusiveOptionValue);
-        onChange(newValues);
-        setClearedMessage(null);
-      } else {
-        const hadOtherSelections = selectedValues.some((v) => v !== exclusiveOptionValue);
-        onChange([exclusiveOptionValue]);
-        if (hadOtherSelections) {
-          setClearedMessage(
-            exclusiveMessage ??
-              `We cleared your other selections so we can record "${exclusiveOptionLabel ?? 'None of these'}".`
-          );
-        } else {
-          setClearedMessage(null);
-        }
-        // Trigger auto-advance callback if provided
-        if (onExclusiveSelect) {
-          setTimeout(() => onExclusiveSelect(), 600);
-        }
+    if (exclusiveValue && value === exclusiveValue) {
+      // If selecting exclusive option, clear all others
+      newValues = checked ? [exclusiveValue] : [];
+      if (checked && onExclusiveSelect) {
+        onExclusiveSelect();
       }
-      return;
+    } else {
+      // If selecting non-exclusive option, remove exclusive if present
+      newValues = selectedValues.filter((v) => v !== exclusiveValue);
+      
+      if (checked) {
+        newValues.push(value);
+      } else {
+        newValues = newValues.filter((v) => v !== value);
+      }
     }
-
-    let workingValues = selectedValues;
-    if (exclusiveOptionValue && selectedValues.includes(exclusiveOptionValue)) {
-      workingValues = selectedValues.filter((v) => v !== exclusiveOptionValue);
-    }
-
-    const newValues = workingValues.includes(value)
-      ? workingValues.filter((v) => v !== value)
-      : [...workingValues, value];
 
     onChange(newValues);
-    setClearedMessage(null);
   };
 
-  // Separate exclusive option from regular options
-  const exclusiveOption = exclusiveOptionValue 
-    ? options.find(opt => opt.value === exclusiveOptionValue)
-    : null;
-  const regularOptions = exclusiveOptionValue
-    ? options.filter(opt => opt.value !== exclusiveOptionValue)
-    : options;
+  // Create options array with exclusive option if provided
+  const allOptions = [...options];
+  if (exclusiveValue && exclusiveLabel) {
+    allOptions.push({ value: exclusiveValue, label: exclusiveLabel });
+  }
 
+  // Sort options: exclusive option always first
+  const sortedOptions = [...allOptions];
+  if (exclusiveValue) {
+    const exclusiveIndex = sortedOptions.findIndex(opt => opt.value === exclusiveValue);
+    if (exclusiveIndex >= 0) {
+      const [exclusiveOption] = sortedOptions.splice(exclusiveIndex, 1);
+      sortedOptions.unshift(exclusiveOption); // Always first
+    }
+  }
+
+  // Pill variant render
+  if (variant === 'pills') {
+    return (
+      <div>
+        {label && (
+          <Label className="text-xl sm:text-2xl text-neutral-900">{label}</Label>
+        )}
+        {help_text && (
+          <p className="text-sm leading-relaxed text-neutral-600 mt-2 mb-4 flex items-start gap-2">
+            <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#00A896]" />
+            {help_text}
+          </p>
+        )}
+        <div className="flex flex-wrap gap-2.5 mt-3">
+          {sortedOptions.map((option, index) => {
+            const isChecked = selectedValues.includes(option.value);
+            const isExclusive = exclusiveValue === option.value;
+            
+            return (
+              <motion.button
+                key={option.value}
+                type="button"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.03, duration: 0.2 }}
+                onClick={() => handleChange(option.value, !isChecked)}
+                whileTap={{ scale: 0.95 }}
+                className={`
+                  pill-button relative min-h-[48px] px-4 py-3 rounded-xl border-2 transition-all duration-300 text-center
+                  focus:outline-none focus-visible:ring-4 focus-visible:ring-[#00A896]/20 text-sm sm:text-base
+                  ${isExclusive
+                    ? isChecked
+                      ? 'border-[#E8E8E8] bg-neutral-100 text-[#2D3436] font-medium'
+                      : 'border-dashed border-[#E8E8E8] bg-white text-[#666666] hover:border-[#E8E8E8] hover:bg-neutral-50'
+                    : isChecked
+                      ? 'border-[#00A896] bg-[#E0F5F3] text-[#00A896] shadow-md font-medium'
+                      : 'border-[#E8E8E8] bg-white text-[#2D3436] hover:border-[#00A896]/40 hover:shadow-md hover:scale-[1.02]'
+                  }
+                `}
+              >
+                <div className="flex items-center gap-2 justify-center">
+                  {isChecked && (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    >
+                      {isExclusive ? (
+                        <X className="w-4 h-4" strokeWidth={2.5} />
+                      ) : (
+                        <Check className="w-4 h-4" strokeWidth={2.5} />
+                      )}
+                    </motion.div>
+                  )}
+                  <span className="leading-relaxed">
+                    {option.label}
+                  </span>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Default variant (large cards)
   return (
-    <div className="w-full">
-      <label className="block font-semibold mb-3 text-stone-900 text-[0.9375rem]">
-        {label}
-      </label>
+    <div>
+      {label && (
+        <Label className="mb-3 text-xl sm:text-2xl text-neutral-900">{label}</Label>
+      )}
       {help_text && (
-        <p className="text-sm -mt-2 mb-3 text-stone-600">
+        <p className="text-sm leading-relaxed text-neutral-600 mb-4 flex items-start gap-2">
+          <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#00A896]" />
           {help_text}
         </p>
       )}
       <div className="space-y-4">
-        {/* Show exclusive option first with distinct styling */}
-        {exclusiveOption && (
-          <motion.button
-            key={exclusiveOption.value}
-            initial={hasAnimated ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.45,
-              ease: [0.25, 0.1, 0.25, 1]
-            }}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            type="button"
-            onClick={() => handleToggle(exclusiveOption.value)}
-            className={`w-full flex items-center justify-between py-[18px] px-5 border-2 rounded-xl text-base transition-colors transform focus:outline-none text-left ${
-              selectedValues.includes(exclusiveOption.value)
-                ? 'border-primary bg-primary/5 text-primary'
-                : 'bg-stone-50 border-stone-300 hover:border-stone-400 text-stone-700 font-medium'
-            }`}
-            style={{
-              transitionDuration: 'var(--timing-slow)',
-              transitionTimingFunction: 'var(--easing-elegant)'
-            }}
-          >
-            <span className="text-left flex-1">{exclusiveLabel || exclusiveOption.label}</span>
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-              selectedValues.includes(exclusiveOption.value)
-                ? 'bg-primary'
-                : 'border-2 border-stone-400'
-            }`}
-            style={{
-              transitionDuration: 'var(--timing-normal)',
-              transitionTimingFunction: 'var(--easing-elegant)'
-            }}>
-              {selectedValues.includes(exclusiveOption.value) && (
-                <motion.svg
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 1 }}
-                  transition={{
-                    pathLength: { type: 'spring', stiffness: 180, damping: 25 },
-                    opacity: { duration: 0.3 }
-                  }}
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  strokeWidth="3"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <motion.path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </motion.svg>
-              )}
-            </div>
-          </motion.button>
-        )}
-        
-        {/* Show regular options */}
-        {regularOptions.map((option, index) => {
-          const isDisabled = exclusiveSelected && option.value !== exclusiveOptionValue;
+        {sortedOptions.map((option, index) => {
           const isChecked = selectedValues.includes(option.value);
-          const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const isExclusive = exclusiveValue === option.value;
           
           return (
             <motion.button
               key={option.value}
-              initial={hasAnimated || reducedMotion ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={reducedMotion ? { duration: 0.01 } : {
-                delay: hasAnimated ? 0 : index * 0.1,
-                duration: 0.45,
-                ease: [0.25, 0.1, 0.25, 1]
-              }}
-              whileHover={reducedMotion ? {} : (isDisabled ? {} : { scale: 1.01 })}
-              whileTap={reducedMotion ? {} : { scale: 0.98 }}
               type="button"
-              onClick={() => {
-                if (isDisabled) return;
-                handleToggle(option.value);
-              }}
-              disabled={isDisabled}
-              className={`w-full flex items-center justify-between py-[18px] px-5 border-2 rounded-xl text-base transition-colors transform focus:outline-none text-left ${
-                isChecked
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : isDisabled
-                    ? 'border-gray-200 opacity-60 cursor-not-allowed bg-white text-neutral-400'
-                    : 'bg-white border-gray-200 hover:border-accent-warm/30 hover:shadow-md text-neutral-600'
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.06 + Math.random() * 0.02, duration: 0.3 }}
+              onClick={() => handleChange(option.value, !isChecked)}
+              whileTap={{ scale: 0.98 }}
+              whileHover={isChecked ? { y: -2 } : {}}
+              className={`w-full py-5 sm:py-[18px] px-5 sm:px-6 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 text-left group relative overflow-hidden focus:outline-none focus-visible:ring-4 focus-visible:ring-[#00A896]/20 ${
+                isExclusive
+                  ? isChecked
+                    ? 'border-[#E8E8E8] bg-white shadow-sm'
+                    : 'border-dashed border-[#E8E8E8] bg-white hover:border-[#E8E8E8] hover:shadow-md shadow-sm'
+                  : isChecked
+                    ? 'border-[#00A896] bg-[#E0F5F3] shadow-md'
+                    : 'border-[#E8E8E8] bg-white hover:border-[#00A896]/30 hover:shadow-md hover:scale-[1.02] shadow-sm'
               }`}
-              style={{
-                transitionDuration: 'var(--timing-slow)',
-                transitionTimingFunction: 'var(--easing-elegant)'
-              }}
+              style={{ transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
             >
-              <span className="text-left flex-1">{option.label}</span>
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                isChecked
-                  ? 'bg-primary'
-                  : 'border-2 border-gray-300'
-              }`}
-              style={{
-                transitionDuration: 'var(--timing-normal)',
-                transitionTimingFunction: 'var(--easing-elegant)'
-              }}>
-                {isChecked && (
-                  <motion.svg
-                    initial={reducedMotion ? { opacity: 1 } : { pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={reducedMotion ? { duration: 0.01 } : {
-                      pathLength: { type: 'spring', stiffness: 180, damping: 25 },
-                      opacity: { duration: 0.3 }
-                    }}
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    strokeWidth="3"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+              <div className="flex items-center justify-between gap-4">
+                <span className={`text-base sm:text-lg leading-relaxed ${
+                  isExclusive
+                    ? isChecked ? 'text-[#2D3436] font-medium' : 'text-[#666666]'
+                    : isChecked ? 'text-[#00A896] font-medium' : 'text-[#2D3436]'
+                }`}>
+                  {option.label}
+                </span>
+                {isChecked ? (
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${
+                      isExclusive
+                        ? 'bg-[#E8E8E8]'
+                        : 'bg-[#00A896]'
+                    }`}
                   >
-                    <motion.path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </motion.svg>
+                    {isExclusive ? (
+                      <X className="w-4 h-4 text-white" strokeWidth={3} />
+                    ) : (
+                      <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    className={`w-6 h-6 rounded-full border-2 transition-all flex-shrink-0 ${
+                      isExclusive
+                        ? 'border-[#E8E8E8] border-dashed'
+                        : 'border-[#E8E8E8] group-hover:border-[#00A896]/50'
+                    }`}
+                    whileHover={{ scale: [1, 1.1, 1.05] }}
+                    transition={{ duration: 0.3 }}
+                  />
                 )}
               </div>
             </motion.button>
           );
         })}
       </div>
-      {clearedMessage && (
-        <div
-          className="mt-4 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary"
-          role="status"
-          aria-live="polite"
-        >
-          {clearedMessage}
-        </div>
-      )}
     </div>
   );
 };

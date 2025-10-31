@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Info, AlertCircle } from 'lucide-react';
+import { Label } from './label';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string;
@@ -18,15 +20,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label 
-            htmlFor={id} 
-            className="block font-semibold mb-3 text-stone-900 text-[0.9375rem]"
-          >
+          <Label htmlFor={id} className="mb-2 text-neutral-800">
             {label}
-          </label>
+            {props.required && <span className="text-[#FF6B6B] ml-1">*</span>}
+          </Label>
         )}
         {help_text && (
-          <p className="text-sm -mt-2 mb-3 text-stone-600">
+          <p className="text-sm text-neutral-600 mb-3 flex items-start gap-2">
+            <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#0D9488]" />
             {help_text}
           </p>
         )}
@@ -39,12 +40,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-invalid={!!error}
             aria-describedby={error ? errorId : undefined}
             className={`
-              block w-full rounded-xl transition-colors duration-200
-              py-[18px] px-5 text-[1.0625rem] text-stone-900
-              border-2 ${error ? 'border-red-300' : 'border-stone-300'}
-              focus:outline-none
-              ${error ? 'focus:border-red-500' : 'focus:border-primary'}
-              ${hasTrailingAdornment ? 'pr-14' : ''}
+              w-full px-5 sm:px-6 py-5 sm:py-[18px] rounded-xl sm:rounded-2xl border-2 transition-all duration-300 bg-white shadow-sm
+              ${hasTrailingAdornment ? 'pr-16' : ''}
+              ${error ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100' : 'border-[#E8E8E8] focus:border-[#0D9488] focus:ring-4 focus:ring-[#0D9488]/10'}
+              outline-none
             `}
             style={{
               boxShadow: 'none',
@@ -55,14 +54,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {suffix && !isPasswordField && (
-            <span className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none font-medium text-stone-500 text-[0.9375rem]">
+            <span className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none font-medium text-neutral-600 text-sm">
               {suffix}
             </span>
           )}
           {isPasswordField && (
             <button
               type="button"
-              className="absolute inset-y-0 right-0 flex items-center px-4 text-sm font-semibold text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
+              className="absolute inset-y-0 right-0 flex items-center px-4 text-sm font-semibold text-[#00A896] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00A896]/40 transition-colors"
               style={{
                 transitionDuration: 'var(--timing-fast)',
                 transitionTimingFunction: 'var(--easing-elegant)'

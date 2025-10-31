@@ -148,10 +148,10 @@ export const useFormLogic = (config: FormConfig) => {
     // Count actual screens visited so far (definite)
     const screensCompleted = history.length + 1;
     
-    // Based on precise testing: typical users see exactly 38 screens due to conditional logic
-    const expectedScreensToVisit = 38;
+    // Based on actual flow: typical users see around 15-20 screens due to conditional logic
+    const expectedScreensToVisit = 18;
     
-    // Use the larger of: expected 38 screens, or screens already visited + small buffer
+    // Use the larger of: expected 18 screens, or screens already visited + small buffer
     const totalExpectedScreens = Math.max(expectedScreensToVisit, screensCompleted + 2);
     
     // Calculate proportional progress

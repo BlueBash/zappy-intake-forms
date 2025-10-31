@@ -7,6 +7,8 @@ import defaultFormConfig from './forms/weight-loss/data';
 import { apiClient } from './utils/api';
 
 import ProgressBar from './components/ui/ProgressBar';
+import SectionIndicator from './components/common/SectionIndicator';
+import ScreenHeader from './components/common/ScreenHeader';
 import SingleSelectScreen from './components/screens/SingleSelectScreen';
 import CompositeScreen from './components/screens/CompositeScreen';
 import ContentScreen from './components/screens/ContentScreen';
@@ -28,6 +30,7 @@ import AccountCreationScreen from './components/screens/AccountCreationScreen';
 import MedicationPreferenceInitialScreen from './components/screens/MedicationPreferenceInitialScreen';
 import MedicationPreferenceScreen from './components/screens/MedicationPreferenceScreen';
 import WeightLossGraphScreen from './components/screens/WeightLossGraphScreen';
+import EmailCaptureScreen from './components/screens/EmailCaptureScreen';
 import { buildMedicationHistorySummary } from './utils/medicationHistory';
 import AutocompleteScreen from './components/screens/AutocompleteScreen';
 
@@ -43,55 +46,31 @@ const getProgramTheme = (condition: string): ProgramTheme => {
   const normalized = condition.toLowerCase();
   if (normalized.includes('strength')) {
     return {
-      headerBg: 'bg-sky-50/90',
-      headerBorder: 'border-sky-100',
-      badgeBg: 'bg-gradient-to-r from-sky-500 to-emerald-500',
+      headerBg: 'bg-[#E0F5F3]/90',
+      headerBorder: 'border-[#E8E8E8]',
+      badgeBg: 'bg-[#00A896]',
       badgeText: 'text-white',
-      badgeShadow: 'shadow-sky-200/60',
+      badgeShadow: 'shadow-lg',
     };
   }
   if (normalized.includes('anti')) {
     return {
-      headerBg: 'bg-fuchsia-50/90',
-      headerBorder: 'border-fuchsia-100',
-      badgeBg: 'bg-gradient-to-r from-fuchsia-500 to-rose-500',
+      headerBg: 'bg-[#FFF5F3]/90',
+      headerBorder: 'border-[#E8E8E8]',
+      badgeBg: 'bg-[#FF6B6B]',
       badgeText: 'text-white',
-      badgeShadow: 'shadow-fuchsia-200/60',
+      badgeShadow: 'shadow-lg',
     };
   }
   return {
-    headerBg: 'bg-orange-50/90',
-    headerBorder: 'border-orange-100',
-    badgeBg: 'bg-gradient-to-r from-orange-500 to-amber-500',
+    headerBg: 'bg-[#fef8f2]/90',
+    headerBorder: 'border-[#E8E8E8]',
+    badgeBg: 'bg-[#00A896]',
     badgeText: 'text-white',
-    badgeShadow: 'shadow-orange-200/60',
+    badgeShadow: 'shadow-lg',
   };
 };
 
-const ProgramHeader: React.FC<{ condition: string; theme: ProgramTheme }> = ({ condition, theme }) => (
-  <header
-    className={`mb-8 w-full rounded-3xl border ${theme.headerBorder} ${theme.headerBg} px-6 py-5 shadow-sm shadow-slate-200/40 backdrop-blur-sm`}
-  >
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <a href="https://zappyhealth.com" className="inline-flex items-center" aria-label="ZappyHealth home">
-        <img
-          src="https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2.webp"
-          srcSet="https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2.webp 352w, https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2-300x109.webp 300w"
-          sizes="(max-width: 220px) 100vw, 220px"
-          width={220}
-          height={80}
-          alt="ZappyHealth"
-          loading="lazy"
-          className="h-10 w-auto sm:h-12"
-        />
-      </a>
-      <div className={`inline-flex flex-col items-center rounded-2xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] ${theme.badgeBg} ${theme.badgeText} shadow-lg ${theme.badgeShadow}`}>
-        <span>Program</span>
-        <span className="mt-1 text-sm font-semibold tracking-normal uppercase">{condition}</span>
-      </div>
-    </div>
-  </header>
-);
 
 const LEAD_SESSION_STORAGE_KEY = 'consultation_lead_id';
 
@@ -103,6 +82,47 @@ const toServiceSlug = (value: string): string =>
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '') || 'general';
+
+const getSectionLabel = (screen: Screen): string => {
+  // Specific screen ID mappings for better UX
+  if (screen.id.includes('goal') || screen.id === 'goal_range' || screen.id === 'goal_motivations' || screen.id === 'goal_challenges') {
+    return 'Your Goals';
+  }
+  if (screen.id === 'home_state' || screen.id.includes('demographics') || screen.id.includes('personal') || screen.id.includes('age') || screen.id.includes('dob')) {
+    return 'About You';
+  }
+  if (screen.id.includes('medical') || screen.id.includes('health') || screen.id.includes('glp1') || screen.id.includes('medication') || screen.id.includes('eating') || screen.id.includes('substance')) {
+    return 'Health History';
+  }
+  if (screen.id.includes('weight') || screen.id.includes('height') || screen.id.includes('measurement')) {
+    return 'Your Measurements';
+  }
+  if (screen.id.includes('plan') || screen.id.includes('subscription')) {
+    return 'Plan Selection';
+  }
+  if (screen.id.includes('account') || screen.id.includes('payment') || screen.id.includes('checkout')) {
+    return 'Account Setup';
+  }
+  if (screen.id.includes('review') || screen.id.includes('summary')) {
+    return 'Review & Submit';
+  }
+  if (screen.id.includes('ethnicity') || screen.id.includes('race')) {
+    return 'Background';
+  }
+  
+  // Default based on screen type - avoid generic "Assessment"
+  switch (screen.type) {
+    case 'content':
+    case 'interstitial':
+      return 'Information';
+    case 'consent':
+      return 'Terms & Consent';
+    case 'terminal':
+      return 'Complete';
+    default:
+      return 'Questions'; // Remove generic "Assessment"
+  }
+};
 
 const isValidEmail = (value: unknown): value is string =>
   typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -610,9 +630,14 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         responses.condition = resolvedCondition;
       }
 
+      console.log('answers', answers);
+
+      const clientRecordId = answers['client_record_id'] ?? (typeof window !== 'undefined' ? window.sessionStorage.getItem('client_record_id') : null);
+
       const payload = {
         condition: responses.condition,
         responses,
+        client_record_id: clientRecordId || undefined,
         // intake_form: activeFormConfig,
         // timestamp: new Date().toISOString(),
       };
@@ -705,6 +730,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
                           screen.type !== 'content';
     
     const commonProps = {
+      screen,
       answers,
       calculations,
       updateAnswer,
@@ -716,31 +742,35 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     };
 
     if (screen.id === 'treatment.glp1_history') {
-      return <GLP1HistoryScreen key={screen.id} {...commonProps} screen={screen} />;
+      return <GLP1HistoryScreen key={screen.id} {...commonProps} />;
     }
 
     if (screen.id === 'treatment.medication_choice') {
-      return <MedicationChoiceScreen key={screen.id} {...commonProps} screen={screen} />;
+      return <MedicationChoiceScreen {...commonProps} />;
     }
 
     if (screen.id === 'checkout.account_creation') {
-      return <AccountCreationScreen {...commonProps} screen={screen} key={screen.id}  onSubmit={handleReviewSubmit}/>;
+      return <AccountCreationScreen key={screen.id} {...commonProps} onSubmit={handleReviewSubmit}/>;
     }
 
     if (screen.id === 'treatment.medication_preference_initial') {
-      return <MedicationPreferenceInitialScreen key={screen.id} {...commonProps} screen={screen} />;
+      return <MedicationPreferenceInitialScreen key={screen.id} {...commonProps} />;
     }
 
     if (screen.id === 'treatment.medication_options') {
-      return <MedicationOptionsScreen key={screen.id} {...commonProps} screen={screen} goToScreen={goToScreen} />;
+      return <MedicationOptionsScreen key={screen.id} {...commonProps} goToScreen={goToScreen} />;
     }
 
     if (screen.id === 'treatment.medication_preference') {
-      return <MedicationPreferenceScreen key={screen.id} {...commonProps} screen={screen} />;
+      return <MedicationPreferenceScreen key={screen.id} {...commonProps} />;
     }
 
     if (screen.id === 'logistics.discount_code') {
-      return <DiscountCodeScreen key={screen.id} {...commonProps} screen={screen} />;
+      return <DiscountCodeScreen key={screen.id} {...commonProps} />;
+    }
+
+    if (screen.id === 'capture.email') {
+      return <EmailCaptureScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 
     switch (screen.type) {
@@ -800,8 +830,17 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       </div>
       
       <div className="relative w-full max-w-2xl mx-auto flex flex-col flex-grow">
+        {/* Header with logo and back button */}
+        <ScreenHeader
+          onBack={history.length > 0 ? goToPrev : undefined}
+          sectionLabel={getSectionLabel(currentScreen)}
+          currentStep={history.length + 1}
+          totalSteps={38}
+          showProgress={activeFormConfig.settings.progress_bar}
+          progressPercentage={(history.length / 38) * 100}
+        />
+        
         <div className="flex flex-col flex-grow">
-          {activeFormConfig.settings.progress_bar && <ProgressBar progress={progress} />}
           
           <main className="flex-grow w-full relative flex flex-col min-h-0">
               <AnimatePresence mode="wait" initial={false} custom={direction}>

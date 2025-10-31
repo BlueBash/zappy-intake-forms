@@ -214,7 +214,6 @@ const MedicationPreferenceScreen: React.FC<ScreenProps & { screen: any }> = ({
                           <div className={`font-medium ${isSelected ? 'text-primary' : 'text-neutral-900'}`}>
                             {med.name}
                           </div>
-                          <div className="text-sm text-neutral-600">Starting from ${med.startingPrice}</div>
                         </div>
 
                         {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
@@ -253,7 +252,7 @@ const MedicationPreferenceScreen: React.FC<ScreenProps & { screen: any }> = ({
                               >
                                 <div className="font-medium">{dose.label}</div>
                                 {dose.requiresScript && (
-                                  <div className={`text-xs mt-1 ${selectedDose === dose.value ? 'text-white/80' : 'text-amber-600'}`}>
+                                  <div className={`text-xs mt-1 ${selectedDose === dose.value ? 'text-white/80' : 'text-[var(--coral)]'}`}>
                                     *
                                   </div>
                                 )}

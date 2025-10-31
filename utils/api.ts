@@ -292,7 +292,16 @@ export const apiClient = {
     }),
 
   submitConsultation: (payload: Record<string, unknown>) =>
-    post<SubmitConsultationResponse>('/consultations', payload),
+    post<SubmitConsultationResponse>('/consultations/submit', payload),
+
+  login: (payload: Record<string, unknown>) =>
+    post<any>('/consultations/login', payload),
+
+  forgotPassword: (payload: Record<string, unknown>) =>
+    post<any>('/api/v1/auth/forgot-password', payload),
+
+  clientRecord: (payload: Record<string, unknown>) =>
+    post<any>('/consultations/client-records', payload),
 
   createOrUpdateLead: (payload: LeadPayload) =>
     post<LeadResponse>('/consultations/leads', payload),
@@ -305,6 +314,7 @@ export const apiClient = {
 
   getInvoicePaymentIntent: (invoiceId: string) =>
     post<InvoicePaymentIntentResponse>(`/stripe/invoices/${invoiceId}/payment-intent`, {}),
+  
 };
 
 export type ApiClient = typeof apiClient;
