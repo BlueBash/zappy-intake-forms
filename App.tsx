@@ -170,6 +170,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
   const resolvedCondition = defaultCondition ?? activeFormConfig.default_condition ?? 'Weight Loss';
   const programTheme = useMemo(() => getProgramTheme(resolvedCondition), [resolvedCondition]);
   const { 
+    totalSteps = 0,
     currentScreen, 
     answers,
     calculations,
@@ -589,10 +590,24 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         responses.notification_consent = 'false';
       }
 
+      // Extract discount data - prefer from responses, fallback to answers
       const discountData = (responses.discount_data ?? answers['discount_data']) as
-        | { id?: string; code?: string; amount?: number; percentage?: number; description?: string | null }
+        | { 
+            id?: string; 
+            code?: string; 
+            name?: string;
+            amount?: number; 
+            percentage?: number; 
+            description?: string | null;
+            created_at?: string;
+            updated_at?: string;
+            status?: boolean;
+            [key: string]: any;
+          }
         | null
         | undefined;
+      
+      const discountCodeEntered = responses.discount_code_entered ?? answers['discount_code_entered'] ?? '';
       const existingDiscountId =
         typeof responses.discount_id === 'string'
           ? responses.discount_id
@@ -600,18 +615,38 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
           ? answers['discount_id']
           : '';
       const resolvedDiscountId = existingDiscountId || (discountData?.id ?? '');
-      responses.discount_id = resolvedDiscountId || '';
-      if (!responses.discount_code && discountData?.code) {
-        responses.discount_code = discountData.code;
-      }
-      if ((responses.discount_amount === undefined || responses.discount_amount === null) && typeof discountData?.amount === 'number') {
-        responses.discount_amount = discountData.amount;
-      }
-      if ((responses.discount_percentage === undefined || responses.discount_percentage === null) && typeof discountData?.percentage === 'number') {
-        responses.discount_percentage = discountData.percentage;
-      }
-      if (!responses.discount_description && typeof discountData?.description === 'string') {
-        responses.discount_description = discountData.description;
+      
+      // Set all discount fields in responses
+      if (discountData && resolvedDiscountId) {
+        // discount_id
+        responses.discount_id = resolvedDiscountId;
+        
+        // discount_code
+        responses.discount_code = responses.discount_code || discountData.code || '';
+        
+        // discount_code_entered (the code the user actually typed)
+        responses.discount_code_entered = discountCodeEntered || discountData.code || '';
+        
+        // discount_amount
+        responses.discount_amount = 
+          (responses.discount_amount !== undefined && responses.discount_amount !== null) 
+            ? responses.discount_amount 
+            : (typeof discountData.amount === 'number' ? discountData.amount : 0);
+        
+        // discount_description
+        responses.discount_description = 
+          responses.discount_description || discountData.description || '';
+        
+        // discount_data (full object with all fields)
+        responses.discount_data = discountData;
+      } else {
+        // Clear discount fields if no discount data
+        responses.discount_id = '';
+        responses.discount_code = '';
+        responses.discount_code_entered = '';
+        responses.discount_amount = 0;
+        responses.discount_description = '';
+        responses.discount_data = null;
       }
 
       responses.selected_plan_details = responses.selected_plan_details || answers['selected_plan_details'] || null;
@@ -809,7 +844,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       case 'terminal':
         return <TerminalScreen {...commonProps} screen={screen} key={screen.id} />;
       case 'interstitial':
-        return <InterstitialScreen screen={screen} onSubmit={goToNext} />;
+        return <InterstitialScreen screen={screen} onSubmit={goToNext} answers={answers} calculations={calculations} />;
       case 'plan_selection':
         return <PlanSelectionScreen {...commonProps} screen={screen} />;
       default:
@@ -835,9 +870,9 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
           onBack={history.length > 0 ? goToPrev : undefined}
           sectionLabel={getSectionLabel(currentScreen)}
           currentStep={history.length + 1}
-          totalSteps={38}
+          totalSteps={totalSteps}
           showProgress={activeFormConfig.settings.progress_bar}
-          progressPercentage={(history.length / 38) * 100}
+          progressPercentage={(history.length / totalSteps) * 100}
         />
         
         <div className="flex flex-col flex-grow">
