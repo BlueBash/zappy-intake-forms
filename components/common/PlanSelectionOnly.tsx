@@ -134,25 +134,7 @@ export default function PlanSelectionOnly({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Image Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl"
-      >
-        <div className="relative h-48 sm:h-56 bg-gradient-to-br from-[#00A896]/10 to-[#E0F5F3]/10 flex items-center justify-center">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,_#00A896_1px,_transparent_1px)] bg-[length:20px_20px]" />
-          <div className="relative z-10 text-center text-white px-6">
-            <Package className="w-12 h-12 mx-auto mb-3 opacity-80" />
-            <h3 className="text-xl font-semibold mb-1">Professional-Grade Medication</h3>
-            <p className="text-sm text-white/90">Delivered directly to your door</p>
-          </div>
-        </div>
-      </motion.div>
-
-      <div className="space-y-4">
+    <div className="space-y-4">
         {plans
           .filter((plan) => plan.is_active === true)
           .map((plan, index) => {
@@ -163,7 +145,7 @@ export default function PlanSelectionOnly({
             const pharmacy = plan.pharmacy || '';
             const subtitle = plan.medication_subtitle || plan.medication_description || '';
             const imageUrl = plan.image_url;
-            const tags = uniqueNonEmpty(plan.tags);
+            const tags = uniqueNonEmpty(plan.tags).filter(tag => tag.toLowerCase() !== 'branded');
             const primaryTags = tags.slice(0, isSelected ? 3 : 2);
             const extraTags = isSelected ? tags.slice(primaryTags.length) : [];
             const features = uniqueNonEmpty(plan.features);
@@ -187,14 +169,27 @@ export default function PlanSelectionOnly({
                     : 'border-gray-200 bg-white hover:border-[#00A896]/40 hover:shadow-md'
                 }`}
               >
-                {/* Discount Badges */}
+                {/* Tags positioned at top-right */}
+                {primaryTags.length > 0 && (
+                  <div className="absolute top-3 right-3 flex flex-wrap gap-1.5 justify-end max-w-[200px]">
+                    {primaryTags.map((tagLabel, tagIndex) => (
+                      <span
+                        key={`${plan.id}-tag-${tagIndex}`}
+                        className="inline-flex items-center rounded-full bg-[#00A896] text-white px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide shadow-md"
+                      >
+                        <Tag className="w-3 h-3 mr-1" />
+                        {tagLabel}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Discount Badge */}
                 {plan.discount_tag && (
-                  <div className="absolute top-0 right-0 overflow-hidden">
-                    <div className="relative">
-                      <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9A7F] text-white text-xs flex items-center gap-1 shadow-md">
-                        <Sparkles className="w-3 h-3 fill-current" />
-                        <span>{plan.discount_tag}</span>
-                      </div>
+                  <div className="absolute top-3 left-3">
+                    <div className="px-3 py-1 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9A7F] text-white text-xs flex items-center gap-1 shadow-md">
+                      <Sparkles className="w-3 h-3 fill-current" />
+                      <span>{plan.discount_tag}</span>
                     </div>
                   </div>
                 )}
@@ -202,19 +197,6 @@ export default function PlanSelectionOnly({
                 <div className="flex items-start gap-4 mt-1">
                   <div className="relative">
                     <PlanImage src={imageUrl} alt={planName} />
-                    {primaryTags.length > 0 && (
-                      <div className="absolute flex flex-wrap gap-1">
-                        {primaryTags.map((tagLabel, tagIndex) => (
-                          <span
-                            key={`${plan.id}-tag-${tagIndex}`}
-                            className="mt-3 inline-flex items-center rounded-full bg-[#00A896]/10 border border-[#00A896]/30 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#00A896] shadow-sm backdrop-blur"
-                          >
-                            <Tag className="w-3 h-3 mr-1" />
-                            {tagLabel}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex-1">
@@ -263,14 +245,13 @@ export default function PlanSelectionOnly({
 
                     {isSelected && requiresGoal && (
                       <div className="mt-4 pt-4 border-t border-[#00A896]/10">
-                        <p className="text-sm text-neutral-900 mb-2">Choose your program goal</p>
-                        <p className="text-xs text-neutral-600 mb-3">
-                          Maintenance keeps your dose steady. Escalation increases it over the program when clinically appropriate.
+                        <p className="text-sm text-neutral-700 mb-3">
+                          Choose your program goal: <span className="text-neutral-600">Maintenance keeps your dose steady. Escalation increases it over the program when clinically appropriate.</span>
                         </p>
-                        <div className="space-y-2">
+                        <div className="flex gap-3">
                           {[
-                            { value: 'maintenance', label: 'Maintenance', desc: 'Keep my dose the same throughout the program' },
-                            { value: 'escalation', label: 'Escalation', desc: 'Gradually increase my dose with clinical guidance' },
+                            { value: 'maintenance', label: 'Maintenance' },
+                            { value: 'escalation', label: 'Escalation' },
                           ].map((option) => {
                             const optionSelected = currentGoal === option.value;
                             return (
@@ -281,31 +262,14 @@ export default function PlanSelectionOnly({
                                   event.stopPropagation();
                                   onPlanGoalChange?.(option.value);
                                 }}
-                                className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-all duration-200 ${
+                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 ${
                                   optionSelected
-                                    ? 'border-[#00A896] bg-gradient-to-r from-[#00A896]/5 to-[#E0F5F3]/5'
-                                    : 'border-stone-300 hover:border-[#00A896]/50'
+                                    ? 'bg-[#00A896] text-white shadow-md'
+                                    : 'bg-gray-50 text-neutral-700 hover:bg-gray-100 border border-gray-200'
                                 }`}
                               >
-                                <div
-                                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
-                                    optionSelected
-                                      ? 'border-[#00A896] bg-gradient-to-br from-[#00A896] to-[#E0F5F3]'
-                                      : 'border-stone-300'
-                                  }`}
-                                >
-                                  {optionSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                                </div>
-                                <div className="text-left flex-1">
-                                  <span
-                                    className={`text-sm block ${
-                                      optionSelected ? 'text-[#00A896]' : 'text-neutral-900'
-                                    }`}
-                                  >
-                                    {option.label}
-                                  </span>
-                                  <span className="text-xs text-neutral-600">{option.desc}</span>
-                                </div>
+                                {optionSelected && <Check className="w-4 h-4" strokeWidth={3} />}
+                                <span className="text-sm font-medium">{option.label}</span>
                               </button>
                             );
                           })}
@@ -431,7 +395,6 @@ export default function PlanSelectionOnly({
               </motion.button>
             );
           })}
-      </div>
     </div>
   );
 }

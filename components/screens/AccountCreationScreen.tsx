@@ -18,6 +18,8 @@ import {
   TrendingDown,
   Check,
   Shield,
+  Camera,
+  Upload,
 } from "lucide-react";
 import { ScreenProps } from "./common";
 import RegionDropdown, { US_STATES } from "../common/RegionDropdown";
@@ -133,10 +135,36 @@ function MockPaymentForm({
   const [appliedDiscount, setAppliedDiscount] = useState<Discount | null>(() => 
     (answers['discount_data'] as Discount | null) || null
   );
+  const [idPhoto, setIdPhoto] = useState<File | null>(null);
+  const [idPhotoPreview, setIdPhotoPreview] = useState<string>(() =>
+    getString(answers.id_photo_url)
+  );
 
   // Get user info for display
   const userEmail = getString(answers.email || answers.account_email);
   const userName = getString(answers.first_name || answers.account_firstName);
+
+  const handleIdPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIdPhoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setIdPhotoPreview(result);
+        updateAnswer('id_photo_url', result);
+        updateAnswer('id_photo_name', file.name);
+      };
+      reader.readAsDataURL(file);
+      // Clear error if there was one
+      if (errors.idPhoto) {
+        setErrors(prev => {
+          const { idPhoto: _, ...rest } = prev;
+          return rest;
+        });
+      }
+    }
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -373,74 +401,31 @@ function MockPaymentForm({
         transition={{ delay: 0.1 }}
         className="bg-white rounded-2xl p-6 shadow-sm border border-[#E8E8E8]"
       >
-        {/* Plan Header */}
-        <div className="flex items-start justify-between mb-5 pb-5 border-b border-[#E8E8E8]">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
+        {/* Plan Summary */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#E0F5F3] flex items-center justify-center">
               <Package className="w-5 h-5 text-[#00A896]" />
-              <h3 className="text-[#2D3436]">{planName}</h3>
             </div>
-            <p className="text-sm text-[#666666]">
-              {selectedMedication} • Monthly subscription
-            </p>
+            <div>
+              <h3 className="text-[#2D3436] font-medium">{planName}</h3>
+              <p className="text-sm text-[#666666]">{selectedMedication}</p>
+            </div>
           </div>
           <div className="text-right">
-            <div className="flex items-baseline gap-1">
-              <span className="text-sm text-[#666666] line-through">
-                ${(planPrice * 1.67).toFixed(0)}
-              </span>
-              <TrendingDown className="w-4 h-4 text-[#00A896]" />
-            </div>
-            <div className="text-[#2D3436]">
-              <span className="text-2xl">${planPrice}</span>
-              <span className="text-sm text-[#666666]">/mo</span>
-            </div>
+            <div className="text-2xl font-bold text-[#00A896]">${planPrice}</div>
+            <div className="text-xs text-[#666666]">/month</div>
           </div>
         </div>
 
-        {/* Benefits */}
-        <div className="space-y-3 mb-5">
-          <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-[#E0F5F3] flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Check className="w-3 h-3 text-[#00A896]" />
-            </div>
-            <p className="text-sm text-[#2D3436]">No insurance required</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-[#E0F5F3] flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Check className="w-3 h-3 text-[#00A896]" />
-            </div>
-            <p className="text-sm text-[#2D3436]">
-              Adjust medication anytime with a provider
-            </p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-[#E0F5F3] flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Check className="w-3 h-3 text-[#00A896]" />
-            </div>
-            <p className="text-sm text-[#2D3436]">
-              Cancel anytime, no commitments
-            </p>
-          </div>
-        </div>
-
-        {/* Pricing Breakdown */}
-        <div className="space-y-3 pt-5 border-t border-[#E8E8E8]">
-          <div className="flex items-baseline justify-between">
-            <span className="text-sm text-[#666666]">Monthly subscription</span>
-            <span className="text-[#2D3436]">${planPrice}</span>
-          </div>
-          <div className="flex items-baseline justify-between">
+        {/* Payment Info */}
+        <div className="pt-4 border-t border-[#E8E8E8]">
+          <div className="flex items-baseline justify-between mb-2">
             <span className="text-sm text-[#666666]">Due today</span>
-            <span className="text-xl text-[#00A896]">$0</span>
+            <span className="text-xl font-bold text-[#00A896]">$0</span>
           </div>
-        </div>
-
-        {/* Important Notice */}
-        <div className="mt-5 py-3 border-t border-[#E8E8E8]">
           <p className="text-xs text-[#666666] leading-relaxed">
-            You'll be charged once prescribed. You won't be charged if a
-            provider determines that our program isn't right for you.
+            You'll be charged ${planPrice}/month once prescribed. No charge if not approved.
           </p>
         </div>
 
@@ -664,6 +649,87 @@ function MockPaymentForm({
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="bg-white rounded-2xl p-6 shadow-sm border border-[#E8E8E8] space-y-5"
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-[#E0F5F3] flex items-center justify-center">
+            <Camera className="w-4 h-4 text-[#00A896]" />
+          </div>
+          <h3 className="text-[#2D3436]">ID Verification</h3>
+        </div>
+
+        <div>
+          <label className="block text-sm text-[#2D3436] mb-2 font-medium">
+            Upload a photo of your ID
+          </label>
+          <p className="text-xs text-[#666666] mb-3">
+            We need a clear photo of your driver's license or government-issued ID for verification
+          </p>
+          
+          <div className="relative">
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleIdPhotoChange}
+              className="hidden"
+              id="id-photo-upload"
+            />
+            <label
+              htmlFor="id-photo-upload"
+              className={`flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                errors.idPhoto 
+                  ? 'border-[#FF6B6B] bg-red-50' 
+                  : idPhotoPreview
+                  ? 'border-[#00A896] bg-[#E0F5F3]/30'
+                  : 'border-[#E8E8E8] hover:border-[#00A896] hover:bg-[#E0F5F3]/10'
+              }`}
+            >
+              {idPhotoPreview ? (
+                <div className="w-full space-y-3">
+                  <img
+                    src={idPhotoPreview}
+                    alt="ID preview"
+                    className="w-full h-48 object-contain rounded-lg"
+                  />
+                  <div className="flex items-center justify-center gap-2 text-[#00A896]">
+                    <Check className="w-5 h-5" />
+                    <span className="text-sm font-medium">ID uploaded</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('id-photo-upload')?.click();
+                    }}
+                    className="w-full px-4 py-2 text-sm text-[#00A896] hover:text-[#008577] transition-colors"
+                  >
+                    Change photo
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <Camera className="w-12 h-12 mx-auto mb-3 text-[#00A896]" />
+                  <p className="text-sm text-[#2D3436] mb-1 font-medium">
+                    Take or upload a photo
+                  </p>
+                  <p className="text-xs text-[#666666]">
+                    PNG, JPG up to 10MB
+                  </p>
+                </div>
+              )}
+            </label>
+          </div>
+          {errors.idPhoto && (
+            <p className="text-sm text-[#FF6B6B] mt-1.5">{errors.idPhoto}</p>
+          )}
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
         className="bg-white rounded-2xl p-6 shadow-sm border border-[#E8E8E8] space-y-5"
       >
@@ -861,7 +927,7 @@ export default function AccountCreationScreen({
               className="text-2xl sm:text-3xl md:text-4xl text-neutral-900 mb-3 sm:mb-4 leading-snug tracking-tight"
               style={{ letterSpacing: "-0.02em" }}
             >
-              Create your account
+              You made it! 🎉
             </motion.h1>
 
             <motion.p
@@ -869,7 +935,7 @@ export default function AccountCreationScreen({
               animate={{ opacity: 1 }}
               className="text-base sm:text-lg text-neutral-600 leading-relaxed"
             >
-              You're almost there! Just a few more details to get started.
+              We just need your shipping address and ID to complete your order.
             </motion.p>
           </div>
 

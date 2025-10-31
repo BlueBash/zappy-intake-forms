@@ -269,7 +269,7 @@ const formConfig: FormConfig = {
       id: "basic_info_2",
       type: "multi_select",
       phase: "qualify",
-      title: "Do any of these apply to you?",
+      title: "Have you ever been diagnosed with any of the following mental health conditions?",
       options: [
         { value: "none", label: "None of these apply to me" },
         { value: "depression", label: "Depression" },
@@ -787,24 +787,6 @@ const formConfig: FormConfig = {
           required: true,
           auto_advance: true,
         },
-        {
-          id: "glp1_medication_in_mind",
-          type: "single_select",
-          label: "Do you have a medication in mind?",
-          options: [
-            { value: "yes", label: "Yes" },
-            { value: "no", label: "No" },
-          ],
-          required: true,
-          auto_advance: true,
-          conditional_display: {
-            show_if: "glp1_has_tried == 'no'",
-          },
-          progressive_display: {
-            show_after_field: "glp1_has_tried",
-            show_if_condition: "glp1_has_tried == 'no'",
-          },
-        },
       ],
       next_logic: [
         {
@@ -858,35 +840,11 @@ const formConfig: FormConfig = {
       type: "terminal",
       phase: "treatment",
       status: "success",
-      title: "Welcome, ${first_name} ${last_name}!",
-      body: "Your account has been created successfully. Check your email at ${email} to get started!:",
-      next_steps: [
-        {
-          icon: "✓",
-          icon_name: "review",
-          label: "Physician review (24 hrs)",
-          status: "pending",
-        },
-        {
-          icon: "→",
-          icon_name: "plan",
-          label: "Treatment plan (48 hrs)",
-          status: "pending",
-        },
-        {
-          icon: "→",
-          icon_name: "journey",
-          label: "Start your journey",
-          status: "pending",
-        },
-      ],
+      title: "Thank you for your submission!",
+      body: "We've received your information and will review it shortly.\n\n**What happens next:**\n• Provider review: 24-48 hours\n• You'll receive an email with next steps\n• If approved, your medication ships within 3-5 days",
       cta_primary: {
-        label: "View Your Dashboard",
+        label: "Done",
       },
-      links: [
-        { label: "Return to Zappy Health", url: "https://zappyhealth.com" },
-        { label: "Back to Home", url: "/" },
-      ],
     },
     // {
     //   "id": "demographics.dob",

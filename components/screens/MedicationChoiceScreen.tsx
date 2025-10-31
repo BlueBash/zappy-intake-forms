@@ -728,7 +728,7 @@ export default function MedicationChoiceScreen({
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#2D3436] mb-2">
-            Choose Your Medication
+            What medication are you interested in today?
           </h1>
           <p className="text-[#666666]">
             Select the medication and pharmacy that works best for you.
