@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -20,6 +20,7 @@ import {
   Shield,
   Camera,
   Upload,
+  AlertCircle,
 } from "lucide-react";
 import { ScreenProps } from "./common";
 import RegionDropdown, { US_STATES } from "../common/RegionDropdown";
@@ -50,6 +51,82 @@ const normalizeStateCode = (raw: unknown): string => {
   }
   return trimmed.slice(0, 2).toUpperCase();
 };
+
+// Stripe Payment Form Component - handles Stripe submission
+function StripePaymentForm({
+  onPaymentMethodConfirmed,
+  clientSecret,
+  isProcessing,
+  setIsProcessing,
+}: {
+  onPaymentMethodConfirmed: (paymentMethodId: string) => void;
+  clientSecret: string;
+  isProcessing: boolean;
+  setIsProcessing: (value: boolean) => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const handleStripeSubmit = React.useCallback(async () => {
+    if (!stripe || !elements) {
+      throw new Error('Stripe is not initialized');
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Validate the payment element
+      const { error: submitError } = await elements.submit();
+      
+      if (submitError) {
+        throw new Error(submitError.message || 'Payment validation failed');
+      }
+
+      // Confirm the setup intent with Stripe
+      const { error: confirmError, setupIntent } = await stripe.confirmSetup({
+        elements,
+        clientSecret,
+        redirect: 'if_required',
+      });
+
+      if (confirmError) {
+        throw new Error(confirmError.message || 'Failed to confirm payment method');
+      }
+
+      if (setupIntent && setupIntent.payment_method) {
+        // Payment method was successfully saved
+        const paymentMethodId = typeof setupIntent.payment_method === 'string' 
+          ? setupIntent.payment_method 
+          : setupIntent.payment_method.id;
+        
+        onPaymentMethodConfirmed(paymentMethodId);
+        return paymentMethodId;
+      } else {
+        throw new Error('Payment method confirmation incomplete');
+      }
+    } catch (err: any) {
+      console.error('Stripe submission error:', err);
+      throw err; // Re-throw to be caught by parent
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [stripe, elements, clientSecret, onPaymentMethodConfirmed, setIsProcessing]);
+
+  // Expose the submit function to parent component
+  React.useEffect(() => {
+    // Store the submit function in a way the parent can access it
+    (window as any).__stripeSubmitHandler = handleStripeSubmit;
+    return () => {
+      delete (window as any).__stripeSubmitHandler;
+    };
+  }, [handleStripeSubmit]);
+
+  return (
+    <div className="rounded-xl border-2 border-neutral-200 p-3">
+      <PaymentElement options={{ layout: "tabs" }} />
+    </div>
+  );
+}
 
 // Mock payment form when Stripe is not configured
 function MockPaymentForm({
@@ -83,24 +160,31 @@ function MockPaymentForm({
 
   // State management - simplified based on what we actually need
   const [phone, setPhone] = useState(() =>
-    getString(answers.account_phone ?? answers.phone)
+    getString(answers.account_phone ?? answers.phone ?? answers?.mobile_phone)
   );
   const [address, setAddress] = useState(() =>
     getString(
       answers.account_address ??
         answers.address_line1 ??
-        answers.shipping_address
+        answers.shipping_address ??
+        answers?.address?.street
     )
   );
   const [address2, setAddress2] = useState(() =>
     getString(
       answers.account_address2 ??
         answers.address_line2 ??
-        answers.shipping_address2
+        answers.shipping_address2 ??
+        answers?.address?.unit
     )
   );
   const [city, setCity] = useState(() =>
-    getString(answers.account_city ?? answers.city ?? answers.shipping_city)
+    getString(
+      answers.account_city ??
+        answers.city ??
+        answers.shipping_city ??
+        answers?.address?.locality
+    )
   );
   const [state, setState] = useState(() =>
     normalizeStateCode(
@@ -108,16 +192,19 @@ function MockPaymentForm({
         answers.account_state ??
           answers.state ??
           answers.shipping_state ??
-          answers.home_state
+          answers?.home_state ??
+          answers?.address?.region
       )
     )
   );
+  console.log("state", state);
   const [zipCode, setZipCode] = useState(() =>
     getString(
       answers.account_zipCode ??
         answers.account_zipcode ??
         answers.zip_code ??
-        answers.shipping_zip
+        answers.shipping_zip ??
+        answers?.address?.postalCode
     )
   );
   const [cardNumber, setCardNumber] = useState("");
@@ -127,13 +214,13 @@ function MockPaymentForm({
   const [setupIntentClientSecret, setSetupIntentClientSecret] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
-  const [discountCode, setDiscountCode] = useState(() => 
-    getString(answers['discount_code_entered'])
+  const [discountCode, setDiscountCode] = useState(() =>
+    getString(answers["discount_code_entered"])
   );
   const [discountError, setDiscountError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [appliedDiscount, setAppliedDiscount] = useState<Discount | null>(() => 
-    (answers['discount_data'] as Discount | null) || null
+  const [appliedDiscount, setAppliedDiscount] = useState<Discount | null>(
+    () => (answers["discount_data"] as Discount | null) || null
   );
   const [idPhoto, setIdPhoto] = useState<File | null>(null);
   const [idPhotoPreview, setIdPhotoPreview] = useState<string>(() =>
@@ -144,21 +231,31 @@ function MockPaymentForm({
   const userEmail = getString(answers.email || answers.account_email);
   const userName = getString(answers.first_name || answers.account_firstName);
 
-  const handleIdPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIdPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setIdPhoto(file);
+      // if(answers["client_record_id"]){
+      //   try {
+      //     const formData = new FormData();
+      //     formData.append("file", file);
+      //     const response :any = await apiClient.updateProfilePhoto(formData, answers["client_record_id"]);
+      //     updateAnswer("id_photo_url", response?.profile_picture_url ?? "");
+      //   } catch (error) {
+      //     console.error("Error updating profile photo:", error);
+      //   }
+      // }
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
         setIdPhotoPreview(result);
-        updateAnswer('id_photo_url', result);
-        updateAnswer('id_photo_name', file.name);
+        updateAnswer("id_photo_url", result);
+        updateAnswer("id_photo_name", file.name);
       };
       reader.readAsDataURL(file);
       // Clear error if there was one
       if (errors.idPhoto) {
-        setErrors(prev => {
+        setErrors((prev) => {
           const { idPhoto: _, ...rest } = prev;
           return rest;
         });
@@ -185,15 +282,17 @@ function MockPaymentForm({
     if (!setupIntentClientSecret.trim()) {
       if (!cardNumber.trim()) newErrors.cardNumber = "Card number is required";
       if (!cvv.trim()) newErrors.cvv = "CVV is required";
-      else if (!/^\d{3,4}$/.test(cvv.trim())) newErrors.cvv = "CVV must be 3 or 4 digits";
-      if (!expiryDate.trim()) newErrors.expiryDate = "Expiration date is required";
+      else if (!/^\d{3,4}$/.test(cvv.trim()))
+        newErrors.cvv = "CVV must be 3 or 4 digits";
+      if (!expiryDate.trim())
+        newErrors.expiryDate = "Expiration date is required";
       else {
         const expiryRegex = /^(0[1-9]|1[0-2])\/(\d{2})$/;
         if (!expiryRegex.test(expiryDate.trim())) {
           newErrors.expiryDate = "Please enter a valid date (MM/YY)";
         } else {
           // Validate that the date is not in the past
-          const [month, year] = expiryDate.split('/');
+          const [month, year] = expiryDate.split("/");
           const expiryYearFull = 2000 + parseInt(year, 10);
           const expiryMonthNum = parseInt(month, 10) - 1;
           const expiryDateObj = new Date(expiryYearFull, expiryMonthNum + 1, 0); // Last day of the month
@@ -218,70 +317,109 @@ function MockPaymentForm({
 
     try {
       // If we have card details and a customer ID, add the card to Stripe
-      const customerId = answers['stripe_customer_id'] || answers['customer_id'] || "156ca3307961ed745af2563f";
-      const hasCardDetails = cardNumber.trim() && cvv.trim() && expiryDate.trim();
+      // const customerId =
+      //   answers["stripe_customer_id"] ||
+      //   answers["customer_id"] ||
+      //   "156ca3307961ed745af2563f";
+      // const hasCardDetails =
+      //   cardNumber.trim() && cvv.trim() && expiryDate.trim();
 
-      if (customerId && hasCardDetails && !setupIntentClientSecret && stripePromise) {
-        try {
-          // Parse MM/YY format
-          const [month, year] = expiryDate.split('/');
-          const expiryYearFull = 2000 + parseInt(year, 10);
-          
-          const cardNumberDigits = cardNumber.replace(/\s/g, '');
-          
-          // Note: This requires your Stripe secret key - ideally this should be done on your backend
-          // For now, we'll need to pass the secret key (NOT RECOMMENDED for production)
-          const stripeSecretKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-          
-          if (!stripeSecretKey) {
-            throw new Error('Stripe secret key is not configured. Please set VITE_STRIPE_PUBLISHABLE_KEY in your environment variables.');
+      // if (
+      //   customerId &&
+      //   hasCardDetails &&
+      //   !setupIntentClientSecret &&
+      //   stripePromise
+      // ) {
+      //   try {
+      //     // Parse MM/YY format
+      //     const [month, year] = expiryDate.split("/");
+      //     const expiryYearFull = 2000 + parseInt(year, 10);
+
+      //     const cardNumberDigits = cardNumber.replace(/\s/g, "");
+
+      //     // Note: This requires your Stripe secret key - ideally this should be done on your backend
+      //     // For now, we'll need to pass the secret key (NOT RECOMMENDED for production)
+      //     const stripeSecretKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+      //     if (!stripeSecretKey) {
+      //       throw new Error(
+      //         "Stripe secret key is not configured. Please set VITE_STRIPE_PUBLISHABLE_KEY in your environment variables."
+      //       );
+      //     }
+
+      //     // Create card source directly via Stripe Sources API
+      //     // Reference: https://docs.stripe.com/api/cards/create
+      //     // The source parameter accepts card details as an object
+      //     const sourceParams = new URLSearchParams({
+      //       "source[object]": "card",
+      //       "source[number]": cardNumberDigits,
+      //       "source[exp_month]": parseInt(month, 10).toString(),
+      //       "source[exp_year]": expiryYearFull.toString(),
+      //       "source[cvc]": cvv.trim(),
+      //     });
+
+      //     const cardResponse = await fetch(
+      //       `https://api.stripe.com/v1/customers/${customerId}/sources`,
+      //       {
+      //         method: "POST",
+      //         headers: {
+      //           Authorization: `Bearer ${stripeSecretKey}`,
+      //           "Content-Type": "application/x-www-form-urlencoded",
+      //         },
+      //         body: sourceParams.toString(),
+      //       }
+      //     );
+
+      //     const cardData = await cardResponse.json();
+
+      //     if (!cardResponse.ok) {
+      //       throw new Error(
+      //         cardData.error?.message || "Failed to add card to customer"
+      //       );
+      //     }
+
+      //     // // Store card information in answers
+      //     // if (cardData.id) {
+      //     //   updateAnswer('stripe_card_id', cardData.id);
+      //     //   updateAnswer('stripe_card_last4', cardData.last4 || '');
+      //     //   updateAnswer('stripe_card_brand', cardData.brand || '');
+      //     // }
+      //   } catch (cardError: any) {
+      //     console.error("Error adding card to customer:", cardError);
+      //     setErrors({
+      //       general:
+      //         cardError?.message ||
+      //         "Failed to add card. Please check your card details and try again.",
+      //     });
+      //     setIsProcessing(false);
+      //   }
+      // }
+
+      // Handle Stripe payment submission if using Stripe Payment Element
+      if (setupIntentClientSecret && stripePromise) {
+        // Check if Stripe submit handler is available (from StripePaymentForm component)
+        const stripeSubmitHandler = (window as any).__stripeSubmitHandler;
+        
+        if (stripeSubmitHandler) {
+          try {
+            await stripeSubmitHandler();
+            // Payment method confirmed successfully
+            // The payment method ID is handled in StripePaymentForm
+          } catch (stripeError: any) {
+            setErrors({ 
+              general: stripeError?.message || "Failed to process payment method. Please try again." 
+            });
+            setIsProcessing(false);
+            return;
           }
-
-          // Create card source directly via Stripe Sources API
-          // Reference: https://docs.stripe.com/api/cards/create
-          // The source parameter accepts card details as an object
-          const sourceParams = new URLSearchParams({
-            'source[object]': 'card',
-            'source[number]': cardNumberDigits,
-            'source[exp_month]': parseInt(month, 10).toString(),
-            'source[exp_year]': expiryYearFull.toString(),
-            'source[cvc]': cvv.trim(),
-          });
-
-          const cardResponse = await fetch(
-            `https://api.stripe.com/v1/customers/${customerId}/sources`,
-            {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${stripeSecretKey}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: sourceParams.toString(),
-            }
-          );
-
-          const cardData = await cardResponse.json();
-
-          if (!cardResponse.ok) {
-            throw new Error(cardData.error?.message || 'Failed to add card to customer');
-          }
-
-          // // Store card information in answers
-          // if (cardData.id) {
-          //   updateAnswer('stripe_card_id', cardData.id);
-          //   updateAnswer('stripe_card_last4', cardData.last4 || '');
-          //   updateAnswer('stripe_card_brand', cardData.brand || '');
-          // }
-        } catch (cardError: any) {
-          console.error('Error adding card to customer:', cardError);
-          setErrors({
-            general: cardError?.message || "Failed to add card. Please check your card details and try again.",
-          });
-          setIsProcessing(false);
+        } else {
+          // If Stripe is configured but handler not ready, wait a bit
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
+      } else {
+        // Demo mode - just wait
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       }
-
-      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const accountData = {
         phone: phone.trim(),
@@ -320,25 +458,25 @@ function MockPaymentForm({
         setAppliedDiscount(null);
         setDiscountError("Invalid discount code");
         // Clear discount data from answers
-        updateAnswer('discount_code_entered', '');
-        updateAnswer('discount_id', '');
-        updateAnswer('discount_code', '');
-        updateAnswer('discount_amount', 0);
-        updateAnswer('discount_description', '');
-        updateAnswer('discount_data', null);
+        updateAnswer("discount_code_entered", "");
+        updateAnswer("discount_id", "");
+        updateAnswer("discount_code", "");
+        updateAnswer("discount_amount", 0);
+        updateAnswer("discount_description", "");
+        updateAnswer("discount_data", null);
         return;
       }
 
       const discount = response.discount;
       setAppliedDiscount(discount);
-      
+
       // Save discount data to answers
-      updateAnswer('discount_code_entered', trimmedCode);
-      updateAnswer('discount_id', discount.id);
-      updateAnswer('discount_code', discount.code);
-      updateAnswer('discount_amount', discount.amount);
-      updateAnswer('discount_description', discount.description || '');
-      updateAnswer('discount_data', discount);
+      updateAnswer("discount_code_entered", trimmedCode);
+      updateAnswer("discount_id", discount.id);
+      updateAnswer("discount_code", discount.code);
+      updateAnswer("discount_amount", discount.amount);
+      updateAnswer("discount_description", discount.description || "");
+      updateAnswer("discount_data", discount);
     } catch (applyError) {
       console.error(applyError);
       setAppliedDiscount(null);
@@ -348,12 +486,12 @@ function MockPaymentForm({
           : "Failed to apply discount"
       );
       // Clear discount data from answers on error
-      updateAnswer('discount_code_entered', '');
-      updateAnswer('discount_id', '');
-      updateAnswer('discount_code', '');
-      updateAnswer('discount_amount', 0);
-      updateAnswer('discount_description', '');
-      updateAnswer('discount_data', null);
+      updateAnswer("discount_code_entered", "");
+      updateAnswer("discount_id", "");
+      updateAnswer("discount_code", "");
+      updateAnswer("discount_amount", 0);
+      updateAnswer("discount_description", "");
+      updateAnswer("discount_data", null);
     } finally {
       setLoading(false);
     }
@@ -364,13 +502,32 @@ function MockPaymentForm({
     setDiscountError("");
     setAppliedDiscount(null);
     // Clear discount data from answers
-    updateAnswer('discount_code_entered', '');
-    updateAnswer('discount_id', '');
-    updateAnswer('discount_code', '');
-    updateAnswer('discount_amount', 0);
-    updateAnswer('discount_description', '');
-    updateAnswer('discount_data', null);
+    updateAnswer("discount_code_entered", "");
+    updateAnswer("discount_id", "");
+    updateAnswer("discount_code", "");
+    updateAnswer("discount_amount", 0);
+    updateAnswer("discount_description", "");
+    updateAnswer("discount_data", null);
   };
+
+  const setupIntent = useCallback(async () => {
+    const response :any = await apiClient.setupIntent({
+      client_record_id: answers["client_record_id"] || "156ca3307961ed745af2563f",
+      usage: "off_session",
+      metadata: {
+        source: "setup_intent_test_page_manual_prepare",
+      },
+      payment_method_types: ["card", "link"],
+    });
+    console.log("response", response);
+    setSetupIntentClientSecret(response?.setup_intent?.client_secret);
+  }, [answers["client_record_id"]]);
+
+  useEffect(() => {
+    if(answers["client_record_id"]){
+      setupIntent();
+    }
+  }, [answers["client_record_id"], setupIntent]);
 
   const selectedMedication = answers["selected_medication"] || "Medication";
   const planName =
@@ -413,19 +570,22 @@ function MockPaymentForm({
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-[#00A896]">${planPrice}</div>
+            <div className="text-2xl font-bold text-[#00A896]">
+              ${planPrice}
+            </div>
             <div className="text-xs text-[#666666]">/month</div>
           </div>
         </div>
 
         {/* Payment Info */}
-        <div className="pt-4 border-t border-[#E8E8E8]">
+        <div className="py-4 border-t border-[#E8E8E8]">
           <div className="flex items-baseline justify-between mb-2">
             <span className="text-sm text-[#666666]">Due today</span>
             <span className="text-xl font-bold text-[#00A896]">$0</span>
           </div>
           <p className="text-xs text-[#666666] leading-relaxed">
-            You'll be charged ${planPrice}/month once prescribed. No charge if not approved.
+            You'll be charged ${planPrice}/month once prescribed. No charge if
+            not approved.
           </p>
         </div>
 
@@ -450,29 +610,41 @@ function MockPaymentForm({
             </svg>
           </summary>
           <div className="pt-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Enter code"
-                className="flex-1 px-4 py-2.5 rounded-xl border-2 border-[#E8E8E8] focus:border-[#00A896] focus:outline-none transition-colors text-sm text-[#2D3436] placeholder:text-[#666666]"
-                value={discountCode}
-                onChange={(event) => {
-                  setDiscountCode(event.target.value.toUpperCase());
-                  setDiscountError("");
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleApplyDiscount}
-                disabled={loading || !discountCode.trim()}
-                className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                  loading || !discountCode.trim()
-                    ? "bg-stone-200 text-stone-500 cursor-not-allowed"
-                    : "bg-primary text-white hover:bg-primary/90"
-                }`}
-              >
-                {loading ? "Applying…" : "Apply"}
-              </button>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter code"
+                  className={`flex-1 px-4 py-2.5 rounded-xl border-2 focus:outline-none transition-colors text-sm text-[#2D3436] placeholder:text-[#666666] ${
+                    discountError
+                      ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-100"
+                      : "border-[#E8E8E8] focus:border-[#00A896] focus:ring-4 focus:ring-[#00A896]/10"
+                  }`}
+                  value={discountCode}
+                  onChange={(event) => {
+                    setDiscountCode(event.target.value.toUpperCase());
+                    setDiscountError("");
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyDiscount}
+                  disabled={loading || !discountCode.trim()}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                    loading || !discountCode.trim()
+                      ? "bg-stone-200 text-stone-500 cursor-not-allowed"
+                      : "bg-primary text-white hover:bg-primary/90"
+                  }`}
+                >
+                  {loading ? "Applying…" : "Apply"}
+                </button>
+              </div>
+              {discountError && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border-2 border-red-200 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-800 flex-1">{discountError}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -589,7 +761,7 @@ function MockPaymentForm({
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-3 gap-4">
           <div className="col-span-1">
             <label className="block text-sm text-[#2D3436] mb-2">City</label>
             <input
@@ -664,9 +836,10 @@ function MockPaymentForm({
             Upload a photo of your ID
           </label>
           <p className="text-xs text-[#666666] mb-3">
-            We need a clear photo of your driver's license or government-issued ID for verification
+            We need a clear photo of your driver's license or government-issued
+            ID for verification
           </p>
-          
+
           <div className="relative">
             <input
               type="file"
@@ -679,11 +852,11 @@ function MockPaymentForm({
             <label
               htmlFor="id-photo-upload"
               className={`flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
-                errors.idPhoto 
-                  ? 'border-[#FF6B6B] bg-red-50' 
+                errors.idPhoto
+                  ? "border-[#FF6B6B] bg-red-50"
                   : idPhotoPreview
-                  ? 'border-[#00A896] bg-[#E0F5F3]/30'
-                  : 'border-[#E8E8E8] hover:border-[#00A896] hover:bg-[#E0F5F3]/10'
+                  ? "border-[#00A896] bg-[#E0F5F3]/30"
+                  : "border-[#E8E8E8] hover:border-[#00A896] hover:bg-[#E0F5F3]/10"
               }`}
             >
               {idPhotoPreview ? (
@@ -701,7 +874,7 @@ function MockPaymentForm({
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
-                      document.getElementById('id-photo-upload')?.click();
+                      document.getElementById("id-photo-upload")?.click();
                     }}
                     className="w-full px-4 py-2 text-sm text-[#00A896] hover:text-[#008577] transition-colors"
                   >
@@ -714,9 +887,7 @@ function MockPaymentForm({
                   <p className="text-sm text-[#2D3436] mb-1 font-medium">
                     Take or upload a photo
                   </p>
-                  <p className="text-xs text-[#666666]">
-                    PNG, JPG up to 10MB
-                  </p>
+                  <p className="text-xs text-[#666666]">PNG, JPG up to 10MB</p>
                 </div>
               )}
             </label>
@@ -745,9 +916,15 @@ function MockPaymentForm({
             stripe={stripePromise}
             options={{ clientSecret: setupIntentClientSecret }}
           >
-            <div className="rounded-xl border-2 border-neutral-200 p-3">
-              <PaymentElement options={{ layout: "tabs" }} />
-            </div>
+            <StripePaymentForm
+              clientSecret={setupIntentClientSecret}
+              onPaymentMethodConfirmed={(paymentMethodId) => {
+                // Store payment method ID in answers
+                console.log('Payment method confirmed:', paymentMethodId);
+              }}
+              isProcessing={isProcessing}
+              setIsProcessing={setIsProcessing}
+            />
           </Elements>
         ) : (
           <div className="space-y-4">
@@ -760,11 +937,13 @@ function MockPaymentForm({
                 type="text"
                 value={cardNumber}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
-                  const formatted = value.match(/.{1,4}/g)?.join(' ') || value;
+                  const value = e.target.value
+                    .replace(/\s/g, "")
+                    .replace(/\D/g, "");
+                  const formatted = value.match(/.{1,4}/g)?.join(" ") || value;
                   setCardNumber(formatted);
                   if (errors.cardNumber) {
-                    setErrors(prev => {
+                    setErrors((prev) => {
                       const { cardNumber: _, ...rest } = prev;
                       return rest;
                     });
@@ -792,21 +971,21 @@ function MockPaymentForm({
                   type="text"
                   value={expiryDate}
                   onChange={(e) => {
-                    let value = e.target.value.replace(/\D/g, '');
-                    
+                    let value = e.target.value.replace(/\D/g, "");
+
                     // Limit to 4 digits
                     if (value.length > 4) {
                       value = value.slice(0, 4);
                     }
-                    
+
                     // Auto-format as MM/YY
                     if (value.length >= 2) {
-                      value = value.slice(0, 2) + '/' + value.slice(2);
+                      value = value.slice(0, 2) + "/" + value.slice(2);
                     }
-                    
+
                     setExpiryDate(value);
                     if (errors.expiryDate) {
-                      setErrors(prev => {
+                      setErrors((prev) => {
                         const { expiryDate: _, ...rest } = prev;
                         return rest;
                       });
@@ -826,17 +1005,15 @@ function MockPaymentForm({
               </div>
 
               <div>
-                <label className="block text-sm text-[#2D3436] mb-2">
-                  CVV
-                </label>
+                <label className="block text-sm text-[#2D3436] mb-2">CVV</label>
                 <input
                   type="text"
                   value={cvv}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    const value = e.target.value.replace(/\D/g, "").slice(0, 4);
                     setCvv(value);
                     if (errors.cvv) {
-                      setErrors(prev => {
+                      setErrors((prev) => {
                         const { cvv: _, ...rest } = prev;
                         return rest;
                       });
@@ -849,9 +1026,7 @@ function MockPaymentForm({
                   maxLength={4}
                 />
                 {errors.cvv && (
-                  <p className="text-sm text-[#FF6B6B] mt-1.5">
-                    {errors.cvv}
-                  </p>
+                  <p className="text-sm text-[#FF6B6B] mt-1.5">{errors.cvv}</p>
                 )}
               </div>
             </div>

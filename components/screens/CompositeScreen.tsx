@@ -755,9 +755,23 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                   />
                 </div>
               )}
-              {multiSelectField.conditional_warnings && multiSelectField.conditional_warnings
-                .filter(warning => selectedValues.includes(warning.show_if_value))
-                .map((warning, index) => {
+              {(() => {
+                // Check for conditional warnings and deduplicate by title and type
+                const filteredWarnings = multiSelectField.conditional_warnings?.filter(warning => 
+                  selectedValues.includes(warning.show_if_value)
+                ) || [];
+                
+                // Deduplicate warnings: if multiple warnings have same title and type, show only one
+                const seen = new Map<string, typeof filteredWarnings[0]>();
+                filteredWarnings.forEach(warning => {
+                  const key = `${warning.title || ''}_${warning.type || 'error'}`;
+                  if (!seen.has(key)) {
+                    seen.set(key, warning);
+                  }
+                });
+                
+                return Array.from(seen.values());
+              })().map((warning, index) => {
                   const warningType = warning.type || 'error';
                   const styles = {
                     error: {

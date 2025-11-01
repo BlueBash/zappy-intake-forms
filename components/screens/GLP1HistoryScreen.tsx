@@ -128,6 +128,18 @@ const medications: MedicationData[] = [
       { value: '1.8mg', label: '1.8 mg' },
     ],
   },
+  {
+    id: 'liraglutide_compound',
+    name: 'Compounded Liraglutide',
+    subtitle: 'From compounding pharmacy',
+    category: 'liraglutide',
+    doseOptions: [
+      { value: '0.6mg', label: '0.6 mg' },
+      { value: '1.2mg', label: '1.2 mg' },
+      { value: '1.8mg', label: '1.8 mg' },
+      { value: '3mg', label: '3 mg' },
+    ],
+  },
 ];
 
 const categoryLabels = {

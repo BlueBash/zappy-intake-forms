@@ -55,8 +55,8 @@ const formConfig: FormConfig = {
       title: "What matters most to you?",
       phase: "qualify",
       options: [
-        { value: "lose_weight", label: "Lose weight and keep it off" },
         { value: "boost_energy", label: "Boost energy and feel better" },
+        { value: "lose_weight", label: "Lose weight and keep it off" },
         { value: "improve_health", label: "Improve overall health" },
         { value: "regain_confidence", label: "Regain confidence" },
         { value: "other", label: "Other" },
@@ -70,8 +70,8 @@ const formConfig: FormConfig = {
       phase: "qualify",
       title: "What would you like support with?",
       options: [
-        { value: "cravings", label: "Controlling cravings and hunger" },
         { value: "time", label: "Finding time to exercise" },
+        { value: "cravings", label: "Controlling cravings and hunger" },
         { value: "motivation", label: "Staying motivated" },
         { value: "plateaus", label: "Breaking through plateaus" },
         { value: "consistency", label: "Being consistent" },
@@ -204,7 +204,7 @@ const formConfig: FormConfig = {
       phase: "qualify",
       variant: "weight_loss_graph",
       title: "Your potential transformation",
-      subtitle: "You could shed ${calc.weight_loss} lbs from your starting weight",
+      subtitle: "You could shed  ${calc.weight_loss} lbs from your starting weight",
       message:
         "Individual results may vary. Graph shows typical patient journey based on clinical trials.",
       next: "capture.email",
@@ -439,7 +439,7 @@ const formConfig: FormConfig = {
               title: "Type 1 Needs Specialist Care",
               message:
                 "GLP-1s aren't FDA-approved for Type 1 and need careful coordination.",
-              type: "error",
+              type: "warning",
             },
           ],
         },
@@ -467,29 +467,29 @@ const formConfig: FormConfig = {
               title: "GLP-1s Not Safe During Pregnancy",
               message:
                 "We can't prescribe GLP-1 medications during pregnancy, when trying to conceive, or while breastfeeding.",
-              type: "error",
+              type: "warning",
             },
             {
               show_if_value: "trying",
               title: "GLP-1s Not Safe During Pregnancy",
               message:
                 "We can't prescribe GLP-1 medications during pregnancy, when trying to conceive, or while breastfeeding.",
-              type: "error",
+              type: "warning",
             },
             {
               show_if_value: "nursing",
               title: "GLP-1s Not Safe During Pregnancy",
               message:
                 "We can't prescribe GLP-1 medications during pregnancy, when trying to conceive, or while breastfeeding.",
-              type: "error",
+              type: "warning",
             },
           ],
         },
         {
           id: "medical_conditions",
           type: "multi_select",
-          label: "Do any of these apply to you?",
-          help_text: "We need to ask about your medical history",
+          label: "Do any of these medical conditions apply to you?",
+          // help_text: "We need to ask about your medical history",
           options: [
             { value: "none", label: "None of these apply to me" },
             {
@@ -533,14 +533,14 @@ const formConfig: FormConfig = {
               title: "Safety Contraindication",
               message:
                 "With this history, GLP-1s carry significant cancer risk according to FDA data.",
-              type: "error",
+              type: "warning",
             },
             {
               show_if_value: "men2",
               title: "Safety Contraindication",
               message:
                 "With this history, GLP-1s carry significant cancer risk according to FDA data.",
-              type: "error",
+              type: "warning",
             },
             {
               show_if_value: "pancreatitis",
@@ -562,7 +562,7 @@ const formConfig: FormConfig = {
           id: "glp1_safety",
           type: "multi_select",
           label: "Have you been diagnosed with any of these?",
-          help_text: "Important safety questions about GLP-1 medications",
+          // help_text: "Important safety questions about GLP-1 medications",
           options: [
             { value: "none", label: "None of these apply to me" },
             {
@@ -620,7 +620,7 @@ const formConfig: FormConfig = {
           id: "current_medications",
           type: "multi_select",
           label: "Do you take any medication?",
-          help_text: "We need to know about all your current medications",
+          // help_text: "We need to know about all your current medications",
           options: [
             { value: "none", label: "I don't take any medication" },
             { value: "insulin", label: "Insulin" },

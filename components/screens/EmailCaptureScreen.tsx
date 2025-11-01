@@ -90,12 +90,12 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
     return tld ? validTLDs.includes(tld) || tld.length >= 2 : false;
   };
 
-  const handleEmailChange = (value: string) => {
+  const handleEmailChange = async (value: string) => {
     setEmail(value);
     const isValid = validateEmail(value);
     setIsEmailValid(isValid);
     
-    // Reset states when email changes (no API call here)
+    // Reset states when email changes
     setAccountExists(false);
     setShowNameFields(false);
     setShowPasswordField(false);
@@ -103,6 +103,8 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
     setManualSignIn(false);
     if (isValid) {
       updateAnswer("email", value);
+      // Automatically check if account exists when email is valid
+      await checkIfAccountExists(value);
     }
   };
 
@@ -143,12 +145,14 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
       const loginResponse: any = await apiClient.login({ email, password });
       const clientRecordId = loginResponse?.client_record?.id;
       updateAnswer("email", email);
-      updateAnswer("first_name", loginResponse?.client_record.first_name);
-      updateAnswer("last_name", loginResponse?.client_record.last_name);
-      updateAnswer("account_firstName", loginResponse?.client_record.first_name);
-      updateAnswer("account_lastName", loginResponse?.client_record.last_name);
+      updateAnswer("first_name", loginResponse?.client_record?.first_name);
+      updateAnswer("last_name", loginResponse?.client_record?.last_name);
+      updateAnswer("account_firstName", loginResponse?.client_record?.first_name);
+      updateAnswer("account_lastName", loginResponse?.client_record?.last_name);
       updateAnswer("account_email", email);
       updateAnswer("account_password", password);
+      updateAnswer("address", loginResponse?.client_record?.address);
+      updateAnswer("mobile_phone", loginResponse?.client_record?.mobile_phone);
       if (clientRecordId) {
         updateAnswer("client_record_id", clientRecordId);
         try {
@@ -196,9 +200,14 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
   };
 
   const handleContinue = async () => {
-    // If we haven't determined account existence yet, trigger the check
+    // If account check is still in progress, wait for it
+    if (checkingAccount) {
+      return;
+    }
+
+    // If we haven't determined account existence yet (shouldn't happen with auto-check, but safety check)
     if (!showPasswordField && !showNameFields) {
-      if (isEmailValid && !checkingAccount) {
+      if (isEmailValid) {
         await checkIfAccountExists(email);
       }
       return;
@@ -226,11 +235,12 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
             last_name: lastName.trim(),
             password,
           });
-          console.log("resp", resp);
           if (!resp?.short_code || resp?.short_code === "created") {
             const clientRecordId = resp?.client_record?.id;
             if (clientRecordId) {
               updateAnswer("client_record_id", clientRecordId);
+              updateAnswer("address", resp?.client_record?.address);
+              updateAnswer("mobile_phone", resp?.client_record?.mobile_phone);
               try {
                 if (typeof window !== "undefined") {
                   window.sessionStorage.setItem(
@@ -649,13 +659,45 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
               transition={{ duration: 0.3, delay: 0.2 }}
             >
               <label className="flex items-start gap-2.5 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border border-neutral-300 text-[#00A896] focus:ring-2 focus:ring-[#00A896] focus:ring-offset-0 transition-colors cursor-pointer"
-                />
-                <span className="text-xs leading-relaxed text-neutral-600">
+                <div className="relative mt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="absolute opacity-0 w-4 h-4 cursor-pointer z-10 peer"
+                  />
+                  <motion.div
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-[#00A896] peer-focus-visible:ring-offset-2 ${
+                      agreedToTerms
+                        ? "border-[#00A896] bg-[#00A896] shadow-md shadow-[#00A896]/30"
+                        : "border-[#E8E8E8] bg-white group-hover:border-[#00A896]/50 group-hover:shadow-sm"
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <AnimatePresence>
+                      {agreedToTerms && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180, opacity: 0 }}
+                          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                          exit={{ scale: 0, rotate: 180, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                        >
+                          <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                  {agreedToTerms && (
+                    <motion.div
+                      className="absolute inset-0 rounded border-2 border-[#00A896] opacity-0 pointer-events-none ring-2 ring-[#00A896]/20"
+                      animate={{ opacity: [0, 0.3, 0], scale: [1, 1.3, 1.5] }}
+                      transition={{ duration: 0.4 }}
+                    />
+                  )}
+                </div>
+                <span className="text-xs leading-relaxed text-neutral-600 group-hover:text-neutral-700 transition-colors">
                   I agree to the{" "}
                   <a
                     href="https://zappyhealth.com/terms"
@@ -737,9 +779,7 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
               (!isSigningIn && createClientLoading)
             }
             nextLabel={
-              !showPasswordField && !showNameFields
-                ? "Check email"
-                : isSigningIn
+              isSigningIn
                 ? "Sign in"
                 : "Continue"
             }
