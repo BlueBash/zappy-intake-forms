@@ -74,8 +74,19 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
   disabled = false,
   name,
 }) => {
+  // Initialize searchTerm from value if provided
+  const getInitialSearchTerm = () => {
+    if (value) {
+      const matchingState = US_STATES.find(
+        (state) => state.code.toUpperCase() === value.toUpperCase()
+      );
+      return matchingState ? matchingState.name : "";
+    }
+    return "";
+  };
+
   const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(getInitialSearchTerm);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -88,6 +99,24 @@ const RegionDropdown: React.FC<RegionDropdownProps> = ({
     const code = state.code.toLowerCase();
     return name.includes(normalizedTerm) || code.includes(normalizedTerm);
   });
+
+  // Sync searchTerm with value prop when value changes from outside
+  useEffect(() => {
+    if (value) {
+      const matchingState = US_STATES.find(
+        (state) => state.code.toUpperCase() === value.toUpperCase()
+      );
+      if (matchingState) {
+        setSearchTerm((prev) => {
+          // Only update if different to avoid unnecessary re-renders
+          return prev !== matchingState.name ? matchingState.name : prev;
+        });
+      }
+    } else {
+      // Clear searchTerm when value is cleared
+      setSearchTerm("");
+    }
+  }, [value]); // Only depend on value, not searchTerm to avoid loops
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

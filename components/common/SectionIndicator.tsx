@@ -34,7 +34,7 @@ export default function SectionIndicator({
       initial={{ opacity: 0, y: -5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`flex items-center justify-between mb-4 ${className}`}
+      className={`flex items-center justify-between ${className}`}
     >
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-[#666666] tracking-wide">

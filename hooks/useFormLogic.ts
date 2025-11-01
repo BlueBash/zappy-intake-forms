@@ -20,6 +20,7 @@ export const useFormLogic = (config: FormConfig) => {
 
   useEffect(() => {
     setCurrentScreenId(config.screens[0].id);
+    // setCurrentScreenId("checkout.account_creation"??config.screens[0].id);
     setAnswers({});
     answersRef.current = {};
     setCalculations({});

@@ -542,7 +542,11 @@ export default function MedicationChoiceScreen({
       <div className="space-y-4">
         {medications.map((entry, index) => {
           const { id: medicationId, name: medicationName, description, imageUrl } = deriveMedicationIdentity(entry);
-          const pharmacies = dedupePharmacies(entry?.pharmacies);
+          const apiPharmacies = dedupePharmacies(entry?.pharmacies);
+          const pharmacies = [
+            { id: 'no-preference', name: 'No preference' },
+            ...apiPharmacies
+          ];
           const packages = entry?.packages || [];
           const isExpanded = expandedMedicationId === medicationId;
           const isMedicationSelected = selectedMedicationId === medicationId;
@@ -728,7 +732,7 @@ export default function MedicationChoiceScreen({
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#2D3436] mb-2">
-            Choose Your Medication
+            What medication are you interested in today?
           </h1>
           <p className="text-[#666666]">
             Select the medication and pharmacy that works best for you.

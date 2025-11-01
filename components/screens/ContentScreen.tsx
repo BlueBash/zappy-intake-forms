@@ -92,7 +92,7 @@ const ContentScreen: React.FC<ScreenProps & { screen: ContentScreenType }> = ({ 
   const isInspirePhase = screen.phase === 'inspire';
 
   return (
-    <div className={`w-full text-center flex-grow flex flex-col justify-center items-center ${statusBorderClass} ${isInspirePhase ? 'inspire-phase-content' : ''}`}>
+    <div className={`w-full text-center flex-grow flex flex-col justify-start items-center ${statusBorderClass} ${isInspirePhase ? 'inspire-phase-content' : ''}`}>
         {image === 'welcome_illustration' && (
           <>
             <div className="w-20 h-1.5 mb-8 bg-gradient-decorative rounded-full"></div>

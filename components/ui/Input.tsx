@@ -42,7 +42,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
             style={{ transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
             className={`
-               w-full px-5 sm:px-6 py-5 sm:py-[18px] rounded-xl sm:rounded-2xl border-2 transition-all duration-300 bg-white
+               w-full py-3 sm:py-[18px] px-4 sm:px-6 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 bg-white
               ${hasTrailingAdornment ? 'pr-16' : ''}
               ${error ? 'border-red-400 focus:border-red-500  focus:ring-red-100' : 'border-[#E8E8E8] bg-white hover:shadow-md shadow-sm'}
             `}

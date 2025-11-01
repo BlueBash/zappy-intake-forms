@@ -140,7 +140,8 @@ const MedicationOptionsScreen: React.FC<MedicationOptionsScreenProps> = ({
     [medications, expandedMedication]
   );
 
-  const pharmacies = currentMedicationData?.pharmacies || [];
+  const apiPharmacies = currentMedicationData?.pharmacies || [];
+  const pharmacies = ['No preference', ...apiPharmacies];
   const doseOptions = selectedMedication ? getDoseOptions(selectedMedication) : [];
   const hasHigherDoses = doseOptions.some(d => d.requiresScript);
 

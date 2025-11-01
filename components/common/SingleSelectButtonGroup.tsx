@@ -48,7 +48,7 @@ export default function SingleSelectButtonGroup({
             onClick={() => handleSelect(option.value)}
             whileTap={{ scale: 0.98 }}
             whileHover={isSelected ? { y: -2 } : {}}
-            className={`option-button w-full py-5 sm:py-[18px] px-5 sm:px-6 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 text-left group relative overflow-hidden focus:outline-none focus-visible:ring-4 focus-visible:ring-[#0D9488]/20 ${
+            className={`option-button w-full py-3 sm:py-[18px] px-4 sm:px-6 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 text-left group relative overflow-hidden focus:outline-none focus-visible:ring-4 focus-visible:ring-[#0D9488]/20 ${
               isSelected
                 ? 'border-[#1a7f72] bg-[#e6f3f2] shadow-md'
                 : 'border-[#E8E8E8] bg-white hover:border-[#1a7f72]/30 hover:shadow-md hover:scale-[1.02] shadow-sm'
