@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Check, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 import NavigationButtons from "../common/NavigationButtons";
@@ -56,6 +56,24 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
     null
   );
   const [checkingAccount, setCheckingAccount] = useState(false);
+
+  // Ref for password input to manage focus
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+
+  // Effect to manage password field focus
+  useEffect(() => {
+    // Focus password field when it becomes visible and conditions are met
+    if (showPasswordField && passwordInputRef.current) {
+      // For sign-in flow, focus immediately when password field appears
+      if (isSigningIn) {
+        setTimeout(() => passwordInputRef.current?.focus(), 100);
+      }
+      // For new account flow, focus only after name fields are completed
+      else if (showNameFields && firstName.trim() && lastName.trim()) {
+        setTimeout(() => passwordInputRef.current?.focus(), 100);
+      }
+    }
+  }, [showPasswordField, isSigningIn, showNameFields, firstName, lastName]);
 
   const validateEmail = (value: string) => {
     // Stricter email validation with valid TLD check
@@ -439,6 +457,7 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 pointer-events-none" />
                   <input
+                    ref={passwordInputRef}
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -452,7 +471,6 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
                         ? "border-red-300 bg-white focus:border-red-500 focus:ring-4 focus:ring-red-100"
                         : "border-neutral-300 bg-white focus:border-[#00A896] focus:ring-4 focus:ring-[#00A896]/10"
                     }`}
-                    autoFocus
                   />
                   <button
                     type="button"

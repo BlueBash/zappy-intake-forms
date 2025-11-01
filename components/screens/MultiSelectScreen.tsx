@@ -8,7 +8,7 @@ import Input from '../ui/Input';
 import NavigationButtons from '../common/NavigationButtons';
 import { MultiSelectScreen as MultiSelectScreenType } from '../../types';
 
-const PILL_THRESHOLD = 6; // Switch to pills when more than 6 options
+const PILL_THRESHOLD = 5; // Switch to pills when more than 5 options
 
 const MultiSelectScreen: React.FC<ScreenProps & { screen: MultiSelectScreenType }> = ({ screen, answers, updateAnswer, onSubmit, showBack, onBack, showLoginLink }) => {
   const { id, title, help_text, options = [], required, other_text_id, other_text_placeholder } = screen;

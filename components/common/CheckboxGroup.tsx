@@ -101,8 +101,8 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
                   focus:outline-none focus-visible:ring-4 focus-visible:ring-[#00A896]/20 text-sm sm:text-base
                   ${isExclusive
                     ? isChecked
-                      ? 'border-[#E8E8E8] bg-neutral-100 text-[#2D3436] font-medium'
-                      : 'border-dashed border-[#E8E8E8] bg-white text-[#666666] hover:border-[#E8E8E8] hover:bg-neutral-50'
+                      ? 'border-[#8B7FC5] bg-[#E8E7F3] text-[#8B7FC5] shadow-md font-medium'
+                      : 'border-[#D4D0E8] bg-[#F8F7FC] text-[#8B7FC5] hover:border-[#8B7FC5] hover:shadow-sm'
                     : isChecked
                       ? 'border-[#00A896] bg-[#E0F5F3] text-[#00A896] shadow-md font-medium'
                       : 'border-[#E8E8E8] bg-white text-[#2D3436] hover:border-[#00A896]/40 hover:shadow-md hover:scale-[1.02]'
@@ -165,8 +165,8 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
               className={`w-full py-5 sm:py-[18px] px-5 sm:px-6 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 text-left group relative overflow-hidden focus:outline-none focus-visible:ring-4 focus-visible:ring-[#00A896]/20 ${
                 isExclusive
                   ? isChecked
-                    ? 'border-[#E8E8E8] bg-white shadow-sm'
-                    : 'border-dashed border-[#E8E8E8] bg-white hover:border-[#E8E8E8] hover:shadow-md shadow-sm'
+                    ? 'border-[#8B7FC5] bg-[#E8E7F3] shadow-md'
+                    : 'border-[#D4D0E8] bg-[#F8F7FC] hover:border-[#8B7FC5] hover:shadow-md shadow-sm'
                   : isChecked
                     ? 'border-[#00A896] bg-[#E0F5F3] shadow-md'
                     : 'border-[#E8E8E8] bg-white hover:border-[#00A896]/30 hover:shadow-md hover:scale-[1.02] shadow-sm'
@@ -176,7 +176,7 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
               <div className="flex items-center justify-between gap-4">
                 <span className={`text-base sm:text-lg leading-relaxed ${
                   isExclusive
-                    ? isChecked ? 'text-[#2D3436] font-medium' : 'text-[#666666]'
+                    ? isChecked ? 'text-[#8B7FC5] font-medium' : 'text-[#8B7FC5]'
                     : isChecked ? 'text-[#00A896] font-medium' : 'text-[#2D3436]'
                 }`}>
                   {option.label}
@@ -188,7 +188,7 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
                     transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                     className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${
                       isExclusive
-                        ? 'bg-[#E8E8E8]'
+                        ? 'bg-[#8B7FC5]'
                         : 'bg-[#00A896]'
                     }`}
                   >
@@ -202,7 +202,7 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
                   <motion.div
                     className={`w-6 h-6 rounded-full border-2 transition-all flex-shrink-0 ${
                       isExclusive
-                        ? 'border-[#E8E8E8] border-dashed'
+                        ? 'border-[#8B7FC5]'
                         : 'border-[#E8E8E8] group-hover:border-[#00A896]/50'
                     }`}
                     whileHover={{ scale: [1, 1.1, 1.05] }}

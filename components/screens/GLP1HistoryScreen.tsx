@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Check } from 'lucide-react';
 import Input from '../ui/Input';
+import Select from '../ui/Select';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
 import { TouchButton } from '../common/TouchButton';
 import { InfoTooltip } from '../common/InfoTooltip';
 import { ScreenProps } from './common';
+import { Option } from '../../types';
 
 interface MedicationDetail {
   currentlyTaking?: string;
@@ -23,6 +25,40 @@ interface MedicationData {
   category: 'semaglutide' | 'tirzepatide' | 'liraglutide' | 'other';
   doseOptions: { value: string; label: string }[];
 }
+
+// Dropdown options for duration
+const durationOptions: Option[] = [
+  { value: 'less_than_1_month', label: 'Less than 1 month' },
+  { value: '1-3_months', label: '1-3 months' },
+  { value: '3-6_months', label: '3-6 months' },
+  { value: '6-12_months', label: '6-12 months' },
+  { value: '1-2_years', label: '1-2 years' },
+  { value: 'more_than_2_years', label: 'More than 2 years' }
+];
+
+// Dropdown options for last dose (currently taking)
+const lastDoseOptions: Option[] = [
+  { value: 'today', label: 'Today' },
+  { value: 'yesterday', label: 'Yesterday' },
+  { value: '2-3_days_ago', label: '2-3 days ago' },
+  { value: '4-7_days_ago', label: '4-7 days ago' },
+  { value: '1-2_weeks_ago', label: '1-2 weeks ago' },
+  { value: '2-4_weeks_ago', label: '2-4 weeks ago' },
+  { value: '1-3_months_ago', label: '1-3 months ago' },
+  { value: '3-6_months_ago', label: '3-6 months ago' },
+  { value: 'more_than_6_months', label: 'More than 6 months ago' }
+];
+
+// Dropdown options for when stopped (not currently taking)
+const whenStoppedOptions: Option[] = [
+  { value: 'within_last_week', label: 'Within the last week' },
+  { value: '1-2_weeks_ago', label: '1-2 weeks ago' },
+  { value: '2-4_weeks_ago', label: '2-4 weeks ago' },
+  { value: '1-3_months_ago', label: '1-3 months ago' },
+  { value: '3-6_months_ago', label: '3-6 months ago' },
+  { value: '6-12_months_ago', label: '6-12 months ago' },
+  { value: 'more_than_1_year', label: 'More than 1 year ago' }
+];
 
 const medications: MedicationData[] = [
   {
@@ -596,7 +632,7 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                                     <div>
                                       <div className="flex items-center gap-1.5 mb-2">
                                         <label className="text-xs text-neutral-700">
-                                          Currently taking? <span className="text-[#FF6B6B]">*</span>
+                                          Are you currently taking this medication? <span className="text-[#FF6B6B]">*</span>
                                         </label>
                                         <InfoTooltip 
                                           content="This helps us understand if you're actively using this medication."
@@ -630,34 +666,42 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                                     <>
                                       <div>
                                         <label className="block text-xs text-neutral-700 mb-1.5">
-                                          {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' ? 'How long?' : 'Duration'}{' '}
+                                          {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' 
+                                            ? 'How long have you been taking it?' 
+                                            : 'How long were you on it?'}{' '}
                                           <span className="text-[#FF6B6B]">*</span>
                                         </label>
-                                        <Input
+                                        <Select
                                           id={`${med.id}_duration`}
                                           value={details?.duration || ''}
                                           onChange={(e) => updateMedicationDetail(med.id, 'duration', e.target.value)}
-                                          placeholder="e.g., 6 months"
+                                          options={durationOptions}
+                                          required
                                         />
                                       </div>
 
                                       <div>
                                         <label className="block text-xs text-neutral-700 mb-1.5">
-                                          {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' ? 'Last dose' : 'When stopped'}{' '}
+                                          {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' 
+                                            ? 'When did you last take it?' 
+                                            : 'When did you stop taking it?'}{' '}
                                           <span className="text-[#FF6B6B]">*</span>
                                         </label>
-                                        <Input
+                                        <Select
                                           id={`${med.id}_last_taken`}
                                           value={details?.lastTaken || ''}
                                           onChange={(e) => updateMedicationDetail(med.id, 'lastTaken', e.target.value)}
-                                          placeholder="e.g., Last week"
+                                          options={shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' 
+                                            ? lastDoseOptions 
+                                            : whenStoppedOptions}
+                                          required
                                         />
                                       </div>
 
                                       <div>
                                         <div className="flex items-center gap-1.5 mb-2">
                                           <label className="text-xs text-neutral-700">
-                                            Highest dose <span className="text-[#FF6B6B]">*</span>
+                                            What's the highest dose you've taken? <span className="text-[#FF6B6B]">*</span>
                                           </label>
                                           <InfoTooltip 
                                             content="A prescription copy is required to continue doses higher than 0.5 mg."
@@ -682,7 +726,7 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
 
                                       <div>
                                         <label className="block text-xs text-neutral-700 mb-1.5">
-                                          Side effects? <span className="text-neutral-500">(optional)</span>
+                                          Did you experience any side effects? <span className="text-neutral-500">(optional)</span>
                                         </label>
                                         <textarea
                                           value={details?.sideEffects || ''}

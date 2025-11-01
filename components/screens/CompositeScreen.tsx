@@ -733,6 +733,10 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           const noneOption = multiSelectField.options.find(opt => opt.value === 'none');
           const exclusiveValue = noneOption ? 'none' : undefined;
           
+          // Determine variant based on number of options (same threshold as MultiSelectScreen)
+          const PILL_THRESHOLD = 5;
+          const variant = multiSelectField.options.length > PILL_THRESHOLD ? 'pills' : 'default';
+          
           return (
             <div>
               <CheckboxGroup
@@ -743,6 +747,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                 selectedValues={selectedValues}
                 onChange={handleMultiSelectChange}
                 exclusiveValue={exclusiveValue}
+                variant={variant}
               />
               {showOtherInput && (
                 <div className="mt-3">

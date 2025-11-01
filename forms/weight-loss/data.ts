@@ -586,11 +586,6 @@ const formConfig: FormConfig = {
               value: "suicide_attempt_history",
               label: "History of suicide attempts",
             },
-            {
-              value: "other_glp1_current",
-              label:
-                "Currently on another GLP-1 (Victoza, Byetta, Trulicity, etc.)",
-            },
             { value: "thyroid_nodules", label: "Thyroid nodules" },
           ],
           required: true,
@@ -742,6 +737,15 @@ const formConfig: FormConfig = {
           ],
           required: true,
         },
+      ],
+      next: "assessment.journey_notes",
+    },
+    {
+      id: "assessment.journey_notes",
+      type: "composite",
+      phase: "qualify",
+      title: "Additional Notes",
+      fields: [
         {
           id: "journey_notes",
           type: "text",
@@ -752,9 +756,6 @@ const formConfig: FormConfig = {
           multiline: true,
           rows: 6,
           required: false,
-          progressive_display: {
-            show_after_field: "activity_level",
-          },
         },
       ],
       next: "complete.celebration",
