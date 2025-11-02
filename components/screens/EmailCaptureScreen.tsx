@@ -59,21 +59,42 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
 
   // Ref for password input to manage focus
   const passwordInputRef = useRef<HTMLInputElement>(null);
+  // Ref for debounce timeout
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Effect to manage password field focus
   useEffect(() => {
-    // Focus password field when it becomes visible and conditions are met
-    if (showPasswordField && passwordInputRef.current) {
-      // For sign-in flow, focus immediately when password field appears
-      if (isSigningIn) {
-        setTimeout(() => passwordInputRef.current?.focus(), 100);
-      }
-      // For new account flow, focus only after name fields are completed
-      else if (showNameFields && firstName.trim() && lastName.trim()) {
-        setTimeout(() => passwordInputRef.current?.focus(), 100);
-      }
+    // Focus password field only for sign-in flow, not for new account creation
+    if (showPasswordField && passwordInputRef.current && isSigningIn) {
+      setTimeout(() => passwordInputRef.current?.focus(), 100);
     }
-  }, [showPasswordField, isSigningIn, showNameFields, firstName, lastName]);
+  }, [showPasswordField, isSigningIn]);
+
+  // Effect to debounce email validation and API check
+  useEffect(() => {
+    // Clear any existing timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Only proceed if email is valid
+    if (!isEmailValid || !email.trim()) {
+      return;
+    }
+
+    // Set new timeout for debounced API call
+    debounceTimeoutRef.current = setTimeout(() => {
+      updateAnswer("email", email);
+      checkIfAccountExists(email);
+    }, 1000); // 1000ms debounce delay
+
+    // Cleanup function
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [email, isEmailValid]);
 
   const validateEmail = (value: string) => {
     // Stricter email validation with valid TLD check
@@ -108,22 +129,18 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
     return tld ? validTLDs.includes(tld) || tld.length >= 2 : false;
   };
 
-  const handleEmailChange = async (value: string) => {
+  const handleEmailChange = (value: string) => {
     setEmail(value);
     const isValid = validateEmail(value);
     setIsEmailValid(isValid);
-    
+
     // Reset states when email changes
     setAccountExists(false);
     setShowNameFields(false);
     setShowPasswordField(false);
     setIsSigningIn(false);
     setManualSignIn(false);
-    if (isValid) {
-      updateAnswer("email", value);
-      // Automatically check if account exists when email is valid
-      await checkIfAccountExists(value);
-    }
+    // API call is now handled by debounced useEffect
   };
 
   const checkIfAccountExists = async (emailValue: string) => {
@@ -266,7 +283,7 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
                     clientRecordId
                   );
                 }
-              } catch {}
+              } catch { }
             }
             onSubmit();
           } else if (resp?.short_code === "already_existed") {
@@ -308,13 +325,13 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
 
   const preCheckStage = isEmailValid && !showPasswordField && !showNameFields;
   const isComplete = isSigningIn
-	? isEmailValid && password.length >= 8
-	: preCheckStage
-	  ? true
-	  : isEmailValid &&
-	    (password.length >= 8) &&
-	    (firstName.trim() && lastName.trim()) &&
-	    agreedToTerms;
+    ? isEmailValid && password.length >= 8
+    : preCheckStage
+      ? true
+      : isEmailValid &&
+      (password.length >= 8) &&
+      (firstName.trim() && lastName.trim()) &&
+      agreedToTerms;
 
   return (
     <ScreenLayout
@@ -343,11 +360,10 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
               value={email}
               onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="you@example.com"
-              className={`w-full pl-12 pr-12 py-4 rounded-xl border-2 transition-all text-base outline-none shadow-sm ${
-                email && !isEmailValid
-                  ? "border-red-300 bg-white focus:border-red-500 focus:ring-4 focus:ring-red-100"
-                  : "border-neutral-300 bg-white focus:border-[#00A896] focus:ring-4 focus:ring-[#00A896]/10"
-              }`}
+              className={`w-full pl-12 pr-12 py-4 rounded-xl border-2 transition-all text-base outline-none shadow-sm ${email && !isEmailValid
+                ? "border-red-300 bg-white focus:border-red-500 focus:ring-4 focus:ring-red-100"
+                : "border-neutral-300 bg-white focus:border-[#00A896] focus:ring-4 focus:ring-[#00A896]/10"
+                }`}
               autoFocus
             />
             {checkingAccount && (
@@ -466,11 +482,10 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
                         ? "Enter your password"
                         : "At least 8 characters"
                     }
-                    className={`w-full pl-12 pr-12 py-4 rounded-xl border-2 transition-all text-base outline-none shadow-sm ${
-                      password && password.length < 8
-                        ? "border-red-300 bg-white focus:border-red-500 focus:ring-4 focus:ring-red-100"
-                        : "border-neutral-300 bg-white focus:border-[#00A896] focus:ring-4 focus:ring-[#00A896]/10"
-                    }`}
+                    className={`w-full pl-12 pr-12 py-4 rounded-xl border-2 transition-all text-base outline-none shadow-sm ${password && password.length < 8
+                      ? "border-red-300 bg-white focus:border-red-500 focus:ring-4 focus:ring-red-100"
+                      : "border-neutral-300 bg-white focus:border-[#00A896] focus:ring-4 focus:ring-[#00A896]/10"
+                      }`}
                   />
                   <button
                     type="button"
@@ -553,11 +568,10 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
                       ? "Enter your password"
                       : "At least 8 characters"
                   }
-                  className={`w-full pl-12 pr-12 py-4 rounded-xl border-2 transition-all text-base outline-none shadow-sm ${
-                    password && password.length < 8
-                      ? "border-red-300 bg-white focus:border-red-500 focus:ring-4 focus:ring-red-100"
-                      : "border-neutral-300 bg-white focus:border-[#00A896] focus:ring-4 focus:ring-[#00A896]/10"
-                  }`}
+                  className={`w-full pl-12 pr-12 py-4 rounded-xl border-2 transition-all text-base outline-none shadow-sm ${password && password.length < 8
+                    ? "border-red-300 bg-white focus:border-red-500 focus:ring-4 focus:ring-red-100"
+                    : "border-neutral-300 bg-white focus:border-[#00A896] focus:ring-4 focus:ring-[#00A896]/10"
+                    }`}
                   autoFocus
                 />
                 <button
@@ -630,11 +644,10 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
                     <button
                       onClick={handleResetPassword}
                       disabled={forgotLoading}
-                      className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors ${
-                        forgotLoading
-                          ? "bg-neutral-200 text-neutral-400 cursor-not-allowed"
-                          : "bg-[#00A896] text-white hover:bg-[#008977]"
-                      }`}
+                      className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors ${forgotLoading
+                        ? "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                        : "bg-[#00A896] text-white hover:bg-[#008977]"
+                        }`}
                     >
                       {forgotLoading ? "Sending…" : "Send reset link"}
                     </button>
@@ -685,11 +698,10 @@ const EmailCaptureScreen: React.FC<EmailCaptureScreenProps> = ({
                     className="absolute opacity-0 w-4 h-4 cursor-pointer z-10 peer"
                   />
                   <motion.div
-                    className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-[#00A896] peer-focus-visible:ring-offset-2 ${
-                      agreedToTerms
-                        ? "border-[#00A896] bg-[#00A896] shadow-md shadow-[#00A896]/30"
-                        : "border-[#E8E8E8] bg-white group-hover:border-[#00A896]/50 group-hover:shadow-sm"
-                    }`}
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-[#00A896] peer-focus-visible:ring-offset-2 ${agreedToTerms
+                      ? "border-[#00A896] bg-[#00A896] shadow-md shadow-[#00A896]/30"
+                      : "border-[#E8E8E8] bg-white group-hover:border-[#00A896]/50 group-hover:shadow-sm"
+                      }`}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
