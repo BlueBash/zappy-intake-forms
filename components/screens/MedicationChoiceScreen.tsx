@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronDown } from 'lucide-react';
 import NavigationButtons from '../common/NavigationButtons';
-import { apiClient, type ConsultationMedicationEntry, type ConsultationMedicationPharmacy } from '../../utils/api';
+import { apiClient, type ConsultationMedicationEntry, type ConsultationMedicationPharmacy, type ConsultationMedicationPackage } from '../../utils/api';
 import { ScreenProps } from './common';
 
 const DEFAULT_SERVICE_TYPE = 'Weight Loss';
@@ -213,6 +213,33 @@ const formatCurrency = (value?: number) => {
   }).format(value);
 };
 
+const getLowestStartingPrice = (packages: ConsultationMedicationPackage[] = []): number | null => {
+  if (!packages || packages.length === 0) return null;
+
+  const prices: number[] = [];
+
+  for (const pkg of packages) {
+    // Prefer invoice_amount_starter, fallback to invoice_amount
+    const starterPrice = typeof pkg.invoice_amount_starter === 'number' && !Number.isNaN(pkg.invoice_amount_starter)
+      ? pkg.invoice_amount_starter
+      : null;
+    
+    const regularPrice = typeof pkg.invoice_amount === 'number' && !Number.isNaN(pkg.invoice_amount)
+      ? pkg.invoice_amount
+      : null;
+
+    // Use starter price if available, otherwise use regular price
+    const price = starterPrice !== null ? starterPrice : regularPrice;
+    
+    if (price !== null && price > 0) {
+      prices.push(price);
+    }
+  }
+
+  if (prices.length === 0) return null;
+  return Math.min(...prices);
+};
+
 const ImageWithFallback = ({
   src,
   alt,
@@ -236,8 +263,8 @@ const ImageWithFallback = ({
 const deriveMedicationIdentity = (entry: ConsultationMedicationEntry) => {
   const details = entry?.medication || {};
   const name =
-    (typeof (details as any).title === 'string' && (details as any).title.trim()) ||
     (typeof (details as any).name === 'string' && (details as any).name.trim()) ||
+    (typeof (details as any).title === 'string' && (details as any).title.trim()) ||
     'Medication';
   const id = (typeof (details as any).id === 'string' && (details as any).id.trim()) || name;
   const description = (typeof (details as any).description === 'string' && (details as any).description.trim()) || '';
@@ -543,11 +570,9 @@ export default function MedicationChoiceScreen({
         {medications.map((entry, index) => {
           const { id: medicationId, name: medicationName, description, imageUrl } = deriveMedicationIdentity(entry);
           const apiPharmacies = dedupePharmacies(entry?.pharmacies);
-          const pharmacies = [
-            { id: 'no-preference', name: 'No preference' },
-            ...apiPharmacies
-          ];
+          const pharmacies = apiPharmacies;
           const packages = entry?.packages || [];
+          const lowestPrice = getLowestStartingPrice(packages);
           const isExpanded = expandedMedicationId === medicationId;
           const isMedicationSelected = selectedMedicationId === medicationId;
           const activePharmacy =
@@ -562,6 +587,7 @@ export default function MedicationChoiceScreen({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.08, duration: 0.3 }}
+              className="bg-[#E6F6F5]"
             >
               <motion.button
                 type="button"
@@ -593,6 +619,13 @@ export default function MedicationChoiceScreen({
                       >
                         {medicationName}
                       </span>
+                      {lowestPrice !== null && (
+                        <span
+                          className="text-xs text-neutral-500"
+                        >
+                          Starting at {formatCurrency(lowestPrice)}
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-neutral-600">
                       {description || 'Clinician-prescribed medication tailored to your goals.'}
@@ -666,7 +699,7 @@ export default function MedicationChoiceScreen({
                             {!hasGLP1Experience && doseOptions.some((option) => option.value !== 'no-preference') ? (
                               <>
                                 <p className="text-sm text-neutral-700">Starter dose</p>
-                                <div className="rounded-xl border border-[#00A896]/20 bg-gradient-to-r from-[#00A896]/5 via-[#FF6B6B]/5 to-[#00A896]/5 p-4">
+                                <div className="rounded-xl border border-[#00A896]/20 bg-[#ffffff] p-4">
                                   <p className="mb-3 text-sm text-neutral-600">
                                     Since you&apos;re new to GLP-1 medications, we&apos;ll start with the lowest dose to
                                     help your body adjust gradually.
