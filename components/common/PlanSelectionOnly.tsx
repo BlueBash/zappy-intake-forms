@@ -203,14 +203,14 @@ export default function PlanSelectionOnly({
             >
               <div className="flex items-start gap-3 mb-3">
                 {/* Discount Badge - positioned at start/left */}
-                {plan.discount_tag && (
+                {/* {plan.discount_tag && (
                   <div className="flex-shrink-0">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9A7F] text-white text-xs font-semibold shadow-md">
                       <Sparkles className="w-3 h-3 fill-current flex-shrink-0" />
                       <span>{plan.discount_tag}</span>
                     </div>
                   </div>
-                )}
+                )} */}
                 {/* Most Popular Badge - positioned at end/right, always pushed to the right */}
                 <div className="flex flex-wrap gap-1.5 justify-end flex-shrink-0 ml-auto">
                   {(() => {
@@ -266,13 +266,9 @@ export default function PlanSelectionOnly({
                       {subtitle}
                     </p>
                   )}
-                  <p className="text-xs sm:text-sm text-neutral-600 mb-3">
-                    {plan.medication &&
-                      `Professional ${plan.medication} medication`}
-                  </p>
 
                   {/* Billing & Pharmacy Details */}
-                  <div className="space-y-1.5 mb-3">
+                  {/* <div className="space-y-1.5 mb-3">
                     <div className="flex items-center gap-2 text-xs text-neutral-600">
                       <Calendar className="w-3.5 h-3.5 text-[#00A896] flex-shrink-0" />
                       <span>{billingFrequency}</span>
@@ -283,7 +279,31 @@ export default function PlanSelectionOnly({
                         <span>Pharmacy: {pharmacy}</span>
                       </div>
                     )}
-                  </div>
+                  </div> */}
+                  {features.length > 0 && (
+                        <div className="space-y-2">
+                          {/* <p className="text-xs sm:text-sm font-medium text-[#00A896] uppercase tracking-wide">
+                            What&apos;s included
+                          </p> */}
+                          {features.slice(0, 2).map((feature, idx) => (
+                            <motion.div
+                              key={`${plan.id}-feature-${idx}`}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: idx * 0.05 }}
+                              className="flex items-start gap-2 text-xs sm:text-sm text-neutral-700"
+                            >
+                              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[#00A896] to-[#E0F5F3] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <Check
+                                  className="w-2.5 h-2.5 text-white"
+                                  strokeWidth={3}
+                                />
+                              </div>
+                              <span>{feature}</span>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
 
                   {/* Discount Badge */}
                   {plan.discount && plan.discount > 0 && (
@@ -347,7 +367,7 @@ export default function PlanSelectionOnly({
                     </div>
                   )}
 
-                  {!isSelected && displayFeatures.length > 0 && (
+                  {/* {!isSelected && displayFeatures.length > 0 && (
                     <div className="mt-4 space-y-1.5">
                       {displayFeatures.map((feature, idx) => (
                         <div
@@ -364,7 +384,7 @@ export default function PlanSelectionOnly({
                         </div>
                       ))}
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Pricing Section - right-aligned on desktop, full-width on mobile */}
@@ -375,15 +395,10 @@ export default function PlanSelectionOnly({
                         isSelected ? "text-[#00A896]" : "text-neutral-900"
                       }`}
                     >
-                      {formatCurrency(price)}
+                      {formatCurrency(monthlyPrice)}
                     </div>
                     <div className="flex flex-row sm:flex-col items-center gap-1 text-xs text-neutral-500 mt-1 self-center">
                       /month
-                      {monthlyPrice && (
-                        <span className="block sm:inline sm:ml-1 text-[11px] text-neutral-400">
-                          Starter {formatCurrency(monthlyPrice)}
-                        </span>
-                      )}
                     </div>
                   </div>
 
@@ -434,12 +449,12 @@ export default function PlanSelectionOnly({
                         </div>
                       )}
 
-                      {features.length > 0 && (
+                      {features.length > 2 && (
                         <div className="space-y-2">
-                          <p className="text-xs sm:text-sm font-medium text-[#00A896] uppercase tracking-wide">
+                          {/* <p className="text-xs sm:text-sm font-medium text-[#00A896] uppercase tracking-wide">
                             What&apos;s included
-                          </p>
-                          {features.map((feature, idx) => (
+                          </p> */}
+                          {features.slice(2).map((feature, idx) => (
                             <motion.div
                               key={`${plan.id}-feature-${idx}`}
                               initial={{ opacity: 0, x: -10 }}
@@ -461,9 +476,9 @@ export default function PlanSelectionOnly({
 
                       {offers.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-xs sm:text-sm font-medium text-[#FF6B6B] uppercase tracking-wide">
+                          {/* <p className="text-xs sm:text-sm font-medium text-[#FF6B6B] uppercase tracking-wide">
                             Special perks
-                          </p>
+                          </p> */}
                           {offers.map((offer, idx) => (
                             <motion.div
                               key={`${plan.id}-offer-${idx}`}
