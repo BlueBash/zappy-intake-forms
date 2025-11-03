@@ -498,16 +498,66 @@ export default function InterstitialScreen({ screen, onSubmit, answers = {}, cal
             </motion.h1>
 
             {/* Subtitle */}
-            {screen.subtitle && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.6 }}
-                className="text-lg sm:text-xl text-neutral-600 mb-8 sm:mb-12 max-w-2xl mx-auto"
-              >
-                {interpolateText(screen.subtitle, calculations, answers)}
-              </motion.p>
-            )}
+            {screen.subtitle && (() => {
+              const subtitle = screen.subtitle;
+              // Check if subtitle contains weight_loss calculation
+              if (subtitle.includes('${calc.weight_loss}')) {
+                // Extract the weight_loss value
+                let weightLossValue: number | string = calculations['weight_loss'];
+                
+                // If not in calculations, compute it (same logic as stringInterpolator)
+                if (weightLossValue === undefined || weightLossValue === null) {
+                  const highestWeightStr = answers['highest_weight'];
+                  const weightStr = answers['weight'];
+                  
+                  let highestWeight = 0;
+                  if (highestWeightStr !== undefined && highestWeightStr !== null && highestWeightStr !== '') {
+                    highestWeight = parseFloat(String(highestWeightStr));
+                  }
+                  if ((!highestWeight || isNaN(highestWeight)) && weightStr !== undefined && weightStr !== null && weightStr !== '') {
+                    highestWeight = parseFloat(String(weightStr));
+                  }
+                  
+                  if (highestWeight > 0 && !isNaN(highestWeight)) {
+                    weightLossValue = Math.round(highestWeight * 0.2);
+                  } else {
+                    weightLossValue = '';
+                  }
+                }
+                
+                // Split the subtitle around the placeholder
+                const parts = subtitle.split('${calc.weight_loss}');
+                const beforeText = parts[0] ? interpolateText(parts[0], calculations, answers) : '';
+                const afterText = parts[1] ? interpolateText(parts[1], calculations, answers) : '';
+                
+                return (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.6 }}
+                    className="text-lg sm:text-xl text-neutral-600 mb-8 sm:mb-12 max-w-2xl mx-auto"
+                  >
+                    {beforeText}{' '}
+                    {weightLossValue !== '' && (
+                      <span className="font-bold text-[#FF6B4A]">{weightLossValue}</span>
+                    )}{' '}
+                    {afterText}
+                  </motion.p>
+                );
+              }
+              
+              // Default rendering for other subtitles
+              return (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
+                  className="text-lg sm:text-xl text-neutral-600 mb-8 sm:mb-12 max-w-2xl mx-auto"
+                >
+                  {interpolateText(subtitle, calculations, answers)}
+                </motion.p>
+              );
+            })()}
 
             {/* Graph */}
             <motion.div

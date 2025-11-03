@@ -733,6 +733,10 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
           const noneOption = multiSelectField.options.find(opt => opt.value === 'none');
           const exclusiveValue = noneOption ? 'none' : undefined;
           
+          // Determine variant based on number of options (same threshold as MultiSelectScreen)
+          const PILL_THRESHOLD = 5;
+          const variant = multiSelectField.options.length > PILL_THRESHOLD ? 'pills' : 'default';
+          
           return (
             <div>
               <CheckboxGroup
@@ -743,6 +747,7 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                 selectedValues={selectedValues}
                 onChange={handleMultiSelectChange}
                 exclusiveValue={exclusiveValue}
+                variant={variant}
               />
               {showOtherInput && (
                 <div className="mt-3">
@@ -755,9 +760,23 @@ const CompositeScreen: React.FC<ScreenProps & { screen: CompositeScreenType }> =
                   />
                 </div>
               )}
-              {multiSelectField.conditional_warnings && multiSelectField.conditional_warnings
-                .filter(warning => selectedValues.includes(warning.show_if_value))
-                .map((warning, index) => {
+              {(() => {
+                // Check for conditional warnings and deduplicate by title and type
+                const filteredWarnings = multiSelectField.conditional_warnings?.filter(warning => 
+                  selectedValues.includes(warning.show_if_value)
+                ) || [];
+                
+                // Deduplicate warnings: if multiple warnings have same title and type, show only one
+                const seen = new Map<string, typeof filteredWarnings[0]>();
+                filteredWarnings.forEach(warning => {
+                  const key = `${warning.title || ''}_${warning.type || 'error'}`;
+                  if (!seen.has(key)) {
+                    seen.set(key, warning);
+                  }
+                });
+                
+                return Array.from(seen.values());
+              })().map((warning, index) => {
                   const warningType = warning.type || 'error';
                   const styles = {
                     error: {

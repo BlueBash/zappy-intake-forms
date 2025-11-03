@@ -235,6 +235,27 @@ const post = async <T>(path: string, body: unknown): Promise<T> => {
   return data as T;
 };
 
+const postFormData = async <T>(path: string, formData: FormData): Promise<T> => {
+  // For FormData, we must NOT set Content-Type header - browser will set it with boundary
+  const headers: HeadersInit = {
+    ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+  };
+
+  const response = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers: headers,
+    body: formData,
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const errorMessage = data?.error || data?.message || 'Request failed';
+    throw new Error(errorMessage);
+  }
+
+  return data as T;
+};
+
 export const apiClient = {
   getPackages: (
     state: string,
@@ -319,6 +340,12 @@ export const apiClient = {
     get<{ exists: boolean; message: string; short_code: string }>('/consultations/client-records/check', {
       email,
     }),
+  
+  setupIntent: (payload: Record<string, unknown>) =>
+    post<PaymentIntentResponse>('/consultations/setup-intent', payload),
+
+  updateProfilePhoto: (payload: FormData, patientId: string) =>
+    postFormData<any>(`/api/v1/patients/${patientId}/profile-picture`, payload),
   
 };
 
