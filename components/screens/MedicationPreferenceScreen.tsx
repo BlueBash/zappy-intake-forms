@@ -15,7 +15,7 @@ interface MedicationOption {
   id: string;
   name: string;
   subtitle: string;
-  category: 'semaglutide' | 'tirzepatide' | 'liraglutide';
+  category: 'semaglutide' | 'tirzepatide' | 'liraglutide' | 'no_preference';
   startingPrice: number;
   doseOptions: DoseOption[];
 }
@@ -117,12 +117,21 @@ const medications: MedicationOption[] = [
       { value: '3mg', label: '3 mg' },
     ],
   },
+  {
+    id: 'no_preference',
+    name: "I don't have a preference",
+    subtitle: 'Let our provider recommend',
+    category: 'no_preference',
+    startingPrice: 0,
+    doseOptions: [],
+  },
 ];
 
 const categoryLabels = {
   semaglutide: 'Semaglutide-based',
   tirzepatide: 'Tirzepatide-based',
   liraglutide: 'Liraglutide-based',
+  no_preference: 'Other Options',
 };
 
 const MedicationPreferenceScreen: React.FC<ScreenProps & { screen: any }> = ({
@@ -157,7 +166,7 @@ const MedicationPreferenceScreen: React.FC<ScreenProps & { screen: any }> = ({
   };
 
   const handleContinue = () => {
-    if (selectedMedication && selectedDose) {
+    if (selectedMedication && (selectedMedication === 'no_preference' || selectedDose)) {
       onSubmit();
     }
   };
@@ -214,7 +223,6 @@ const MedicationPreferenceScreen: React.FC<ScreenProps & { screen: any }> = ({
                           <div className={`font-medium ${isSelected ? 'text-primary' : 'text-neutral-900'}`}>
                             {med.name}
                           </div>
-                          <div className="text-sm text-neutral-600">Starting from ${med.startingPrice}</div>
                         </div>
 
                         {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
@@ -222,7 +230,7 @@ const MedicationPreferenceScreen: React.FC<ScreenProps & { screen: any }> = ({
                     </motion.button>
 
                     {/* Inline Dose Selection */}
-                    {isSelected && (
+                    {isSelected && med.doseOptions.length > 0 && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
@@ -253,7 +261,7 @@ const MedicationPreferenceScreen: React.FC<ScreenProps & { screen: any }> = ({
                               >
                                 <div className="font-medium">{dose.label}</div>
                                 {dose.requiresScript && (
-                                  <div className={`text-xs mt-1 ${selectedDose === dose.value ? 'text-white/80' : 'text-amber-600'}`}>
+                                  <div className={`text-xs mt-1 ${selectedDose === dose.value ? 'text-white/80' : 'text-[var(--coral)]'}`}>
                                     *
                                   </div>
                                 )}
@@ -275,7 +283,7 @@ const MedicationPreferenceScreen: React.FC<ScreenProps & { screen: any }> = ({
         showBack={showBack}
         onBack={onBack}
         onNext={handleContinue}
-        isNextDisabled={!selectedMedication || !selectedDose}
+        isNextDisabled={!selectedMedication || (selectedMedication !== 'no_preference' && !selectedDose)}
       />
     </ScreenLayout>
   );

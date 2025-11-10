@@ -67,7 +67,7 @@ const ConsentScreen: React.FC<ScreenProps & { screen: ConsentScreenType }> = ({
 
   return (
     <ScreenLayout title={title}>
-      <div className="w-full max-w-[580px] space-y-4 mb-8 text-left">
+      <div className="w-full space-y-4 mb-8 text-left">
         {items.map(item => (
           <div
             key={item.id}

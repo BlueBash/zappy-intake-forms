@@ -26,9 +26,9 @@ const Button: React.FC<ButtonProps> = ({
   };
   
   const variantClasses = {
-    primary: 'text-white bg-gradient-to-r from-[#0D9488] to-[#14B8A6] hover:from-[#0F766E] hover:to-[#0D9488] shadow-lg hover:shadow-xl focus-visible:ring-4 focus-visible:ring-primary/20',
-    secondary: 'bg-white text-neutral-600 border-2 border-gray-200 hover:enabled:bg-neutral-50 hover:enabled:border-neutral-300 focus-visible:border-primary',
-    ghost: 'text-neutral-600 hover:enabled:bg-neutral-100 hover:enabled:text-neutral-900 focus-visible:ring-4 focus-visible:ring-primary/20'
+    primary: 'text-white bg-[#FF6B6B] hover:bg-[#FF5555] shadow-lg hover:shadow-xl focus-visible:ring-4 focus-visible:ring-[#FF6B6B]/20',
+    secondary: 'bg-white text-[#2D3436] border-2 border-[#E8E8E8] hover:enabled:border-[#00A896] hover:enabled:text-[#00A896] focus-visible:ring-4 focus-visible:ring-[#00A896]/20',
+    ghost: 'text-[#2D3436] hover:enabled:bg-neutral-100 hover:enabled:text-[#00A896] focus-visible:ring-4 focus-visible:ring-[#00A896]/20'
   };
 
   return (

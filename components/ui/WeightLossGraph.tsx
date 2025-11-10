@@ -118,14 +118,14 @@ export default function WeightLossGraph({ companyName = 'Zappy', className = '' 
         <defs>
           {/* Background gradient */}
           <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#FFD4C8" />
-            <stop offset="100%" stopColor="#FFC2B3" />
+            <stop offset="0%" stopColor="#fef8f2" />
+            <stop offset="100%" stopColor="#f8f0e8" />
           </linearGradient>
           
           {/* Area fill gradient */}
           <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#FF6B4A" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#FF6B4A" stopOpacity="0.05" />
+            <stop offset="0%" stopColor="#FF6B6B" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#FF6B6B" stopOpacity="0.05" />
           </linearGradient>
         </defs>
 
@@ -136,7 +136,7 @@ export default function WeightLossGraph({ companyName = 'Zappy', className = '' 
         <text
           x={padding.left + 15}
           y={padding.top - 15}
-          fill="#999"
+          fill="#666666"
           fontSize="12"
           fontWeight="500"
           letterSpacing="0.5"
@@ -164,7 +164,7 @@ export default function WeightLossGraph({ companyName = 'Zappy', className = '' 
             key={month}
             x={xScale(month)}
             y={height - padding.bottom + 30}
-            fill="#666"
+            fill="#666666"
             fontSize="13"
             textAnchor="middle"
           >
@@ -184,7 +184,7 @@ export default function WeightLossGraph({ companyName = 'Zappy', className = '' 
         {/* WITHOUT treatment line (dashed gray) */}
         <motion.path
           d={withoutTreatmentPath}
-          stroke="#A0A0A0"
+          stroke="#666666"
           strokeWidth="2"
           strokeDasharray="6,6"
           fill="none"
@@ -199,7 +199,7 @@ export default function WeightLossGraph({ companyName = 'Zappy', className = '' 
           cx={xScale(12)}
           cy={yScale(96)}
           r="5"
-          fill="#A0A0A0"
+          fill="#666666"
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 1.7, duration: 0.4, type: "spring", stiffness: 200 }}
@@ -208,7 +208,7 @@ export default function WeightLossGraph({ companyName = 'Zappy', className = '' 
         {/* WITH treatment line (bold coral) */}
         <motion.path
           d={withTreatmentPath}
-          stroke="#FF6B4A"
+          stroke="#FF6B6B"
           strokeWidth="4"
           fill="none"
           strokeLinecap="round"
@@ -225,16 +225,16 @@ export default function WeightLossGraph({ companyName = 'Zappy', className = '' 
             cx={xScale(point.month)}
             cy={yScale(point.weight)}
             r={point.month === 1 ? 6 : 8}
-            fill="#FF6B4A"
+            fill="#FF6B6B"
             stroke="white"
             strokeWidth="0"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ 
-              delay: point.month === 1 ? 0.5 : 1.9, 
-              duration: 0.4, 
-              type: "spring", 
-              stiffness: 200 
+            transition={{
+              delay: point.month === 1 ? 0.5 : 1.9,
+              duration: 0.4,
+              type: "spring",
+              stiffness: 200
             }}
           />
         ))}
@@ -251,7 +251,7 @@ export default function WeightLossGraph({ companyName = 'Zappy', className = '' 
             width="160"
             height="38"
             rx="19"
-            fill="#FF6B4A"
+            fill="#FF6B6B"
           />
           <text
             x={xScale(12) - 90}
@@ -271,7 +271,7 @@ export default function WeightLossGraph({ companyName = 'Zappy', className = '' 
         <motion.text
           x={xScale(12) - 170}
           y={yScale(96) + 28}
-          fill="#666"
+          fill="#666666"
           fontSize="15"
           fontWeight="600"
           letterSpacing="0.4"

@@ -20,7 +20,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({ content, side = 'top',
   };
 
   const iconContent = <Info className="w-3.5 h-3.5" strokeWidth={2.5} />;
-  const sharedClassName = `inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0D9488]/10 hover:bg-[#0D9488]/20 text-[#0D9488] hover:text-[#14B8A6] transition-all duration-200 ${className}`;
+  const sharedClassName = `inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#00A896]/10 hover:bg-[#00A896]/20 text-[#00A896] hover:text-[#E0F5F3] transition-all duration-200 ${className}`;
 
   return (
     <div className="relative inline-flex">

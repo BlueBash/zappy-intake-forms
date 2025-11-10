@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Check } from 'lucide-react';
 import Input from '../ui/Input';
+import Select from '../ui/Select';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
 import { TouchButton } from '../common/TouchButton';
 import { InfoTooltip } from '../common/InfoTooltip';
 import { ScreenProps } from './common';
+import { Option } from '../../types';
 
 interface MedicationDetail {
   currentlyTaking?: string;
@@ -23,6 +25,40 @@ interface MedicationData {
   category: 'semaglutide' | 'tirzepatide' | 'liraglutide' | 'other';
   doseOptions: { value: string; label: string }[];
 }
+
+// Dropdown options for duration
+const durationOptions: Option[] = [
+  { value: 'less_than_1_month', label: 'Less than 1 month' },
+  { value: '1-3_months', label: '1-3 months' },
+  { value: '3-6_months', label: '3-6 months' },
+  { value: '6-12_months', label: '6-12 months' },
+  { value: '1-2_years', label: '1-2 years' },
+  { value: 'more_than_2_years', label: 'More than 2 years' }
+];
+
+// Dropdown options for last dose (currently taking)
+const lastDoseOptions: Option[] = [
+  { value: 'today', label: 'Today' },
+  { value: 'yesterday', label: 'Yesterday' },
+  { value: '2-3_days_ago', label: '2-3 days ago' },
+  { value: '4-7_days_ago', label: '4-7 days ago' },
+  { value: '1-2_weeks_ago', label: '1-2 weeks ago' },
+  { value: '2-4_weeks_ago', label: '2-4 weeks ago' },
+  { value: '1-3_months_ago', label: '1-3 months ago' },
+  { value: '3-6_months_ago', label: '3-6 months ago' },
+  { value: 'more_than_6_months', label: 'More than 6 months ago' }
+];
+
+// Dropdown options for when stopped (not currently taking)
+const whenStoppedOptions: Option[] = [
+  { value: 'within_last_week', label: 'Within the last week' },
+  { value: '1-2_weeks_ago', label: '1-2 weeks ago' },
+  { value: '2-4_weeks_ago', label: '2-4 weeks ago' },
+  { value: '1-3_months_ago', label: '1-3 months ago' },
+  { value: '3-6_months_ago', label: '3-6 months ago' },
+  { value: '6-12_months_ago', label: '6-12 months ago' },
+  { value: 'more_than_1_year', label: 'More than 1 year ago' }
+];
 
 const medications: MedicationData[] = [
   {
@@ -126,6 +162,18 @@ const medications: MedicationData[] = [
       { value: '0.6mg', label: '0.6 mg' },
       { value: '1.2mg', label: '1.2 mg' },
       { value: '1.8mg', label: '1.8 mg' },
+    ],
+  },
+  {
+    id: 'liraglutide_compound',
+    name: 'Compounded Liraglutide',
+    subtitle: 'From compounding pharmacy',
+    category: 'liraglutide',
+    doseOptions: [
+      { value: '0.6mg', label: '0.6 mg' },
+      { value: '1.2mg', label: '1.2 mg' },
+      { value: '1.8mg', label: '1.8 mg' },
+      { value: '3mg', label: '3 mg' },
     ],
   },
 ];
@@ -369,8 +417,8 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
             animate={{ opacity: 1 }}
             className="text-center"
           >
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0D9488]/5 border border-[#0D9488]/20">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#0D9488]" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#00A896]/5 border border-[#00A896]/20">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#00A896]" />
               <span className="text-xs text-neutral-700">
                 {selectedMedications.length + (otherMedication.selected ? 1 : 0)} selected
               </span>
@@ -411,12 +459,12 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                       return (
                         <div
                           key={med.id}
-                          className="rounded-xl border-2 border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5 p-3"
+                          className="rounded-xl border-2 border-[#00A896] bg-gradient-to-r from-[#00A896]/5 to-[#E0F5F3]/5 p-3"
                         >
                           <div className="flex items-center gap-2.5">
-                            <CheckCircle2 className="w-5 h-5 text-[#0D9488] flex-shrink-0" />
+                            <CheckCircle2 className="w-5 h-5 text-[#00A896] flex-shrink-0" />
                             <div className="flex-1">
-                              <div className="text-sm font-medium text-[#0D9488]">{med.name}</div>
+                              <div className="text-sm font-medium text-[#00A896]">{med.name}</div>
                             </div>
                             {isComplete && (
                               <div className="text-xs text-neutral-600">Complete</div>
@@ -433,11 +481,11 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
             {otherMedication.selected && (
               <div>
                 <h3 className="text-xs uppercase tracking-wider text-neutral-400 mb-2 px-1">Other</h3>
-                <div className="rounded-xl border-2 border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5 p-3">
+                <div className="rounded-xl border-2 border-[#00A896] bg-gradient-to-r from-[#00A896]/5 to-[#E0F5F3]/5 p-3">
                   <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-5 h-5 text-[#0D9488] flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-[#00A896] flex-shrink-0" />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-[#0D9488]">
+                      <div className="text-sm font-medium text-[#00A896]">
                         {otherMedication.name || 'Other GLP-1'}
                       </div>
                     </div>
@@ -452,14 +500,14 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
             <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-4">
               <button
                 onClick={() => setShowFullList(true)}
-                className="flex-1 sm:flex-none min-h-[48px] px-6 py-3 bg-white text-neutral-700 border-2 border-gray-200 hover:border-[#0D9488]/30 rounded-xl font-medium transition-all duration-200 focus:outline-none"
+                className="flex-1 sm:flex-none min-h-[48px] px-6 py-3 bg-white text-neutral-700 border-2 border-gray-200 hover:border-[#00A896]/30 rounded-xl font-medium transition-all duration-200 focus:outline-none"
               >
                 + Add Another Medication
               </button>
               
               <button
                 onClick={handleNext}
-                className="flex-1 sm:flex-none min-h-[48px] px-8 py-3 bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white hover:from-[#0F766E] hover:to-[#0D9488] rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none"
+                className="flex-1 sm:flex-none min-h-[48px] px-8 py-3 bg-[#00A896] hover:bg-[#0F766E] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none"
               >
                 Continue
               </button>
@@ -514,7 +562,7 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                             hasError
                               ? 'border-red-300 bg-red-50'
                               : isSelected
-                              ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5 shadow-sm'
+                              ? 'border-[#00A896] bg-gradient-to-r from-[#00A896]/5 to-[#E0F5F3]/5 shadow-sm'
                               : 'border-gray-200 bg-white'
                           }`}
                           data-error={hasError ? 'true' : undefined}
@@ -527,7 +575,7 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                               <div
                                 className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
                                   isSelected
-                                    ? 'bg-gradient-to-br from-[#0D9488] to-[#14B8A6] border-[#0D9488]'
+                                    ? 'bg-gradient-to-br from-[#00A896] to-[#E0F5F3] border-[#00A896]'
                                     : 'border-gray-300'
                                 }`}
                               >
@@ -535,14 +583,14 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                               </div>
 
                               <div className="flex-1 min-w-0">
-                                <div className={`text-sm font-medium ${isSelected ? 'text-[#0D9488]' : 'text-neutral-900'}`}>
+                                <div className={`text-sm font-medium ${isSelected ? 'text-[#00A896]' : 'text-neutral-900'}`}>
                                   {med.name}
                                 </div>
                               </div>
 
                               <div className="flex items-center gap-1">
                                 {isSelected && isComplete && (
-                                  <CheckCircle2 className="w-4 h-4 text-[#0D9488]" />
+                                  <CheckCircle2 className="w-4 h-4 text-[#00A896]" />
                                 )}
                                 {isSelected && (
                                   <div
@@ -550,12 +598,12 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                                       e.stopPropagation();
                                       toggleExpanded(med.id);
                                     }}
-                                    className="p-1 hover:bg-[#0D9488]/10 rounded transition-colors cursor-pointer"
+                                    className="p-1 hover:bg-[#00A896]/10 rounded transition-colors cursor-pointer"
                                   >
                                     {isExpanded ? (
-                                      <ChevronUp className="w-4 h-4 text-[#0D9488]" />
+                                      <ChevronUp className="w-4 h-4 text-[#00A896]" />
                                     ) : (
-                                      <ChevronDown className="w-4 h-4 text-[#0D9488]" />
+                                      <ChevronDown className="w-4 h-4 text-[#00A896]" />
                                     )}
                                   </div>
                                 )}
@@ -572,7 +620,7 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                                 transition={{ duration: 0.3 }}
                                 className="overflow-hidden"
                               >
-                                <div className="px-3 pb-3 pt-2 space-y-3 border-t border-[#0D9488]/10">
+                                <div className="px-3 pb-3 pt-2 space-y-3 border-t border-[#00A896]/10">
                                   {hasError && (
                                     <div className="p-2.5 rounded-lg bg-red-100 border border-red-200 flex items-start gap-2">
                                       <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
@@ -584,7 +632,7 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                                     <div>
                                       <div className="flex items-center gap-1.5 mb-2">
                                         <label className="text-xs text-neutral-700">
-                                          Currently taking? <span className="text-[#FF7A59]">*</span>
+                                          Are you currently taking this medication? <span className="text-[#FF6B6B]">*</span>
                                         </label>
                                         <InfoTooltip 
                                           content="This helps us understand if you're actively using this medication."
@@ -618,34 +666,42 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
                                     <>
                                       <div>
                                         <label className="block text-xs text-neutral-700 mb-1.5">
-                                          {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' ? 'How long?' : 'Duration'}{' '}
-                                          <span className="text-[#FF7A59]">*</span>
+                                          {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' 
+                                            ? 'How long have you been taking it?' 
+                                            : 'How long were you on it?'}{' '}
+                                          <span className="text-[#FF6B6B]">*</span>
                                         </label>
-                                        <Input
+                                        <Select
                                           id={`${med.id}_duration`}
                                           value={details?.duration || ''}
                                           onChange={(e) => updateMedicationDetail(med.id, 'duration', e.target.value)}
-                                          placeholder="e.g., 6 months"
+                                          options={durationOptions}
+                                          required
                                         />
                                       </div>
 
                                       <div>
                                         <label className="block text-xs text-neutral-700 mb-1.5">
-                                          {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' ? 'Last dose' : 'When stopped'}{' '}
-                                          <span className="text-[#FF7A59]">*</span>
+                                          {shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' 
+                                            ? 'When did you last take it?' 
+                                            : 'When did you stop taking it?'}{' '}
+                                          <span className="text-[#FF6B6B]">*</span>
                                         </label>
-                                        <Input
+                                        <Select
                                           id={`${med.id}_last_taken`}
                                           value={details?.lastTaken || ''}
                                           onChange={(e) => updateMedicationDetail(med.id, 'lastTaken', e.target.value)}
-                                          placeholder="e.g., Last week"
+                                          options={shouldShowCurrentlyTaking && details?.currentlyTaking === 'yes' 
+                                            ? lastDoseOptions 
+                                            : whenStoppedOptions}
+                                          required
                                         />
                                       </div>
 
                                       <div>
                                         <div className="flex items-center gap-1.5 mb-2">
                                           <label className="text-xs text-neutral-700">
-                                            Highest dose <span className="text-[#FF7A59]">*</span>
+                                            What's the highest dose you've taken? <span className="text-[#FF6B6B]">*</span>
                                           </label>
                                           <InfoTooltip 
                                             content="A prescription copy is required to continue doses higher than 0.5 mg."
@@ -670,14 +726,14 @@ const GLP1HistoryScreen: React.FC<ScreenProps & { screen: any }> = ({
 
                                       <div>
                                         <label className="block text-xs text-neutral-700 mb-1.5">
-                                          Side effects? <span className="text-neutral-500">(optional)</span>
+                                          Did you experience any side effects? <span className="text-neutral-500">(optional)</span>
                                         </label>
                                         <textarea
                                           value={details?.sideEffects || ''}
                                           onChange={(e) => updateMedicationDetail(med.id, 'sideEffects', e.target.value)}
                                           placeholder="e.g., Nausea"
                                           rows={2}
-                                          className="w-full px-3 py-2 text-sm bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#0D9488] transition-all duration-200 resize-none"
+                                          className="w-full px-3 py-2 text-sm bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#00A896] transition-all duration-200 resize-none"
                                         />
                                       </div>
 

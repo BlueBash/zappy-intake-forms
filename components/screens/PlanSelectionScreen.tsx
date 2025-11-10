@@ -3,9 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import ScreenLayout from '../common/ScreenLayout';
 import NavigationButtons from '../common/NavigationButtons';
 import PlanSelectionOnly from '../common/PlanSelectionOnly';
-import DiscountSelection from '../common/DiscountSelection';
 import { ScreenProps } from './common';
-import type { Discount, PackagePlan } from '../../utils/api';
+import type { PackagePlan } from '../../utils/api';
 
 const formatCurrency = (value?: number) => {
   if (typeof value !== 'number' || Number.isNaN(value)) return '';
@@ -95,9 +94,6 @@ export default function PlanSelectionScreen({ screen, answers, updateAnswer, onS
     const goalAnswer = answers['selected_plan_goal'] || answers['dose_strategy'];
     return typeof goalAnswer === 'string' ? goalAnswer : '';
   });
-  const storedDiscount = (answers['discount_data'] as Discount | null) || null;
-  const storedDiscountCode = typeof answers['discount_code_entered'] === 'string' ? answers['discount_code_entered'] : '';
-  const selectedDiscountId = typeof answers['discount_id'] === 'string' ? answers['discount_id'] : '';
 
   const handlePlanGoalSelect = useCallback((goal: string) => {
     setSelectedPlanGoal(goal);
@@ -133,37 +129,6 @@ export default function PlanSelectionScreen({ screen, answers, updateAnswer, onS
     }
   }, [updateAnswer]);
 
-  useEffect(() => {
-    if (!storedDiscount) {
-      updateAnswer('discount_id', '');
-      updateAnswer('discount_code', '');
-      updateAnswer('discount_amount', 0);
-      updateAnswer('discount_percentage', 0);
-      updateAnswer('discount_description', '');
-    }
-  }, [storedDiscount, updateAnswer]);
-
-  const handleDiscountChange = useCallback((discount: Discount | null, code: string) => {
-    updateAnswer('discount_code_entered', code);
-
-    if (discount) {
-      updateAnswer('discount_id', discount.id);
-      updateAnswer('discount_code', discount.code);
-      updateAnswer('discount_amount', discount.amount);
-      updateAnswer('discount_percentage', discount.percentage);
-      updateAnswer('discount_description', discount.description || '');
-      updateAnswer('discount_data', discount);
-      return;
-    }
-
-    updateAnswer('discount_id', '');
-    updateAnswer('discount_code', '');
-    updateAnswer('discount_amount', 0);
-    updateAnswer('discount_percentage', 0);
-    updateAnswer('discount_description', '');
-    updateAnswer('discount_data', null);
-  }, [updateAnswer]);
-
   const goalRequired = useMemo(() => requiresPlanGoal(selectedPlanDetails), [selectedPlanDetails]);
   const canContinue = Boolean(selectedPlanId && (!goalRequired || selectedPlanGoal));
 
@@ -176,9 +141,9 @@ export default function PlanSelectionScreen({ screen, answers, updateAnswer, onS
     >
       <ScreenLayout title={title || 'Select Your Plan'} helpText="">
         {selectedMedicationName && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5 rounded-xl border border-[#0D9488]/20">
+          <div className="mb-6 p-4 bg-gradient-to-r from-[#00A896]/5 to-[#E0F5F3]/5 rounded-xl border border-[#00A896]/20">
             <p className="text-sm text-neutral-600">
-              Selected Medication: <span className="font-medium text-[#0D9488]">{selectedMedicationName}</span>
+              Selected Medication: <span className="font-medium text-[#00A896]">{selectedMedicationName}</span>
             </p>
           </div>
         )}
@@ -200,15 +165,6 @@ export default function PlanSelectionScreen({ screen, answers, updateAnswer, onS
               Please choose how you want to manage your dose for this program.
             </p>
           )}
-        </div>
-
-        <div className="mt-10">
-          <DiscountSelection
-            selectedDiscountId={selectedDiscountId}
-            storedDiscount={storedDiscount}
-            storedCode={storedDiscountCode}
-            onSelect={handleDiscountChange}
-          />
         </div>
 
         <NavigationButtons

@@ -55,8 +55,8 @@ const formConfig: FormConfig = {
       title: "What matters most to you?",
       phase: "qualify",
       options: [
-        { value: "lose_weight", label: "Lose weight and keep it off" },
         { value: "boost_energy", label: "Boost energy and feel better" },
+        { value: "lose_weight", label: "Lose weight and keep it off" },
         { value: "improve_health", label: "Improve overall health" },
         { value: "regain_confidence", label: "Regain confidence" },
         { value: "other", label: "Other" },
@@ -70,8 +70,8 @@ const formConfig: FormConfig = {
       phase: "qualify",
       title: "What would you like support with?",
       options: [
-        { value: "cravings", label: "Controlling cravings and hunger" },
         { value: "time", label: "Finding time to exercise" },
+        { value: "cravings", label: "Controlling cravings and hunger" },
         { value: "motivation", label: "Staying motivated" },
         { value: "plateaus", label: "Breaking through plateaus" },
         { value: "consistency", label: "Being consistent" },
@@ -115,6 +115,7 @@ const formConfig: FormConfig = {
           id: "sex_birth",
           type: "single_select",
           label: "Sex assigned at birth",
+          labelClassName: "!text-sm !leading-none !font-medium !select-none !text-neutral-800",
           options: [
             { value: "male", label: "Male" },
             { value: "female", label: "Female" },
@@ -152,11 +153,19 @@ const formConfig: FormConfig = {
           id: "highest_weight",
           type: "number",
           label: "What was your highest weight? (lb)",
-          help_text: "Your best estimate is fine",
           required: true,
           suffix: "lbs",
           min: 80,
           max: 600,
+          validation: {
+            min: 80,
+            max: 600,
+            error: "Enter weight between 80-600 lbs",
+            greater_than_field: {
+              field: "weight",
+              error: "Highest weight must be greater than or equal to current weight"
+            }
+          }
         },
         {
           id: "goal_weight",
@@ -166,6 +175,15 @@ const formConfig: FormConfig = {
           suffix: "lbs",
           min: 80,
           max: 600,
+          validation: {
+            min: 80,
+            max: 600,
+            error: "Enter weight between 80-600 lbs",
+            less_than_field: {
+              field: "weight",
+              error: "Goal weight must be less than current weight"
+            }
+          }
         },
       ],
       // "buttons": [
@@ -186,13 +204,9 @@ const formConfig: FormConfig = {
       phase: "qualify",
       variant: "weight_loss_graph",
       title: "Your potential transformation",
-      subtitle: "You could shed 18 lbs from your starting weight",
+      subtitle: "You could shed  ${calc.weight_loss} lbs from your starting weight",
       message:
         "Individual results may vary. Graph shows typical patient journey based on clinical trials.",
-      stat_number: "20%",
-      stat_text: "average weight loss",
-      stat_subtitle: "months to goal",
-      stat_highlight: "GLP-1 medication",
       next: "capture.email",
     },
     {
@@ -235,8 +249,6 @@ const formConfig: FormConfig = {
       type: "single_select",
       phase: "qualify",
       title: "How would you describe your ethnicity?",
-      help_text:
-        "Optional—helps us understand medication effects across different backgrounds",
       auto_advance: true,
       options: [
         { value: "asian", label: "Asian" },
@@ -257,10 +269,9 @@ const formConfig: FormConfig = {
       id: "basic_info_2",
       type: "multi_select",
       phase: "qualify",
-      title: "Do any of these apply to you?",
-      help_text: "We ask everyone this to provide the best care",
+      title: "Have you ever been diagnosed with any of the following mental health conditions?",
       options: [
-        { value: "none", label: "None of these" },
+        { value: "none", label: "None of these apply to me" },
         { value: "depression", label: "Depression" },
         { value: "anxiety", label: "Anxiety disorder" },
         { value: "bipolar", label: "Bipolar disorder" },
@@ -290,14 +301,13 @@ const formConfig: FormConfig = {
       id: "eating_substance",
       type: "composite",
       phase: "qualify",
-      title: "Eating & Substance Use",
-      help_text:
-        "We need to ask a couple of questions about eating and substance use",
+      title: "Have you ever been diagnosed with an eating disorder?",
+      help_text: "We need to ask a couple of questions about eating and substance use",
       fields: [
         {
           id: "eating_relationship",
           type: "single_select",
-          label: "Have you ever been diagnosed with an eating disorder?",
+          label: "",
           options: [
             { value: "no", label: "No" },
             { value: "yes", label: "Yes" },
@@ -375,7 +385,7 @@ const formConfig: FormConfig = {
           type: "multi_select",
           label: "Used any of these in the past 6 months?",
           options: [
-            { value: "none", label: "None of these" },
+            { value: "none", label: "None of these apply to me" },
             { value: "cannabis", label: "Cannabis or marijuana" },
             { value: "cocaine", label: "Cocaine" },
             { value: "opioids", label: "Non-prescribed opioids" },
@@ -429,7 +439,7 @@ const formConfig: FormConfig = {
               title: "Type 1 Needs Specialist Care",
               message:
                 "GLP-1s aren't FDA-approved for Type 1 and need careful coordination.",
-              type: "error",
+              type: "warning",
             },
           ],
         },
@@ -457,31 +467,31 @@ const formConfig: FormConfig = {
               title: "GLP-1s Not Safe During Pregnancy",
               message:
                 "We can't prescribe GLP-1 medications during pregnancy, when trying to conceive, or while breastfeeding.",
-              type: "error",
+              type: "warning",
             },
             {
               show_if_value: "trying",
               title: "GLP-1s Not Safe During Pregnancy",
               message:
                 "We can't prescribe GLP-1 medications during pregnancy, when trying to conceive, or while breastfeeding.",
-              type: "error",
+              type: "warning",
             },
             {
               show_if_value: "nursing",
               title: "GLP-1s Not Safe During Pregnancy",
               message:
                 "We can't prescribe GLP-1 medications during pregnancy, when trying to conceive, or while breastfeeding.",
-              type: "error",
+              type: "warning",
             },
           ],
         },
         {
           id: "medical_conditions",
           type: "multi_select",
-          label: "Do any of these apply to you?",
-          help_text: "We need to ask about your medical history",
+          label: "Do any of these medical conditions apply to you?",
+          // help_text: "We need to ask about your medical history",
           options: [
-            { value: "none", label: "None of these" },
+            { value: "none", label: "None of these apply to me" },
             {
               value: "thyroid_cancer",
               label: "Medullary thyroid cancer (personal or family)",
@@ -523,14 +533,14 @@ const formConfig: FormConfig = {
               title: "Safety Contraindication",
               message:
                 "With this history, GLP-1s carry significant cancer risk according to FDA data.",
-              type: "error",
+              type: "warning",
             },
             {
               show_if_value: "men2",
               title: "Safety Contraindication",
               message:
                 "With this history, GLP-1s carry significant cancer risk according to FDA data.",
-              type: "error",
+              type: "warning",
             },
             {
               show_if_value: "pancreatitis",
@@ -552,9 +562,9 @@ const formConfig: FormConfig = {
           id: "glp1_safety",
           type: "multi_select",
           label: "Have you been diagnosed with any of these?",
-          help_text: "Important safety questions about GLP-1 medications",
+          // help_text: "Important safety questions about GLP-1 medications",
           options: [
-            { value: "none", label: "None of these" },
+            { value: "none", label: "None of these apply to me" },
             {
               value: "diabetic_retinopathy",
               label: "Diabetic retinopathy (eye damage from diabetes)",
@@ -575,11 +585,6 @@ const formConfig: FormConfig = {
             {
               value: "suicide_attempt_history",
               label: "History of suicide attempts",
-            },
-            {
-              value: "other_glp1_current",
-              label:
-                "Currently on another GLP-1 (Victoza, Byetta, Trulicity, etc.)",
             },
             { value: "thyroid_nodules", label: "Thyroid nodules" },
           ],
@@ -610,7 +615,7 @@ const formConfig: FormConfig = {
           id: "current_medications",
           type: "multi_select",
           label: "Do you take any medication?",
-          help_text: "We need to know about all your current medications",
+          // help_text: "We need to know about all your current medications",
           options: [
             { value: "none", label: "I don't take any medication" },
             { value: "insulin", label: "Insulin" },
@@ -732,6 +737,15 @@ const formConfig: FormConfig = {
           ],
           required: true,
         },
+      ],
+      next: "assessment.journey_notes",
+    },
+    {
+      id: "assessment.journey_notes",
+      type: "composite",
+      phase: "qualify",
+      title: "Additional Notes",
+      fields: [
         {
           id: "journey_notes",
           type: "text",
@@ -742,9 +756,6 @@ const formConfig: FormConfig = {
           multiline: true,
           rows: 6,
           required: false,
-          progressive_display: {
-            show_after_field: "activity_level",
-          },
         },
       ],
       next: "complete.celebration",
@@ -776,24 +787,6 @@ const formConfig: FormConfig = {
           ],
           required: true,
           auto_advance: true,
-        },
-        {
-          id: "glp1_medication_in_mind",
-          type: "single_select",
-          label: "Do you have a medication in mind?",
-          options: [
-            { value: "yes", label: "Yes" },
-            { value: "no", label: "No" },
-          ],
-          required: true,
-          auto_advance: true,
-          conditional_display: {
-            show_if: "glp1_has_tried == 'no'",
-          },
-          progressive_display: {
-            show_after_field: "glp1_has_tried",
-            show_if_condition: "glp1_has_tried == 'no'",
-          },
         },
       ],
       next_logic: [
@@ -848,35 +841,11 @@ const formConfig: FormConfig = {
       type: "terminal",
       phase: "treatment",
       status: "success",
-      title: "Welcome, Quia id quos dolore !",
-      body: "Your account has been created successfully. Check your email at ${email} to get started!:",
-      next_steps: [
-        {
-          icon: "✓",
-          icon_name: "review",
-          label: "Physician review (24 hrs)",
-          status: "pending",
-        },
-        {
-          icon: "→",
-          icon_name: "plan",
-          label: "Treatment plan (48 hrs)",
-          status: "pending",
-        },
-        {
-          icon: "→",
-          icon_name: "journey",
-          label: "Start your journey",
-          status: "pending",
-        },
-      ],
+      title: "Thank you for your submission!",
+      body: "We've received your information and will review it shortly.\n\n**What happens next:**\n• Provider review: 24-48 hours\n• You'll receive an email with next steps\n• If approved, your medication ships within 3-5 days",
       cta_primary: {
-        label: "View Your Dashboard",
+        label: "Done",
       },
-      links: [
-        { label: "Return to Zappy Health", url: "https://zappyhealth.com" },
-        { label: "Back to Home", url: "/" },
-      ],
     },
     // {
     //   "id": "demographics.dob",

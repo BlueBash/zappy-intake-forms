@@ -115,7 +115,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-          className="w-12 h-12 mx-auto mb-4 border-4 border-[#0D9488]/20 border-t-[#0D9488] rounded-full"
+          className="w-12 h-12 mx-auto mb-4 border-4 border-[#00A896]/20 border-t-[#00A896] rounded-full"
         />
         <p className="text-neutral-600">Loading plans…</p>
       </div>
@@ -150,8 +150,8 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-2"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#0D9488]/10 via-[#FF7A59]/10 to-[#0D9488]/10 border border-[#0D9488]/20">
-              <CheckCircle2 className="w-4 h-4 text-[#0D9488]" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#00A896]/10 via-[#FF6B6B]/10 to-[#00A896]/10 border border-[#00A896]/20">
+              <CheckCircle2 className="w-4 h-4 text-[#00A896]" />
               <span className="text-sm text-neutral-700">Plan selected</span>
             </div>
           </motion.div>
@@ -162,7 +162,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
         {plans.length > 1 && (
           <button
             onClick={() => setCompareMode(!compareMode)}
-            className="text-sm text-[#0D9488] hover:text-[#14B8A6] transition-colors flex items-center gap-1"
+            className="text-sm text-[#00A896] hover:text-[#E0F5F3] transition-colors flex items-center gap-1"
           >
             {compareMode ? 'Show less' : 'Compare plans'}
             <ChevronDown className={`w-4 h-4 transition-transform ${compareMode ? 'rotate-180' : ''}`} />
@@ -186,13 +186,13 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
               layout
               className={`relative rounded-xl border-2 transition-all duration-300 overflow-hidden ${
                 isSelected
-                  ? 'border-[#0D9488] bg-gradient-to-br from-[#0D9488]/5 via-white to-[#14B8A6]/5 shadow-xl'
-                  : 'border-stone-300 bg-white hover:border-[#0D9488]/50 hover:shadow-lg'
+                  ? 'border-[#00A896] bg-gradient-to-br from-[#00A896]/5 via-white to-[#E0F5F3]/5 shadow-xl'
+                  : 'border-stone-300 bg-white hover:border-[#00A896]/50 hover:shadow-lg'
               }`}
             >
               {/* Popular badge */}
               {plan.popular && (
-                <div className="absolute top-0 right-0 bg-gradient-to-r from-[#FF7A59] to-[#FF6B4A] text-white px-4 py-1.5 rounded-bl-xl rounded-tr-xl text-xs font-semibold flex items-center gap-1">
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-[#FF6B6B] to-[#FF6B4A] text-white px-4 py-1.5 rounded-bl-xl rounded-tr-xl text-xs font-semibold flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
                   Most Popular
                 </div>
@@ -206,13 +206,13 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <h3 className={`text-lg mb-2 transition-colors ${
-                      isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
+                      isSelected ? 'text-[#00A896]' : 'text-neutral-900'
                     }`}>
                       {plan.name || plan.plan || 'Plan'}
                     </h3>
                     <div className="flex items-baseline gap-1 mb-3">
                       <span className={`text-3xl transition-colors ${
-                        isSelected ? 'text-[#0D9488]' : 'text-neutral-900'
+                        isSelected ? 'text-[#00A896]' : 'text-neutral-900'
                       }`}>
                         {formatCurrency(price)}
                       </span>
@@ -230,18 +230,18 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
                         initial={{ scale: 0, rotate: -180 }}
                         animate={{ scale: 1, rotate: 0 }}
                         transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                        className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0D9488] to-[#14B8A6] flex items-center justify-center shadow-lg"
+                        className="w-8 h-8 rounded-full bg-gradient-to-br from-[#00A896] to-[#E0F5F3] flex items-center justify-center shadow-lg"
                       >
                         <Check className="w-5 h-5 text-white" strokeWidth={3} />
                       </motion.div>
                     )}
                     <div className={`p-2 rounded-lg transition-all ${
                       isExpanded 
-                        ? 'bg-[#0D9488]/10 rotate-180' 
+                        ? 'bg-[#00A896]/10 rotate-180' 
                         : 'bg-gray-100 hover:bg-gray-200'
                     }`}>
                       <ChevronDown className={`w-5 h-5 transition-colors ${
-                        isExpanded ? 'text-[#0D9488]' : 'text-neutral-600'
+                        isExpanded ? 'text-[#00A896]' : 'text-neutral-600'
                       }`} />
                     </div>
                   </div>
@@ -258,7 +258,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-6 pb-6 pt-2 space-y-4 border-t border-[#0D9488]/10">
+                    <div className="px-6 pb-6 pt-2 space-y-4 border-t border-[#00A896]/10">
                       {/* Medication & Pharmacy Info */}
                       {(plan.medication || plan.pharmacy) && (
                         <div className="space-y-2">
@@ -290,7 +290,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
                                 transition={{ delay: idx * 0.05 }}
                                 className="flex items-start gap-2 text-sm text-neutral-700"
                               >
-                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#0D9488] to-[#14B8A6] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#00A896] to-[#E0F5F3] flex items-center justify-center flex-shrink-0 mt-0.5">
                                   <Check className="w-3 h-3 text-white" strokeWidth={3} />
                                 </div>
                                 <span>{feature}</span>
@@ -302,7 +302,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
 
                       {/* Dose Strategy Selection */}
                       {showDoseStrategy && (
-                        <div className="pt-4 border-t border-[#0D9488]/10">
+                        <div className="pt-4 border-t border-[#00A896]/10">
                           <p className="text-sm text-neutral-900 mb-2">
                             How should we manage your dose?
                           </p>
@@ -325,13 +325,13 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
                                   }}
                   className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-all duration-200 ${
                     isStrategySelected
-                      ? 'border-[#0D9488] bg-gradient-to-r from-[#0D9488]/5 to-[#14B8A6]/5'
-                      : 'border-stone-300 hover:border-[#0D9488]/50'
+                      ? 'border-[#00A896] bg-gradient-to-r from-[#00A896]/5 to-[#E0F5F3]/5'
+                      : 'border-stone-300 hover:border-[#00A896]/50'
                   }`}
                                 >
                                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
                                     isStrategySelected
-                                      ? 'border-[#0D9488] bg-gradient-to-br from-[#0D9488] to-[#14B8A6]'
+                                      ? 'border-[#00A896] bg-gradient-to-br from-[#00A896] to-[#E0F5F3]'
                                       : 'border-stone-300'
                                   }`}>
                                     {isStrategySelected && (
@@ -340,7 +340,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
                                   </div>
                                   <div className="text-left flex-1">
                                     <span className={`text-sm block ${
-                                      isStrategySelected ? 'text-[#0D9488]' : 'text-neutral-900'
+                                      isStrategySelected ? 'text-[#00A896]' : 'text-neutral-900'
                                     }`}>
                                       {option.label}
                                     </span>
@@ -363,7 +363,7 @@ const PlanSelectionExpanded: React.FC<PlanSelectionProps> = ({
                         }}
                         className={`w-full py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg ${
                           isSelected
-                            ? 'bg-gradient-to-r from-[#0D9488] to-[#14B8A6] text-white'
+                            ? 'bg-gradient-to-r from-[#00A896] to-[#E0F5F3] text-white'
                             : 'bg-gradient-to-r from-gray-100 to-gray-200 text-neutral-700 hover:from-gray-200 hover:to-gray-300'
                         }`}
                       >

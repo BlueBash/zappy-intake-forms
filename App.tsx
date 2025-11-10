@@ -7,6 +7,8 @@ import defaultFormConfig from './forms/weight-loss/data';
 import { apiClient } from './utils/api';
 
 import ProgressBar from './components/ui/ProgressBar';
+import SectionIndicator from './components/common/SectionIndicator';
+import ScreenHeader from './components/common/ScreenHeader';
 import SingleSelectScreen from './components/screens/SingleSelectScreen';
 import CompositeScreen from './components/screens/CompositeScreen';
 import ContentScreen from './components/screens/ContentScreen';
@@ -28,8 +30,11 @@ import AccountCreationScreen from './components/screens/AccountCreationScreen';
 import MedicationPreferenceInitialScreen from './components/screens/MedicationPreferenceInitialScreen';
 import MedicationPreferenceScreen from './components/screens/MedicationPreferenceScreen';
 import WeightLossGraphScreen from './components/screens/WeightLossGraphScreen';
+import EmailCaptureScreen from './components/screens/EmailCaptureScreen';
 import { buildMedicationHistorySummary } from './utils/medicationHistory';
 import AutocompleteScreen from './components/screens/AutocompleteScreen';
+import { getToken, fetchPatientData, mapPatientDataToFormAnswers } from './utils/tokenAuth';
+import { getSkippedScreensCount, getSkippedScreens, generateSkipRulesFromConfig, DEFAULT_SKIP_STEP_RULES, SkipStepRule } from './utils/skipSteps';
 
 type ProgramTheme = {
   headerBg: string;
@@ -43,55 +48,31 @@ const getProgramTheme = (condition: string): ProgramTheme => {
   const normalized = condition.toLowerCase();
   if (normalized.includes('strength')) {
     return {
-      headerBg: 'bg-sky-50/90',
-      headerBorder: 'border-sky-100',
-      badgeBg: 'bg-gradient-to-r from-sky-500 to-emerald-500',
+      headerBg: 'bg-[#E0F5F3]/90',
+      headerBorder: 'border-[#E8E8E8]',
+      badgeBg: 'bg-[#00A896]',
       badgeText: 'text-white',
-      badgeShadow: 'shadow-sky-200/60',
+      badgeShadow: 'shadow-lg',
     };
   }
   if (normalized.includes('anti')) {
     return {
-      headerBg: 'bg-fuchsia-50/90',
-      headerBorder: 'border-fuchsia-100',
-      badgeBg: 'bg-gradient-to-r from-fuchsia-500 to-rose-500',
+      headerBg: 'bg-[#FFF5F3]/90',
+      headerBorder: 'border-[#E8E8E8]',
+      badgeBg: 'bg-[#FF6B6B]',
       badgeText: 'text-white',
-      badgeShadow: 'shadow-fuchsia-200/60',
+      badgeShadow: 'shadow-lg',
     };
   }
   return {
-    headerBg: 'bg-orange-50/90',
-    headerBorder: 'border-orange-100',
-    badgeBg: 'bg-gradient-to-r from-orange-500 to-amber-500',
+    headerBg: 'bg-[#fef8f2]/90',
+    headerBorder: 'border-[#E8E8E8]',
+    badgeBg: 'bg-[#00A896]',
     badgeText: 'text-white',
-    badgeShadow: 'shadow-orange-200/60',
+    badgeShadow: 'shadow-lg',
   };
 };
 
-const ProgramHeader: React.FC<{ condition: string; theme: ProgramTheme }> = ({ condition, theme }) => (
-  <header
-    className={`mb-8 w-full rounded-3xl border ${theme.headerBorder} ${theme.headerBg} px-6 py-5 shadow-sm shadow-slate-200/40 backdrop-blur-sm`}
-  >
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <a href="https://zappyhealth.com" className="inline-flex items-center" aria-label="ZappyHealth home">
-        <img
-          src="https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2.webp"
-          srcSet="https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2.webp 352w, https://zappyhealth.com/wp-content/uploads/2022/09/Zappy-logo-2-300x109.webp 300w"
-          sizes="(max-width: 220px) 100vw, 220px"
-          width={220}
-          height={80}
-          alt="ZappyHealth"
-          loading="lazy"
-          className="h-10 w-auto sm:h-12"
-        />
-      </a>
-      <div className={`inline-flex flex-col items-center rounded-2xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] ${theme.badgeBg} ${theme.badgeText} shadow-lg ${theme.badgeShadow}`}>
-        <span>Program</span>
-        <span className="mt-1 text-sm font-semibold tracking-normal uppercase">{condition}</span>
-      </div>
-    </div>
-  </header>
-);
 
 const LEAD_SESSION_STORAGE_KEY = 'consultation_lead_id';
 
@@ -103,6 +84,47 @@ const toServiceSlug = (value: string): string =>
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '') || 'general';
+
+const getSectionLabel = (screen: Screen): string => {
+  // Specific screen ID mappings for better UX
+  if (screen.id.includes('goal') || screen.id === 'goal_range' || screen.id === 'goal_motivations' || screen.id === 'goal_challenges') {
+    return 'Your Goals';
+  }
+  if (screen.id === 'home_state' || screen.id.includes('demographics') || screen.id.includes('personal') || screen.id.includes('age') || screen.id.includes('dob')) {
+    return 'About You';
+  }
+  if (screen.id.includes('medical') || screen.id.includes('health') || screen.id.includes('glp1') || screen.id.includes('medication') || screen.id.includes('eating') || screen.id.includes('substance')) {
+    return 'Health History';
+  }
+  if (screen.id.includes('weight') || screen.id.includes('height') || screen.id.includes('measurement')) {
+    return 'Your Measurements';
+  }
+  if (screen.id.includes('plan') || screen.id.includes('subscription')) {
+    return 'Plan Selection';
+  }
+  if (screen.id.includes('account') || screen.id.includes('payment') || screen.id.includes('checkout')) {
+    return 'Account Setup';
+  }
+  if (screen.id.includes('review') || screen.id.includes('summary')) {
+    return 'Review & Submit';
+  }
+  if (screen.id.includes('ethnicity') || screen.id.includes('race')) {
+    return 'Background';
+  }
+  
+  // Default based on screen type - avoid generic "Assessment"
+  switch (screen.type) {
+    case 'content':
+    case 'interstitial':
+      return 'Information';
+    case 'consent':
+      return 'Terms & Consent';
+    case 'terminal':
+      return 'Complete';
+    default:
+      return 'Questions'; // Remove generic "Assessment"
+  }
+};
 
 const isValidEmail = (value: unknown): value is string =>
   typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -149,7 +171,22 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
   const activeFormConfig = providedFormConfig ?? defaultFormConfig;
   const resolvedCondition = defaultCondition ?? activeFormConfig.default_condition ?? 'Weight Loss';
   const programTheme = useMemo(() => getProgramTheme(resolvedCondition), [resolvedCondition]);
+  
+  // Generate dynamic skip rules based on form configuration
+  // These rules will skip steps when all required fields are available in API data
+  const skipRules = useMemo<SkipStepRule[]>(() => {
+    const dynamicRules = generateSkipRulesFromConfig(activeFormConfig);
+    // Merge with default rules (default rules take precedence if there's a conflict)
+    const defaultRuleIds = new Set(DEFAULT_SKIP_STEP_RULES.map(r => r.screenId));
+    const mergedRules = [
+      ...DEFAULT_SKIP_STEP_RULES,
+      ...dynamicRules.filter(r => !defaultRuleIds.has(r.screenId))
+    ];
+    return mergedRules;
+  }, [activeFormConfig]);
+  
   const { 
+    totalSteps = 0,
     currentScreen, 
     answers,
     calculations,
@@ -160,9 +197,71 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     updateAnswer,
     goToScreen,
     direction,
-  } = useFormLogic(activeFormConfig);
+  } = useFormLogic(activeFormConfig, skipRules);
 
   const serviceSlug = useMemo(() => toServiceSlug(resolvedCondition), [resolvedCondition]);
+  
+  // Calculate effective steps and progress accounting for all skipped steps
+  const { effectiveTotalSteps, effectiveCurrentStep, effectiveProgress } = useMemo(() => {
+    // If no current screen, return default values
+    if (!currentScreen) {
+      return { 
+        effectiveTotalSteps: 1, 
+        effectiveCurrentStep: 1,
+        effectiveProgress: 0 
+      };
+    }
+    
+    const skippedScreenIds = getSkippedScreens(answers, skipRules);
+    const skippedSet = new Set(skippedScreenIds);
+    
+    // Calculate effective total steps (excluding skipped screens)
+    // Only count input screens, not content/interstitial/terminal screens
+    const inputScreens = activeFormConfig.screens.filter(screen => {
+      const skipScreenTypes = ['content', 'interstitial', 'terminal', 'review', 'plan_selection'];
+      return !skipScreenTypes.includes(screen.type);
+    });
+    const skippedCount = inputScreens.filter(screen => skippedSet.has(screen.id)).length;
+    const effectiveTotal = Math.max(1, inputScreens.length - skippedCount);
+    
+    // Calculate effective current step (excluding skipped screens from history)
+    // Count non-skipped screens in history
+    const nonSkippedHistoryCount = history.filter(screenId => !skippedSet.has(screenId)).length;
+    
+    // IMPORTANT: Never skip the current screen in progress calculation
+    // Even if all fields are filled, the user is still on this screen
+    // The screen will be skipped when navigating to the next screen
+    // Effective current step = non-skipped screens in history + current screen
+    // Always count the current screen, even if it's "skippable" (user is still on it)
+    const effectiveCurrent = nonSkippedHistoryCount + 1;
+    
+    // If we're on a terminal screen, show 100%
+    if (currentScreen.type === 'terminal') {
+      return { 
+        effectiveTotalSteps: effectiveTotal, 
+        effectiveCurrentStep: effectiveTotal,
+        effectiveProgress: 100 
+      };
+    }
+    
+    // Calculate progress percentage based on actual step position
+    // Must exactly match: (currentStep / totalSteps) * 100
+    // This ensures the progress bar percentage matches the displayed step numbers
+    // Example: Step 2 of 10 = (2/10) * 100 = 20%
+    let effectiveProg = 0;
+    if (effectiveTotal > 0 && effectiveCurrent > 0) {
+      effectiveProg = (effectiveCurrent / effectiveTotal) * 100;
+      // Cap at 95% for non-terminal screens (terminal screens already handled above)
+      // This prevents showing 100% before reaching the final screen
+      effectiveProg = Math.min(95, Math.max(0, effectiveProg));
+    }
+    
+    return { 
+      effectiveTotalSteps: effectiveTotal, 
+      effectiveCurrentStep: effectiveCurrent,
+      effectiveProgress: effectiveProg 
+    };
+  }, [answers, activeFormConfig.screens, history, skipRules, currentScreen]);
   const [leadId, setLeadId] = useState<string | null>(() => {
     if (typeof window === 'undefined') {
       return null;
@@ -266,6 +365,61 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
   }, [currentScreen.id, saveProgress, history.length]);
 
 
+  // Track which fields were populated from API (to disable them in forms)
+  const [apiPopulatedFields, setApiPopulatedFields] = useState<Set<string>>(new Set());
+
+  // Token-based authentication and auto-fill
+  const tokenProcessedRef = useRef(false);
+  useEffect(() => {
+    // Only process token once on mount
+    if (tokenProcessedRef.current) return;
+    
+    const token = getToken();
+    if (!token) {
+      tokenProcessedRef.current = true;
+      return;
+    }
+
+    const processToken = async () => {
+      try {
+        tokenProcessedRef.current = true; // Mark as processed before async operation
+        const patientData = await fetchPatientData(token);
+        
+        if (patientData) {
+          const { answers: mappedAnswers, apiPopulatedFields: apiFields } = mapPatientDataToFormAnswers(patientData);
+          
+          // Store API-populated fields
+          setApiPopulatedFields(apiFields);
+          
+          // Auto-fill all available fields
+          Object.entries(mappedAnswers).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+              updateAnswer(key, value);
+            }
+          });
+
+          // Store client_record_id in session storage if available
+          if (mappedAnswers.client_record_id && typeof window !== 'undefined') {
+            try {
+              window.sessionStorage.setItem('client_record_id', mappedAnswers.client_record_id);
+            } catch (error) {
+              console.warn('[TokenAuth] Failed to store client_record_id', error);
+            }
+          }
+
+          // Note: Email capture step will be automatically bypassed by useFormLogic
+          // when user naturally navigates to it, since email is already in answers
+        }
+      } catch (error) {
+        console.error('[TokenAuth] Failed to process token:', error);
+        tokenProcessedRef.current = true; // Mark as processed even on error to avoid retries
+      }
+    };
+
+    processToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
   useEffect(() => {
     const { theme } = activeFormConfig.settings;
     document.documentElement.style.setProperty('--primary-color', theme.primary_hex);
@@ -288,6 +442,29 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     const timeout = setTimeout(() => setScreenAnnouncement(''), 1000);
     return () => clearTimeout(timeout);
   }, [currentScreen.id]);
+
+  // Clear stored form data when reaching the final step (complete.assessment_review)
+  useEffect(() => {
+    if (currentScreen.id === 'complete.assessment_review') {
+      try {
+        // Clear form data saved by email
+        if (isValidEmail(answers.email)) {
+          const emailKey = `${FORM_SAVE_PREFIX}${(answers.email as string).trim().toLowerCase()}`;
+          localStorage.removeItem(emailKey);
+        }
+        // Clear form data saved by session ID
+        const sessionKey = `${FORM_SAVE_PREFIX}${sessionIdRef.current}`;
+        localStorage.removeItem(sessionKey);
+        // localStorage.removeItem('zappy_auth_token');
+        // Also clear session ID itself
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('zappy_session_id');
+        }
+      } catch (error) {
+        console.warn('[App] Failed to clear stored form data', error);
+      }
+    }
+  }, [currentScreen.id, answers.email]);
 
   useEffect(() => {
     if (currentScreen.id !== 'review.summary' && submitError) {
@@ -511,7 +688,9 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         responses.address_line2,
         existingAddress.unit,
         existingAddress.address_line2,
-        responses.account_address_line2
+        responses.account_address_line2,
+        responses.account_unit,
+        responses.account_address2
       );
       const locality = pickAddressValue(
         responses.city,
@@ -569,10 +748,24 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         responses.notification_consent = 'false';
       }
 
+      // Extract discount data - prefer from responses, fallback to answers
       const discountData = (responses.discount_data ?? answers['discount_data']) as
-        | { id?: string; code?: string; amount?: number; percentage?: number; description?: string | null }
+        | { 
+            id?: string; 
+            code?: string; 
+            name?: string;
+            amount?: number; 
+            percentage?: number; 
+            description?: string | null;
+            created_at?: string;
+            updated_at?: string;
+            status?: boolean;
+            [key: string]: any;
+          }
         | null
         | undefined;
+      
+      const discountCodeEntered = responses.discount_code_entered ?? answers['discount_code_entered'] ?? '';
       const existingDiscountId =
         typeof responses.discount_id === 'string'
           ? responses.discount_id
@@ -580,18 +773,38 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
           ? answers['discount_id']
           : '';
       const resolvedDiscountId = existingDiscountId || (discountData?.id ?? '');
-      responses.discount_id = resolvedDiscountId || '';
-      if (!responses.discount_code && discountData?.code) {
-        responses.discount_code = discountData.code;
-      }
-      if ((responses.discount_amount === undefined || responses.discount_amount === null) && typeof discountData?.amount === 'number') {
-        responses.discount_amount = discountData.amount;
-      }
-      if ((responses.discount_percentage === undefined || responses.discount_percentage === null) && typeof discountData?.percentage === 'number') {
-        responses.discount_percentage = discountData.percentage;
-      }
-      if (!responses.discount_description && typeof discountData?.description === 'string') {
-        responses.discount_description = discountData.description;
+      
+      // Set all discount fields in responses
+      if (discountData && resolvedDiscountId) {
+        // discount_id
+        responses.discount_id = resolvedDiscountId;
+        
+        // discount_code
+        responses.discount_code = responses.discount_code || discountData.code || '';
+        
+        // discount_code_entered (the code the user actually typed)
+        responses.discount_code_entered = discountCodeEntered || discountData.code || '';
+        
+        // discount_amount
+        responses.discount_amount = 
+          (responses.discount_amount !== undefined && responses.discount_amount !== null) 
+            ? responses.discount_amount 
+            : (typeof discountData.amount === 'number' ? discountData.amount : 0);
+        
+        // discount_description
+        responses.discount_description = 
+          responses.discount_description || discountData.description || '';
+        
+        // discount_data (full object with all fields)
+        responses.discount_data = discountData;
+      } else {
+        // Clear discount fields if no discount data
+        responses.discount_id = '';
+        responses.discount_code = '';
+        responses.discount_code_entered = '';
+        responses.discount_amount = 0;
+        responses.discount_description = '';
+        responses.discount_data = null;
       }
 
       responses.selected_plan_details = responses.selected_plan_details || answers['selected_plan_details'] || null;
@@ -610,9 +823,13 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         responses.condition = resolvedCondition;
       }
 
+
+      const clientRecordId = answers['client_record_id'] ?? (typeof window !== 'undefined' ? window.sessionStorage.getItem('client_record_id') : null);
+
       const payload = {
         condition: responses.condition,
         responses,
+        client_record_id: clientRecordId || undefined,
         // intake_form: activeFormConfig,
         // timestamp: new Date().toISOString(),
       };
@@ -705,42 +922,47 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
                           screen.type !== 'content';
     
     const commonProps = {
+      screen,
       answers,
       calculations,
       updateAnswer,
       onSubmit: goToNext,
-      showBack: history.length > 0,
-      onBack: goToPrev,
+      showBack: screen.id === 'complete.assessment_review' ? false : history.length > 0,
+      onBack: screen.id === 'complete.assessment_review' ? undefined : goToPrev,
       defaultCondition: resolvedCondition,
       showLoginLink,
     };
 
     if (screen.id === 'treatment.glp1_history') {
-      return <GLP1HistoryScreen key={screen.id} {...commonProps} screen={screen} />;
+      return <GLP1HistoryScreen key={screen.id} {...commonProps} />;
     }
 
     if (screen.id === 'treatment.medication_choice') {
-      return <MedicationChoiceScreen key={screen.id} {...commonProps} screen={screen} />;
+      return <MedicationChoiceScreen {...commonProps} />;
     }
 
     if (screen.id === 'checkout.account_creation') {
-      return <AccountCreationScreen {...commonProps} screen={screen} key={screen.id}  onSubmit={handleReviewSubmit}/>;
+      return <AccountCreationScreen key={screen.id} {...commonProps} onSubmit={handleReviewSubmit}/>;
     }
 
     if (screen.id === 'treatment.medication_preference_initial') {
-      return <MedicationPreferenceInitialScreen key={screen.id} {...commonProps} screen={screen} />;
+      return <MedicationPreferenceInitialScreen key={screen.id} {...commonProps} />;
     }
 
     if (screen.id === 'treatment.medication_options') {
-      return <MedicationOptionsScreen key={screen.id} {...commonProps} screen={screen} goToScreen={goToScreen} />;
+      return <MedicationOptionsScreen key={screen.id} {...commonProps} goToScreen={goToScreen} />;
     }
 
     if (screen.id === 'treatment.medication_preference') {
-      return <MedicationPreferenceScreen key={screen.id} {...commonProps} screen={screen} />;
+      return <MedicationPreferenceScreen key={screen.id} {...commonProps} />;
     }
 
     if (screen.id === 'logistics.discount_code') {
-      return <DiscountCodeScreen key={screen.id} {...commonProps} screen={screen} />;
+      return <DiscountCodeScreen key={screen.id} {...commonProps} />;
+    }
+
+    if (screen.id === 'capture.email') {
+      return <EmailCaptureScreen key={screen.id} {...commonProps} screen={screen} />;
     }
 
     switch (screen.type) {
@@ -751,7 +973,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       case 'multi_select':
         return <MultiSelectScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'composite':
-        return <CompositeScreen key={screen.id} {...commonProps} screen={screen} />;
+        return <CompositeScreen key={screen.id} {...commonProps} screen={screen} apiPopulatedFields={apiPopulatedFields} />;
       case 'content':
         return <ContentScreen key={screen.id} {...commonProps} screen={screen} />;
       case 'text':
@@ -779,7 +1001,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       case 'terminal':
         return <TerminalScreen {...commonProps} screen={screen} key={screen.id} />;
       case 'interstitial':
-        return <InterstitialScreen screen={screen} onSubmit={goToNext} />;
+        return <InterstitialScreen screen={screen} onSubmit={goToNext} answers={answers} calculations={calculations} />;
       case 'plan_selection':
         return <PlanSelectionScreen {...commonProps} screen={screen} />;
       default:
@@ -799,9 +1021,18 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         {screenAnnouncement}
       </div>
       
-      <div className="relative w-full max-w-2xl mx-auto flex flex-col flex-grow">
+      <div className="relative w-full max-w-2xl mx-auto flex flex-grow flex-col">
+        {/* Header with logo and back button */}
+        <ScreenHeader
+          onBack={currentScreen.id === 'complete.assessment_review' ? undefined : (history.length > 0 ? goToPrev : undefined)}
+          sectionLabel={getSectionLabel(currentScreen)}
+          currentStep={effectiveCurrentStep}
+          totalSteps={effectiveTotalSteps}
+          showProgress={activeFormConfig.settings.progress_bar}
+          progressPercentage={effectiveProgress}
+        />
+        
         <div className="flex flex-col flex-grow">
-          {activeFormConfig.settings.progress_bar && <ProgressBar progress={progress} />}
           
           <main className="flex-grow w-full relative flex flex-col min-h-0">
               <AnimatePresence mode="wait" initial={false} custom={direction}>

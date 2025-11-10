@@ -235,6 +235,54 @@ const post = async <T>(path: string, body: unknown): Promise<T> => {
   return data as T;
 };
 
+const postFormData = async <T>(path: string, formData: FormData): Promise<T> => {
+  // For FormData, we must NOT set Content-Type header - browser will set it with boundary
+  const headers: HeadersInit = {
+    ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+  };
+
+  const response = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers: headers,
+    body: formData,
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const errorMessage = data?.error || data?.message || 'Request failed';
+    throw new Error(errorMessage);
+  }
+
+  return data as T;
+};
+
+const getDataWithToken = async <T>(
+  path: string,
+  token: string,
+): Promise<T> => {
+  const fullPath = `${BASE_URL}${path}`;
+  const url = new URL(fullPath, fullPath.startsWith('/') ? window.location.origin : undefined);
+  
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: headers,
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    const errorMessage = data?.error || data?.message || 'Request failed';
+    throw new Error(errorMessage);
+  }
+
+  return data as T;
+};
+
 export const apiClient = {
   getPackages: (
     state: string,
@@ -292,7 +340,16 @@ export const apiClient = {
     }),
 
   submitConsultation: (payload: Record<string, unknown>) =>
-    post<SubmitConsultationResponse>('/consultations', payload),
+    post<SubmitConsultationResponse>('/consultations/submit', payload),
+
+  login: (payload: Record<string, unknown>) =>
+    post<any>('/consultations/login', payload),
+
+  forgotPassword: (payload: Record<string, unknown>) =>
+    post<any>('/api/v1/auth/forgot-password', payload),
+
+  clientRecord: (payload: Record<string, unknown>) =>
+    post<any>('/consultations/client-records', payload),
 
   createOrUpdateLead: (payload: LeadPayload) =>
     post<LeadResponse>('/consultations/leads', payload),
@@ -305,6 +362,20 @@ export const apiClient = {
 
   getInvoicePaymentIntent: (invoiceId: string) =>
     post<InvoicePaymentIntentResponse>(`/stripe/invoices/${invoiceId}/payment-intent`, {}),
+
+  checkClientRecord: (email: string) =>
+    get<{ exists: boolean; message: string; short_code: string }>('/consultations/client-records/check', {
+      email,
+    }),
+  
+  setupIntent: (payload: Record<string, unknown>) =>
+    post<PaymentIntentResponse>('/consultations/setup-intent', payload),
+
+  updateProfilePhoto: (payload: FormData, patientId: string) =>
+    postFormData<any>(`/api/v1/patients/${patientId}/profile-picture`, payload),
+  
+  getAuthMe: (token: string) =>
+    getDataWithToken<any>('/api/v1/auth/me', token),
 };
 
 export type ApiClient = typeof apiClient;
