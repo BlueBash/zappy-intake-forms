@@ -533,7 +533,7 @@ function MockPaymentForm({
   const planName =
     selectedPlan?.name || answers["selected_plan_name"] || "Selected Plan";
   const planPrice =
-    selectedPlan?.invoice_amount || answers["selected_plan_price"] || 299;
+    selectedPlan?.per_month_price || answers["selected_plan_price"] || 299;
 
   // Determine CTA text and title based on user state
   const ctaText = isExistingCustomer
