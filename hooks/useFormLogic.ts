@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { FormConfig, Screen, EligibilityRule } from "../types";
 import { evaluateLogic, checkCondition } from "../utils/logicEvaluator";
 import { performCalculations } from "../utils/calculationEngine";
+import { shouldSkipScreen, DEFAULT_SKIP_STEP_RULES } from "../utils/skipSteps";
 
 export const useFormLogic = (config: FormConfig) => {
   const [currentScreenId, setCurrentScreenId] = useState<string>(
@@ -18,7 +19,7 @@ export const useFormLogic = (config: FormConfig) => {
   const [flags, setFlags] = useState<Set<string>>(new Set());
   const [maxProgress, setMaxProgress] = useState<number>(5);
 
-  useEffect(() => {
+    useEffect(() => {
     setCurrentScreenId(config.screens[0].id);
     // setCurrentScreenId("checkout.account_creation"??config.screens[0].id);
     setAnswers({});
@@ -146,6 +147,31 @@ export const useFormLogic = (config: FormConfig) => {
     // FIX: Removed deprecated logic that checked for `cta_primary.go_to`, which does not exist on the Cta type.
     if (!nextId && screen.next) {
       nextId = screen.next;
+    }
+
+    // Skip steps based on dynamic skip rules
+    if (nextId && shouldSkipScreen(nextId, latestAnswers, DEFAULT_SKIP_STEP_RULES)) {
+      const nextScreen = screenMap.get(nextId);
+      if (nextScreen && nextScreen.next) {
+        // Recursively check if the next screen should also be skipped
+        let currentNextId = nextScreen.next;
+        const visited = new Set<string>([nextId]); // Prevent infinite loops
+        
+        while (currentNextId && shouldSkipScreen(currentNextId, latestAnswers, DEFAULT_SKIP_STEP_RULES)) {
+          if (visited.has(currentNextId)) {
+            // Prevent infinite loop
+            break;
+          }
+          visited.add(currentNextId);
+          const skipScreen = screenMap.get(currentNextId);
+          if (skipScreen && skipScreen.next) {
+            currentNextId = skipScreen.next;
+          } else {
+            break;
+          }
+        }
+        nextId = currentNextId;
+      }
     }
 
     if (nextId && screenMap.has(nextId)) {

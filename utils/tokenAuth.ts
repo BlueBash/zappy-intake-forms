@@ -1,0 +1,266 @@
+import moment from 'moment';
+import { apiClient } from './api';
+
+export interface PatientData {
+  patient: {
+    id?: string;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    mobile_phone?: string;
+    extracted_phone_number?: string;
+    phone_number_kc?: string;
+    notification_consent?: boolean;
+    medication?: string;
+    weight_goal_lbs?: number;
+    profile?: {
+      address?: {
+        default: boolean;
+        street?: string;
+        unit?: string;
+        locality?: string;
+        region?: string;
+        postalCode?: string;
+        country?: string;
+      };
+      dateOfBirth?: string;
+      dayOfBirth?: string;
+      genderIdentity?: string;
+      middleName?: string;
+    };
+    [key: string]: any;
+  };
+}
+
+const AUTH_TOKEN_STORAGE_KEY = 'zappy_auth_token';
+
+/**
+ * Store token in localStorage
+ */
+export const storeToken = (token: string): void => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+  } catch (error) {
+    console.warn('[TokenAuth] Failed to store token in localStorage:', error);
+  }
+};
+
+/**
+ * Get token from localStorage
+ */
+export const getTokenFromStorage = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    return localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch (error) {
+    console.warn('[TokenAuth] Failed to read token from localStorage:', error);
+    return null;
+  }
+};
+
+/**
+ * Get token from window.authToken
+ */
+export const getTokenFromWindow = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  
+  const authToken = (window as any).authToken;
+  if (typeof authToken === 'string' && authToken.trim().length > 0) {
+    return authToken.trim();
+  }
+  
+  return null;
+};
+
+/**
+ * Get token from URL query parameters
+ */
+export const getTokenFromUrl = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  
+  const params = new URLSearchParams(window.location.search);
+  // Check for both 'token' and 'tokne' (typo in user's example)
+  return params.get('token') || params.get('tokne') || null;
+};
+
+/**
+ * Remove token from URL without page reload
+ */
+export const removeTokenFromUrl = (): void => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const url = new URL(window.location.href);
+    // Remove both 'token' and 'tokne' parameters
+    url.searchParams.delete('token');
+    url.searchParams.delete('tokne');
+    
+    // Update URL without reloading the page
+    window.history.replaceState({}, '', url.toString());
+  } catch (error) {
+    console.warn('[TokenAuth] Failed to remove token from URL:', error);
+  }
+};
+
+/**
+ * Get token from multiple sources in priority order:
+ * 1. URL query parameters (highest priority - will be stored and removed)
+ * 2. window.authToken
+ * 3. localStorage
+ */
+export const getToken = (): string | null => {
+  // Priority 1: URL parameters (if found, should be stored and removed)
+  const urlToken = getTokenFromUrl();
+  if (urlToken) {
+    // Store token in localStorage
+    storeToken(urlToken);
+    // Remove token from URL
+    removeTokenFromUrl();
+    return urlToken;
+  }
+  
+  // Priority 3: localStorage
+  const storageToken = getTokenFromStorage();
+  if (storageToken) {
+    return storageToken;
+  }
+  
+  return null;
+};
+
+/**
+ * Fetch patient data using token
+ */
+export const fetchPatientData = async (token: string): Promise<PatientData | null> => {
+  try {
+    const response = await apiClient.getAuthMe(token);
+    return response as PatientData;
+  } catch (error) {
+    console.error('[TokenAuth] Failed to fetch patient data:', error);
+    return null;
+  }
+};
+
+/**
+ * Map patient data from API response to form answers
+ */
+export const mapPatientDataToFormAnswers = (patientData: PatientData): Record<string, any> => {
+  const { patient } = patientData;
+  const answers: Record<string, any> = {};
+
+  // Email
+  if (patient.email) {
+    answers.email = patient.email.toLowerCase().trim();
+  }
+
+  // Name fields
+  if (patient.first_name) {
+    answers.first_name = patient.first_name;
+    answers.account_firstName = patient.first_name;
+  }
+  if (patient.last_name) {
+    answers.last_name = patient.last_name;
+    answers.account_lastName = patient.last_name;
+  }
+  if (patient.profile?.middleName) {
+    answers.middle_name = patient.profile.middleName;
+  }
+
+  // Phone
+  const phone = patient.extracted_phone_number || patient.mobile_phone || patient.phone_number_kc;
+  if (phone) {
+    // Remove formatting for storage
+    const cleanPhone = phone.replace(/\D/g, '');
+    answers.phone = cleanPhone;
+    answers.account_phone = cleanPhone;
+  }
+
+  // Notification consent
+  if (typeof patient.notification_consent === 'boolean') {
+    answers.notification_consent = patient.notification_consent;
+  }
+
+  // Address
+  if (patient.profile?.address) {
+    const addr = patient.profile.address;
+    if (addr.street) {
+      answers.address_line1 = addr.street;
+      answers.shipping_address = addr.street;
+    }
+    if (addr.unit) {
+      answers.address_line2 = addr.unit;
+    }
+    if (addr.locality) {
+      answers.city = addr.locality;
+      answers.shipping_city = addr.locality;
+    }
+    if (addr.region) {
+      answers.state = addr.region.toUpperCase();
+      answers.shipping_state = addr.region.toUpperCase();
+      answers.home_state = addr.region.toUpperCase();
+    }
+    if (addr.postalCode) {
+      answers.zip_code = addr.postalCode;
+      answers.shipping_zip = addr.postalCode;
+    }
+    if (addr.country) {
+      answers.country = addr.country.toUpperCase();
+    }
+
+    // Structured address object
+    answers.address = {
+      street: addr.street || '',
+      unit: addr.unit || '',
+      locality: addr.locality || '',
+      region: addr.region?.toUpperCase() || '',
+      postalCode: addr.postalCode || '',
+      country: addr.country?.toUpperCase() || 'US',
+      default: addr.default || false,
+    };
+  }
+
+  // Date of Birth
+  if (patient.profile?.dateOfBirth || patient.profile?.dayOfBirth) {
+    const dob = patient.profile.dateOfBirth || patient.profile.dayOfBirth;
+    if (dob) {
+      // Convert ISO date to MM/DD/YYYY format using moment
+      const momentDate = moment(dob);
+      if (momentDate.isValid()) {
+        answers.dob = momentDate.format('MM/DD/YYYY');
+      }
+    }
+  }
+
+  // Gender Identity
+  if (patient.profile?.genderIdentity) {
+    answers.sex_birth = patient.profile.genderIdentity === 'Man/Boy' ? 'male' : 'female';
+  }
+
+  // Medication preference
+  if (patient.medication) {
+    answers.selected_medication = patient.medication;
+  }
+
+  // Weight goal
+  if (patient.weight_goal_lbs) {
+    answers.goal_weight = patient.weight_goal_lbs;
+  }
+
+  // Client record ID
+  if (patient.id) {
+    answers.client_record_id = patient.id;
+  }
+
+  return answers;
+};
+
+/**
+ * Check if we should skip email capture step
+ */
+export const shouldSkipEmailCapture = (answers: Record<string, any>): boolean => {
+  return Boolean(answers.email && typeof answers.email === 'string' && answers.email.trim().length > 0);
+};
+

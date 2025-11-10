@@ -188,6 +188,7 @@ export interface CreatePaymentIntentPayload {
 }
 
 const BASE_URL = import.meta.env.VITE_BACKEND_API_BASE || 'http://localhost:3005';
+// const BASE_URL ='/api' || 'http://localhost:3005';
 const API_KEY = import.meta.env.VITE_BACKEND_API_KEY || '';
 
 const defaultHeaders: HeadersInit = {
@@ -248,6 +249,33 @@ const postFormData = async <T>(path: string, formData: FormData): Promise<T> => 
   });
 
   const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const errorMessage = data?.error || data?.message || 'Request failed';
+    throw new Error(errorMessage);
+  }
+
+  return data as T;
+};
+
+const getDataWithToken = async <T>(
+  path: string,
+  token: string,
+): Promise<T> => {
+  const fullPath = `${BASE_URL}${path}`;
+  const url = new URL(fullPath, fullPath.startsWith('/') ? window.location.origin : undefined);
+  
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: headers,
+  });
+
+  const data = await response.json();
   if (!response.ok) {
     const errorMessage = data?.error || data?.message || 'Request failed';
     throw new Error(errorMessage);
@@ -347,6 +375,8 @@ export const apiClient = {
   updateProfilePhoto: (payload: FormData, patientId: string) =>
     postFormData<any>(`/api/v1/patients/${patientId}/profile-picture`, payload),
   
+  getAuthMe: (token: string) =>
+    getDataWithToken<any>('/api/v1/auth/me', token),
 };
 
 export type ApiClient = typeof apiClient;

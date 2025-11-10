@@ -33,6 +33,8 @@ import WeightLossGraphScreen from './components/screens/WeightLossGraphScreen';
 import EmailCaptureScreen from './components/screens/EmailCaptureScreen';
 import { buildMedicationHistorySummary } from './utils/medicationHistory';
 import AutocompleteScreen from './components/screens/AutocompleteScreen';
+import { getToken, fetchPatientData, mapPatientDataToFormAnswers } from './utils/tokenAuth';
+import { getSkippedScreensCount } from './utils/skipSteps';
 
 type ProgramTheme = {
   headerBg: string;
@@ -184,6 +186,14 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
   } = useFormLogic(activeFormConfig);
 
   const serviceSlug = useMemo(() => toServiceSlug(resolvedCondition), [resolvedCondition]);
+  
+  // Calculate effective steps and progress accounting for all skipped steps
+  const { effectiveTotalSteps, effectiveProgress } = useMemo(() => {
+    const skippedCount = getSkippedScreensCount(answers, activeFormConfig.screens);
+    const effectiveTotal = totalSteps - skippedCount;
+    const effectiveProg = effectiveTotal > 0 ? (history.length / effectiveTotal) * 100 : 0;
+    return { effectiveTotalSteps: effectiveTotal, effectiveProgress: effectiveProg };
+  }, [answers, activeFormConfig.screens, totalSteps, history.length]);
   const [leadId, setLeadId] = useState<string | null>(() => {
     if (typeof window === 'undefined') {
       return null;
@@ -287,6 +297,55 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
   }, [currentScreen.id, saveProgress, history.length]);
 
 
+  // Token-based authentication and auto-fill
+  const tokenProcessedRef = useRef(false);
+  useEffect(() => {
+    // Only process token once on mount
+    if (tokenProcessedRef.current) return;
+    
+    const token = getToken();
+    if (!token) {
+      tokenProcessedRef.current = true;
+      return;
+    }
+
+    const processToken = async () => {
+      try {
+        tokenProcessedRef.current = true; // Mark as processed before async operation
+        const patientData = await fetchPatientData(token);
+        
+        if (patientData) {
+          const mappedAnswers = mapPatientDataToFormAnswers(patientData);
+          
+          // Auto-fill all available fields
+          Object.entries(mappedAnswers).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+              updateAnswer(key, value);
+            }
+          });
+
+          // Store client_record_id in session storage if available
+          if (mappedAnswers.client_record_id && typeof window !== 'undefined') {
+            try {
+              window.sessionStorage.setItem('client_record_id', mappedAnswers.client_record_id);
+            } catch (error) {
+              console.warn('[TokenAuth] Failed to store client_record_id', error);
+            }
+          }
+
+          // Note: Email capture step will be automatically bypassed by useFormLogic
+          // when user naturally navigates to it, since email is already in answers
+        }
+      } catch (error) {
+        console.error('[TokenAuth] Failed to process token:', error);
+        tokenProcessedRef.current = true; // Mark as processed even on error to avoid retries
+      }
+    };
+
+    processToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
   useEffect(() => {
     const { theme } = activeFormConfig.settings;
     document.documentElement.style.setProperty('--primary-color', theme.primary_hex);
@@ -309,6 +368,29 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
     const timeout = setTimeout(() => setScreenAnnouncement(''), 1000);
     return () => clearTimeout(timeout);
   }, [currentScreen.id]);
+
+  // Clear stored form data when reaching the final step (complete.assessment_review)
+  useEffect(() => {
+    if (currentScreen.id === 'complete.assessment_review') {
+      try {
+        // Clear form data saved by email
+        if (isValidEmail(answers.email)) {
+          const emailKey = `${FORM_SAVE_PREFIX}${(answers.email as string).trim().toLowerCase()}`;
+          localStorage.removeItem(emailKey);
+        }
+        // Clear form data saved by session ID
+        const sessionKey = `${FORM_SAVE_PREFIX}${sessionIdRef.current}`;
+        localStorage.removeItem(sessionKey);
+        // localStorage.removeItem('zappy_auth_token');
+        // Also clear session ID itself
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('zappy_session_id');
+        }
+      } catch (error) {
+        console.warn('[App] Failed to clear stored form data', error);
+      }
+    }
+  }, [currentScreen.id, answers.email]);
 
   useEffect(() => {
     if (currentScreen.id !== 'review.summary' && submitError) {
@@ -532,7 +614,9 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         responses.address_line2,
         existingAddress.unit,
         existingAddress.address_line2,
-        responses.account_address_line2
+        responses.account_address_line2,
+        responses.account_unit,
+        responses.account_address2
       );
       const locality = pickAddressValue(
         responses.city,
@@ -665,7 +749,6 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         responses.condition = resolvedCondition;
       }
 
-      console.log('answers', answers);
 
       const clientRecordId = answers['client_record_id'] ?? (typeof window !== 'undefined' ? window.sessionStorage.getItem('client_record_id') : null);
 
@@ -770,8 +853,8 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       calculations,
       updateAnswer,
       onSubmit: goToNext,
-      showBack: history.length > 0,
-      onBack: goToPrev,
+      showBack: screen.id === 'complete.assessment_review' ? false : history.length > 0,
+      onBack: screen.id === 'complete.assessment_review' ? undefined : goToPrev,
       defaultCondition: resolvedCondition,
       showLoginLink,
     };
@@ -864,15 +947,15 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
         {screenAnnouncement}
       </div>
       
-      <div className="relative w-full max-w-2xl mx-auto flex flex-col flex-grow">
+      <div className="relative w-full max-w-2xl mx-auto flex flex-grow flex-col">
         {/* Header with logo and back button */}
         <ScreenHeader
-          onBack={history.length > 0 ? goToPrev : undefined}
+          onBack={currentScreen.id === 'complete.assessment_review' ? undefined : (history.length > 0 ? goToPrev : undefined)}
           sectionLabel={getSectionLabel(currentScreen)}
           currentStep={history.length + 1}
-          totalSteps={totalSteps}
+          totalSteps={effectiveTotalSteps}
           showProgress={activeFormConfig.settings.progress_bar}
-          progressPercentage={(history.length / totalSteps) * 100}
+          progressPercentage={effectiveProgress}
         />
         
         <div className="flex flex-col flex-grow">

@@ -197,7 +197,6 @@ function MockPaymentForm({
       )
     )
   );
-  console.log("state", state);
   const [zipCode, setZipCode] = useState(() =>
     getString(
       answers.account_zipCode ??
@@ -425,6 +424,7 @@ function MockPaymentForm({
         phone: phone.trim(),
         address: address.trim(),
         address2: address2.trim(),
+        unit: address2.trim(),
         city: city.trim(),
         state: normalizeStateCode(state),
         zipCode: zipCode.trim(),
@@ -1143,6 +1143,7 @@ export default function AccountCreationScreen({
                 if (key === "address2") {
                   updateAnswer("address_line2", value);
                   updateAnswer("shipping_address2", value);
+                  updateAnswer("unit", value);
                 }
                 if (key === "zipCode") {
                   updateAnswer("zip_code", value);
