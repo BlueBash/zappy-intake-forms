@@ -1,4 +1,4 @@
-import moment from 'moment';
+import { parseISO, isValid, format } from 'date-fns';
 import { apiClient } from './api';
 
 export interface PatientData {
@@ -226,10 +226,10 @@ export const mapPatientDataToFormAnswers = (patientData: PatientData): Record<st
   if (patient.profile?.dateOfBirth || patient.profile?.dayOfBirth) {
     const dob = patient.profile.dateOfBirth || patient.profile.dayOfBirth;
     if (dob) {
-      // Convert ISO date to MM/DD/YYYY format using moment
-      const momentDate = moment(dob);
-      if (momentDate.isValid()) {
-        answers.dob = momentDate.format('MM/DD/YYYY');
+      // Convert ISO date to MM/DD/YYYY format using date-fns
+      const date = parseISO(dob);
+      if (isValid(date)) {
+        answers.dob = format(date, 'MM/dd/yyyy');
       }
     }
   }
