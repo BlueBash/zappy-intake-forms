@@ -554,7 +554,7 @@ function MockPaymentForm({
   const planName =
     selectedPlan?.name || answers["selected_plan_name"] || "Selected Plan";
   const planPrice =
-    selectedPlan?.invoice_amount || answers["selected_plan_price"] || 299;
+    selectedPlan?.per_month_price || answers["selected_plan_price"];
   const invoiceAmount = selectedPlan?.invoice_amount || answers["selected_plan_invoice_amount"] || 299;
   
   // Extract plan details for multi-month display
@@ -565,13 +565,13 @@ function MockPaymentForm({
   
   // Calculate total amounts based on plan type
   const getOrderTotals = () => {
-    if (planType === "3-month") {
+    if (planType === "3 month") {
       return {
         totalDue: planPrice * 3,
         billingCycle: "3 months",
         deliveries: 3,
       };
-    } else if (planType === "12-month") {
+    } else if (planType === "12 month") {
       return {
         totalDue: planPrice * 12,
         billingCycle: "annually",
@@ -633,26 +633,11 @@ function MockPaymentForm({
               <span className="text-2xl">${planPrice}</span>
               <span className="text-sm text-[#666666]">/mo</span>
             </div>
-            {planType !== "month" && (
-              <p className="text-xs text-[#666666]">
-                ${orderTotals.totalDue} {orderTotals.billingCycle}
-              </p>
-            )}
           </div>
         </div>
 
         {/* Benefits */}
         <div className="space-y-3 mb-5">
-          <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-[#E0F5F3] flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Check className="w-3 h-3 text-[#00A896]" />
-            </div>
-            <p className="text-sm text-[#2D3436]">
-              {orderTotals.deliveries === 1 
-                ? "Monthly delivery of medication" 
-                : `${orderTotals.deliveries} monthly deliveries included`}
-            </p>
-          </div>
           <div className="flex items-start gap-3">
             <div className="w-5 h-5 rounded-full bg-[#E0F5F3] flex items-center justify-center flex-shrink-0 mt-0.5">
               <Check className="w-3 h-3 text-[#00A896]" />
@@ -699,6 +684,10 @@ function MockPaymentForm({
             </div>
           )}
           <div className="flex items-baseline justify-between pt-3 border-t border-[#E8E8E8]">
+            <span className="text-sm text-[#666666]">Total </span>
+            <span className="text-xl text-[#00A896]">${invoiceAmount}</span>
+          </div>
+          <div className="flex items-baseline justify-between pt-3 border-t border-[#E8E8E8]">
             <span className="text-sm text-[#666666]">Due today</span>
             <span className="text-xl text-[#00A896]">$0</span>
           </div>
@@ -707,7 +696,7 @@ function MockPaymentForm({
         {/* Important Notice */}
         <div className="mt-5 pt-5 border-t border-[#E8E8E8]">
           <p className="text-xs text-[#666666] leading-relaxed">
-            You'll be charged {planType !== "month" ? `$${orderTotals.totalDue} ${orderTotals.billingCycle}` : `$${planPrice} monthly`} once prescribed. You won't be charged if a provider determines that our program isn't right for you.
+            You'll be charged ${planPrice} once prescribed. You won't be charged if a provider determines that our program isn't right for you.
           </p>
         </div>
 
