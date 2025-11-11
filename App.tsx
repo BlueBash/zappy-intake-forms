@@ -921,6 +921,15 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
                           screen.type !== 'interstitial' &&
                           screen.type !== 'content';
     
+    // Handler to navigate to email capture screen for sign-in
+    const handleSignInClick = () => {
+      // Set a flag in sessionStorage to indicate user clicked sign-in
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('zappy_sign_in_clicked', 'true');
+      }
+      goToScreen('capture.email');
+    };
+    
     const commonProps = {
       screen,
       answers,
@@ -931,6 +940,7 @@ const App: React.FC<AppProps> = ({ formConfig: providedFormConfig, defaultCondit
       onBack: screen.id === 'complete.assessment_review' ? undefined : goToPrev,
       defaultCondition: resolvedCondition,
       showLoginLink,
+      onSignInClick: handleSignInClick, // Add sign-in handler
     };
 
     if (screen.id === 'treatment.glp1_history') {
